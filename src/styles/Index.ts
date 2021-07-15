@@ -2,7 +2,6 @@ import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
   html {
-    -webkit-app-region: drag;
     height: 100%;
     overflow: hidden;
   }
