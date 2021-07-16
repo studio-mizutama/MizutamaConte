@@ -15,4 +15,7 @@ export const GlobalStyle = createGlobalStyle`
     height: 100%;
     width: 100%;
   }
+  button {
+    -webkit-app-region: no-drag;
+  }
 `;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import * as isDev from 'electron-is-dev';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
@@ -15,7 +15,7 @@ try {
 
 function createWindow() {
   const win = new BrowserWindow({
-    titleBarStyle: 'hidden',
+    titleBarStyle: 'hiddenInset',
     width: bounds_info.width,
     height: bounds_info.height,
     x: bounds_info.x,
@@ -53,6 +53,9 @@ function createWindow() {
   if (isDev) {
     win.webContents.openDevTools();
   }
+
+  ipcMain.handle('load-platform', () => process.platform);
+
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));
   });
