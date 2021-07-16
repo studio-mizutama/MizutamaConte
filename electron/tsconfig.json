@@ -6,9 +6,12 @@
     "strict": true,
     "outDir": "../build",
     "rootDir": "../",
+    "baseUrl": "../electron",
     "noEmitOnError": true,
     "typeRoots": [
-      "node_modules/@types"
-    ]
+      "node_modules/@types",
+      "electron/@types"
+    ],
+    "paths": {"electron-localshortcut": ["@types/electron-localshortcut"]}
   }
 }
