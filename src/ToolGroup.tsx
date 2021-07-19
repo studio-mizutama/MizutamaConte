@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'reactn';
 import { ActionGroup, Item } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
@@ -12,19 +12,19 @@ const AlignCenter = styled.div`
   margin-top: var(--spectrum-global-dimension-size-85, var(--spectrum-alias-size-85));
 `;
 
-export const ToolGroup: FC = () => {
+export const ToolGroup: React.FC = () => {
   const [selected, setSelected] = useState(new Set(['Select']));
 
   const keyListener = useCallback((e) => {
-    e.key === 'v' && setSelected(new Set(['Select']));
-    e.key === 'c' && setSelected(new Set(['Crop']));
-    e.key === 't' && setSelected(new Set(['Text']));
+    e.key === 'v' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Select']));
+    e.key === 'c' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Crop']));
+    e.key === 't' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Text']));
   }, []);
 
   useEffect(() => {
     document.addEventListener('keydown', keyListener, false);
-    const activeElement = document.activeElement as HTMLElement;
-    activeElement.blur();
+    //const activeElement = document.activeElement as HTMLElement;
+    //activeElement.blur();
   }, [keyListener, selected]);
 
   return (

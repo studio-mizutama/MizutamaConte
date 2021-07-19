@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { setGlobal } from 'reactn';
 import ReactDOM from 'react-dom';
 import App from 'App';
 import reportWebVitals from 'reportWebVitals';
+
+setGlobal({ mode: 'Edit' });
 
 ReactDOM.render(
   <React.StrictMode>
