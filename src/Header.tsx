@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect, useCallback, Key } from 'react';
 import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
@@ -47,8 +47,19 @@ const HeaderRight = styled.div`
 
 const Tab: FC = () => {
   const [selected, setSelected] = useState('Edit');
+  const keyListener = useCallback((e) => {
+    e.key === 'e' && setSelected('Edit');
+    e.key === 'p' && setSelected('Preview');
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', keyListener, false);
+    const activeElement = document.activeElement as HTMLElement;
+    activeElement.blur();
+  }, [keyListener, selected]);
+
   return (
-    <Tabs width="fit-content" defaultSelectedKey={selected} onSelectionChange={() => setSelected}>
+    <Tabs width="fit-content" selectedKey={selected} onSelectionChange={setSelected as (keys: Key) => any}>
       <TabList maxHeight="size-500">
         <Item key="Edit">
           <TableEdit />
