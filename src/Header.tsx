@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useGlobal } from 'reactn';
+import React, { useState, useGlobal } from 'reactn';
 import { Key } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
@@ -48,19 +49,21 @@ const HeaderRight = styled.div`
 
 const Tab: React.FC = () => {
   const [selected, setSelected] = useGlobal('mode');
-  const keyListener = useCallback(
-    (e) => {
-      e.key === 'e' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected('Edit');
-      e.key === 'p' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected('Preview');
-    },
-    [setSelected],
-  );
 
-  useEffect(() => {
-    document.addEventListener('keydown', keyListener, false);
-    //const activeElement = document.activeElement as HTMLElement;
-    //activeElement.blur();
-  }, [keyListener, selected]);
+  const keyDown = () => {
+    const activeElement = document.activeElement as HTMLElement;
+    activeElement.blur();
+  };
+
+  useHotkeys('e', () => {
+    setSelected('Edit');
+    keyDown();
+  });
+
+  useHotkeys('p', () => {
+    setSelected('Preview');
+    keyDown();
+  });
 
   return (
     <Tabs width="fit-content" selectedKey={selected} onSelectionChange={setSelected as (keys: Key) => any}>
