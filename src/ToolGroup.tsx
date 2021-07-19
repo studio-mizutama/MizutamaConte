@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback, Key } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import { ActionGroup, Item } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
@@ -23,12 +23,9 @@ export const ToolGroup: FC = () => {
 
   useEffect(() => {
     document.addEventListener('keydown', keyListener, false);
-  }, [keyListener, selected]);
-
-  const onClick = () => {
     const activeElement = document.activeElement as HTMLElement;
     activeElement.blur();
-  };
+  }, [keyListener, selected]);
 
   return (
     <AlignCenter>
@@ -39,7 +36,6 @@ export const ToolGroup: FC = () => {
         isEmphasized
         selectedKeys={selected}
         onSelectionChange={setSelected as (keys: Selection) => any}
-        onAction={onClick as (keys: Key) => any}
       >
         <Item key="Select">
           <Select />
