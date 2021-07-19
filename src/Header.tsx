@@ -1,4 +1,5 @@
-import { FC, useState, useEffect, useCallback, Key } from 'react';
+import React, { useState, useEffect, useCallback, useGlobal } from 'reactn';
+import { Key } from 'react';
 import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
@@ -45,17 +46,20 @@ const HeaderRight = styled.div`
 //const platform = api.loadPlatform();
 //platform.then((result) => console.log(result));
 
-const Tab: FC = () => {
-  const [selected, setSelected] = useState('Edit');
-  const keyListener = useCallback((e) => {
-    e.key === 'e' && setSelected('Edit');
-    e.key === 'p' && setSelected('Preview');
-  }, []);
+const Tab: React.FC = () => {
+  const [selected, setSelected] = useGlobal('mode');
+  const keyListener = useCallback(
+    (e) => {
+      e.key === 'e' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected('Edit');
+      e.key === 'p' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected('Preview');
+    },
+    [setSelected],
+  );
 
   useEffect(() => {
     document.addEventListener('keydown', keyListener, false);
-    const activeElement = document.activeElement as HTMLElement;
-    activeElement.blur();
+    //const activeElement = document.activeElement as HTMLElement;
+    //activeElement.blur();
   }, [keyListener, selected]);
 
   return (
@@ -74,15 +78,15 @@ const Tab: FC = () => {
   );
 };
 
-const FilePicker: FC = () => {
+const FilePicker: React.FC = () => {
   const [selected, setSelected] = useState('MizutamaConte.json');
   return (
     <Picker
       isQuiet
       menuWidth="size-3400"
       max-width="fit-content"
-      defaultSelectedKey={selected}
-      onSelectionChange={() => setSelected}
+      selectedKey={selected}
+      onSelectionChange={setSelected as (keys: Key) => any}
     >
       <Item key="MizutamaConte.json">
         <DocumentOutline />
@@ -96,7 +100,7 @@ const FilePicker: FC = () => {
   );
 };
 
-export const Header: FC = () => {
+export const Header: React.FC = () => {
   return (
     <DragArea>
       <HeaderLeft>

@@ -1,9 +1,10 @@
-import { FC } from 'react';
+import React from 'reactn';
 import { Grid, Provider, defaultTheme } from '@adobe/react-spectrum';
 import { GlobalStyle } from 'styles/Index';
 import styled from 'styled-components';
 import { ToolGroup } from 'ToolGroup';
 import { Header } from 'Header';
+import { Panels } from 'Panels';
 
 const BackGround = styled.div`
   width: 100%;
@@ -18,7 +19,7 @@ const ToolArea = styled.div<{ gridArea: string }>`
   grid-area: ${({ gridArea }) => gridArea};
 `;
 
-const GlobalGrid: FC = ({ children }) => (
+const GlobalGrid: React.FC = ({ children }) => (
   <Provider theme={defaultTheme}>
     <GlobalStyle />
     <BackGround>
@@ -35,7 +36,7 @@ const GlobalGrid: FC = ({ children }) => (
   </Provider>
 );
 
-const App: FC = () => {
+const App: React.FC = () => {
   return (
     <GlobalGrid>
       <ToolArea gridArea="header">
@@ -44,7 +45,9 @@ const App: FC = () => {
       <ToolArea gridArea="toolbar">
         <ToolGroup />
       </ToolArea>
-      <ToolArea gridArea="sidebar" />
+      <ToolArea gridArea="sidebar">
+        <Panels />
+      </ToolArea>
     </GlobalGrid>
   );
 };
