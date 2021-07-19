@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'reactn';
+import React, { useState } from 'reactn';
 import { ActionGroup, Item } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
 import Crop from '@spectrum-icons/workflow/Crop';
 import Text from '@spectrum-icons/workflow/Text';
 import { Selection } from '@react-types/shared/src/selection';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 const AlignCenter = styled.div`
   display: flex;
@@ -15,17 +16,25 @@ const AlignCenter = styled.div`
 export const ToolGroup: React.FC = () => {
   const [selected, setSelected] = useState(new Set(['Select']));
 
-  const keyListener = useCallback((e) => {
-    e.key === 'v' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Select']));
-    e.key === 'c' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Crop']));
-    e.key === 't' && !e.ctrlKey && !e.shifKey && !e.altKey && !e.metaKey && setSelected(new Set(['Text']));
-  }, []);
+  const keyDown = () => {
+    const activeElement = document.activeElement as HTMLElement;
+    activeElement.blur();
+  };
 
-  useEffect(() => {
-    document.addEventListener('keydown', keyListener, false);
-    //const activeElement = document.activeElement as HTMLElement;
-    //activeElement.blur();
-  }, [keyListener, selected]);
+  useHotkeys('v', () => {
+    setSelected(new Set(['Select']));
+    keyDown();
+  });
+
+  useHotkeys('c', () => {
+    setSelected(new Set(['Crop']));
+    keyDown();
+  });
+
+  useHotkeys('t', () => {
+    setSelected(new Set(['Text']));
+    keyDown();
+  });
 
   return (
     <AlignCenter>
