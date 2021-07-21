@@ -1,8 +1,8 @@
 {
-  "name": "my-app",
+  "name": "mizutama-conte",
   "version": "0.2.0",
-  "author": "Your Name",
-  "description": "React-TypeScript-Electron sample with Create React App and Electron Builder",
+  "author": "Studio Mizutama",
+  "description": "Easy tool for creating econte.",
   "homepage": ".",
   "main": "build/electron/main.js",
   "private": true,
