@@ -1,5 +1,5 @@
 import React, { useState } from 'reactn';
-import { ActionGroup, Item } from '@adobe/react-spectrum';
+import { ActionGroup, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
 import Crop from '@spectrum-icons/workflow/Crop';
@@ -46,15 +46,24 @@ export const ToolGroup: React.FC = () => {
         selectedKeys={selected}
         onSelectionChange={setSelected as (keys: Selection) => any}
       >
-        <Item key="Select">
-          <Select />
-        </Item>
-        <Item key="Crop">
-          <Crop />
-        </Item>
-        <Item key="Text">
-          <Text />
-        </Item>
+        <TooltipTrigger placement="end">
+          <Item key="Select">
+            <Select />
+          </Item>
+          <Tooltip>Select (V)</Tooltip>
+        </TooltipTrigger>
+        <TooltipTrigger placement="end">
+          <Item key="Crop">
+            <Crop />
+          </Item>
+          <Tooltip>Crop (C)</Tooltip>
+        </TooltipTrigger>
+        <TooltipTrigger placement="end">
+          <Item key="Text">
+            <Text />
+          </Item>
+          <Tooltip>Text (T)</Tooltip>
+        </TooltipTrigger>
       </ActionGroup>
     </AlignCenter>
   );
