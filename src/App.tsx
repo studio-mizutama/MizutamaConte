@@ -9,6 +9,7 @@ import { Panels } from 'Panels';
 const BackGround = styled.div`
   width: 100%;
   height: 100%;
+  overflow: hidden;
   margin: 0;
   padding: 0;
   background-color: var(--spectrum-alias-appframe-border-color);
@@ -17,6 +18,8 @@ const BackGround = styled.div`
 const ToolArea = styled.div<{ gridArea: string }>`
   background-color: var(--spectrum-alias-toolbar-background-color);
   grid-area: ${({ gridArea }) => gridArea};
+  height: 100%;
+  overflow: hidden;
 `;
 
 const GlobalGrid: React.FC = ({ children }) => (
