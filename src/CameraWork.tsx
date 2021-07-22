@@ -16,9 +16,9 @@ export const CameraWork: React.FC = () => {
             <>
               <LabelSideL>{array[0]}</LabelSideL>
               <LabelSideM>{array[1]}</LabelSideM>
-              <TextField width="68px"></TextField>
+              <TextField width="68px" isQuiet></TextField>
               <LabelSideM>{array[2]}</LabelSideM>
-              <TextField width="68px"></TextField>
+              <TextField width="68px" isQuiet></TextField>
             </>
           ))}
         </>

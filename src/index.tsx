@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import App from 'App';
 import reportWebVitals from 'reportWebVitals';
 
-setGlobal({ mode: 'Edit' });
+setGlobal({ mode: 'Edit', tool: new Set(['Select']) });
 
 ReactDOM.render(
   <React.StrictMode>

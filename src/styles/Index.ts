@@ -19,4 +19,16 @@ export const GlobalStyle = createGlobalStyle`
   button {
     -webkit-app-region: no-drag;
   }
+  div.hover {
+   :hover {
+     background-color: var(--spectrum-alias-highlight-hover);
+   }
+  }
+  textarea.hover {
+    :hover {
+      color: var(--spectrum-alias-text-color-hover);
+      border: 1px solid var(--spectrum-alias-border-color-hover);
+      border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
+    }
+  }
 `;

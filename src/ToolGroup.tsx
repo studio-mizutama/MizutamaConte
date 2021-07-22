@@ -1,4 +1,4 @@
-import React, { useState } from 'reactn';
+import React, { useGlobal } from 'reactn';
 import { ActionGroup, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
@@ -14,7 +14,7 @@ const AlignCenter = styled.div`
 `;
 
 export const ToolGroup: React.FC = () => {
-  const [selected, setSelected] = useState(new Set(['Select']));
+  const [selected, setSelected] = useGlobal('tool');
 
   const keyDown = () => {
     const activeElement = document.activeElement as HTMLElement;
