@@ -43,10 +43,6 @@ const HeaderRight = styled.div`
   }`}
 `;
 
-//const { api } = window;
-//const platform = api.loadPlatform();
-//platform.then((result) => console.log(result));
-
 const Tab: React.FC = () => {
   const [selected, setSelected] = useGlobal('mode');
 

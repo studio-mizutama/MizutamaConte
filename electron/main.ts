@@ -3,6 +3,23 @@ import * as path from 'path';
 import * as isDev from 'electron-is-dev';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import * as fs from 'fs';
+import 'ag-psd/initialize-canvas';
+//import { readPsd } from 'ag-psd';
+
+const contePath = 'conte';
+
+const files = fs.readdirSync(contePath);
+
+const psdFiles = files.filter((file) => file.indexOf('.psd') !== -1);
+//console.log(psdFiles);
+//const jsonFile = files.filter((file) => file.indexOf('.json') !== 1)![0];
+
+const buffurs: Buffer[] = psdFiles.map((file) => fs.readFileSync(contePath + '/' + file));
+
+//const buffer = fs.readFileSync('conte/c001.psd');
+
+// read only document structure
+//const psd = readPsd(buffer, { skipLayerImageData: false, skipCompositeImageData: true, skipThumbnail: true });
 
 const info_path = path.join(app.getPath('userData'), 'bounds-info.json');
 
@@ -57,6 +74,7 @@ function createWindow() {
   }
 
   ipcMain.handle('load-platform', () => process.platform);
+  ipcMain.handle('load-psd', () => buffurs);
 
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));

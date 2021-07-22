@@ -53,7 +53,11 @@ const App: React.FC = () => {
       <ToolArea gridArea="sidebar">
         <Panels />
       </ToolArea>
-      <View gridArea="content">{mode === 'Edit' && <Conte />}</View>
+      <View gridArea="content">
+        <div style={{ display: `${mode === 'Edit' ? 'block' : 'none'}` }}>
+          <Conte />
+        </div>
+      </View>
     </GlobalGrid>
   );
 };
