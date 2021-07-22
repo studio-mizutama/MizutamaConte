@@ -1,10 +1,11 @@
-import React from 'reactn';
-import { Grid, Provider, defaultTheme } from '@adobe/react-spectrum';
+import React, { useGlobal } from 'reactn';
+import { Grid, Provider, defaultTheme, View } from '@adobe/react-spectrum';
 import { GlobalStyle } from 'styles/Index';
 import styled from 'styled-components';
 import { ToolGroup } from 'ToolGroup';
 import { Header } from 'Header';
 import { Panels } from 'Panels';
+import { Conte } from 'Conte';
 
 const BackGround = styled.div`
   width: 100%;
@@ -40,6 +41,7 @@ const GlobalGrid: React.FC = ({ children }) => (
 );
 
 const App: React.FC = () => {
+  const mode = useGlobal('mode')[0];
   return (
     <GlobalGrid>
       <ToolArea gridArea="header">
@@ -51,6 +53,7 @@ const App: React.FC = () => {
       <ToolArea gridArea="sidebar">
         <Panels />
       </ToolArea>
+      <View gridArea="content">{mode === 'Edit' && <Conte />}</View>
     </GlobalGrid>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useGlobal } from 'reactn';
 import styled from 'styled-components';
-import { Flex, Heading, Text, TextArea } from '@adobe/react-spectrum';
+import { Flex, Heading, Text } from '@adobe/react-spectrum';
 import ImageAlbum from '@spectrum-icons/workflow/ImageAlbum';
 import MovieCamera from '@spectrum-icons/workflow/MovieCamera';
 import ViewList from '@spectrum-icons/workflow/ViewList';
@@ -69,7 +69,6 @@ export const Panels: React.FC = () => {
       <div style={mode === 'Preview' ? { display: 'block' } : { display: 'none' }}>
         <Tool Title="Dialogue">
           <Dialogue />
-          <TextArea minWidth="100%" width="100%" marginTop="size-200" />
         </Tool>
 
         <Tool Title="Media">

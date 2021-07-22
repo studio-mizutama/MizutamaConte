@@ -20,6 +20,8 @@ function createWindow() {
     height: bounds_info.height,
     x: bounds_info.x,
     y: bounds_info.y,
+    minWidth: 1024,
+    minHeight: 768,
     webPreferences: {
       // contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),

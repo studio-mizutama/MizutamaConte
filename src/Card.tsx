@@ -8,10 +8,14 @@ const CardArea = styled.div`
   width: 118px;
   height: var(--spectrum-global-dimension-size-1600, var(--spectrum-alias-size-1600));
   border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
-  border: 1px solid var(--spectrum-alias-appframe-border-color);
+  border: 1px solid var(--spectrum-alias-border-color);
   background-color: var(--spectrum-alias-appframe-border-color);
   display: flex;
   flex-flow: column;
+  :hover {
+    color: var(--spectrum-alias-text-color-hover);
+    border-color: var(--spectrum-alias-border-color-hover);
+  }
 `;
 
 const IconArea = styled.div`
