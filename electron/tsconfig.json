@@ -12,6 +12,8 @@
       "node_modules/@types",
       "electron/@types"
     ],
-    "paths": {"electron-localshortcut": ["@types/electron-localshortcut"]}
+    "paths":{
+      "*":["@types/*"]
+   }
   }
 }

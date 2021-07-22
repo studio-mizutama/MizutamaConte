@@ -15,4 +15,5 @@ declare global {
 
 export interface Sandbox {
   loadPlatform: () => Promise<void | string>;
+  loadPSD: () => Promise<BufferLike[] | ArrayBuffer[]>;
 }
