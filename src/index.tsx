@@ -2,8 +2,14 @@ import React, { setGlobal } from 'reactn';
 import ReactDOM from 'react-dom';
 import App from 'App';
 import reportWebVitals from 'reportWebVitals';
+import { Psd } from 'ag-psd';
 
-setGlobal({ mode: 'Edit', tool: new Set(['Select']) });
+const prtPsd: Psd = { width: 1, height: 1 };
+const prtCut: Cut = {
+  picture: prtPsd,
+};
+
+setGlobal({ mode: 'Edit', tool: new Set(['Select']), cut: prtCut });
 
 ReactDOM.render(
   <React.StrictMode>

@@ -4,7 +4,7 @@ import * as isDev from 'electron-is-dev';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import * as fs from 'fs';
 import 'ag-psd/initialize-canvas';
-//import { readPsd } from 'ag-psd';
+import { Cut } from './@types/cut';
 
 const contePath = 'conte';
 
@@ -12,9 +12,13 @@ const files = fs.readdirSync(contePath);
 
 const psdFiles = files.filter((file) => file.indexOf('.psd') !== -1);
 //console.log(psdFiles);
-//const jsonFile = files.filter((file) => file.indexOf('.json') !== 1)![0];
+const jsonFile = files.filter((file) => file.indexOf('.json') !== -1)![0];
 
 const buffurs: Buffer[] = psdFiles.map((file) => fs.readFileSync(contePath + '/' + file));
+
+const conteString = fs.readFileSync(contePath + '/' + jsonFile, 'utf8');
+
+const conteObject: Cut[] = JSON.parse(conteString);
 
 //const buffer = fs.readFileSync('conte/c001.psd');
 
@@ -75,6 +79,7 @@ function createWindow() {
 
   ipcMain.handle('load-platform', () => process.platform);
   ipcMain.handle('load-psd', () => buffurs);
+  ipcMain.handle('load-json', () => conteObject);
 
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));

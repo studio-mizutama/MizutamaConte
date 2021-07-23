@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { Cut } from './@types/cut';
 
 interface BufferLike {
   buffer: ArrayBuffer;
@@ -15,6 +16,11 @@ contextBridge.exposeInMainWorld('api', {
   loadPSD: (): Promise<BufferLike[] | ArrayBuffer[]> =>
     ipcRenderer
       .invoke('load-psd')
+      .then((result) => result)
+      .catch((err) => console.log(err)),
+  loadJSON: (): Promise<Cut[]> =>
+    ipcRenderer
+      .invoke('load-json')
       .then((result) => result)
       .catch((err) => console.log(err)),
 });

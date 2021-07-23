@@ -1,16 +1,14 @@
-import React, { useState } from 'reactn';
-import { Key } from 'react';
+import React, { useGlobal } from 'reactn';
 import { Flex, Slider, Picker, Item, Text } from '@adobe/react-spectrum';
 import { LabelLL } from 'Label';
 
 export const Transition: React.FC = () => {
-  const [inSelected, setInSelected] = useState('None');
-  const [outSelected, setOutSelected] = useState('None');
+  const cut = useGlobal('cut')[0];
   return (
     <>
       <Flex direction="row" gap="size-200" wrap>
         <LabelLL>Fade In</LabelLL>
-        <Picker width="184px" selectedKey={inSelected} onSelectionChange={setInSelected as (keys: Key) => any}>
+        <Picker width="184px" selectedKey={cut.action?.fadeIn}>
           <Item key="None">
             <Text>None</Text>
           </Item>
@@ -24,9 +22,9 @@ export const Transition: React.FC = () => {
             <Text>Cross</Text>
           </Item>
         </Picker>
-        <Slider label="Duration" maxValue={480} defaultValue={24} width="100%" />
+        <Slider label="Duration" maxValue={480} value={cut.action?.fadeInDuration} width="100%" />
         <LabelLL>Fade Out</LabelLL>
-        <Picker width="184px" selectedKey={outSelected} onSelectionChange={setOutSelected as (keys: Key) => any}>
+        <Picker width="184px" selectedKey={cut.action?.fadeOut}>
           <Item key="None">
             <Text>None</Text>
           </Item>
@@ -40,7 +38,7 @@ export const Transition: React.FC = () => {
             <Text>Cross</Text>
           </Item>
         </Picker>
-        <Slider label="Duration" maxValue={480} defaultValue={24} width="100%" />
+        <Slider label="Duration" maxValue={480} value={cut.action?.fadeOutDuration} width="100%" />
       </Flex>
     </>
   );

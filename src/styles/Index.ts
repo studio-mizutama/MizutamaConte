@@ -31,4 +31,11 @@ export const GlobalStyle = createGlobalStyle`
       border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
     }
   }
+  a {
+    cursor: default;
+    color: var(--spectrum-alias-text-color);
+    :hover {
+      color: var(--spectrum-alias-text-color-hover);
+    }
+  }
 `;
