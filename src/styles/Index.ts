@@ -31,6 +31,13 @@ export const GlobalStyle = createGlobalStyle`
       border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
     }
   }
+  div.isHover {
+    background-color: var(--spectrum-alias-highlight-hover);
+  }
+  li.isHover {
+    background-color: var(--spectrum-alias-highlight-hover);
+    border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
+  }
   a {
     cursor: default;
     color: var(--spectrum-alias-text-color);

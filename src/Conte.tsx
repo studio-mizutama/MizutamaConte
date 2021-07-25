@@ -41,6 +41,15 @@ const Out = styled.div`
   z-index: 3;
 `;
 
+const Fade = styled.svg`
+  padding: 0;
+  margin: 0;
+  stroke: none;
+  fill: var(--spectrum-alias-text-color);
+  position: absolute;
+  left: calc((100% - 96px) / 2);
+`;
+
 const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: number; timeSum?: number }> = ({
   action,
   dialogue,
@@ -60,6 +69,16 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
             action?.fadeOut ? action?.fadeOut : ''
           }\n${action?.fadeOutDuration ? action?.fadeOutDuration : ''}\n${action?.text ? action?.text : ''}\n`}
         </MyTextArea>
+        {action?.fadeIn && (
+          <Fade viewBox="0 0 96 48" width="96px">
+            <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
+          </Fade>
+        )}
+        {action?.fadeOut && (
+          <Fade viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
+            <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
+          </Fade>
+        )}
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea className={tool.has('Text') ? 'hover' : ''} disabled={!tool.has('Text')} onKeyDown={escKeyDown}>
@@ -121,7 +140,13 @@ const CutContainer: React.FC = () => {
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
           return (
             <View backgroundColor="gray-100">
-              <div className={'hover'} id={`Cut${index + 1}`}>
+              <div
+                className={'hover'}
+                id={`Cut${index + 1}`}
+                onClick={() => document.getElementById(`List${index + 1}`)?.click()}
+                onMouseEnter={() => document.getElementById(`List${index + 1}`)?.classList.add('isHover')}
+                onMouseLeave={() => document.getElementById(`List${index + 1}`)?.classList.remove('isHover')}
+              >
                 <Grid
                   columns={['size-900', 'size-3600', 'auto', 'auto', 'size-1600']}
                   areas={['cut picture action dialogue time']}
