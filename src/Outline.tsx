@@ -32,20 +32,21 @@ export const Outline: React.FC = () => {
       }
     };
     f();
-  }, []);
+  }, [setCuts]);
   return (
     <>
       <Accordion labelName="Scene1">
-        {cuts.map((cut, index) => (
-          <List
-            onClick={() => setCut(cut)}
-            id={`List${index + 1}`}
-            onMouseEnter={() => document.getElementById(`Cut${index + 1}`)?.classList.add('isHover')}
-            onMouseLeave={() => document.getElementById(`Cut${index + 1}`)?.classList.remove('isHover')}
-          >
-            <A href={`#Cut${index + 1}`}>Cut{index + 1}</A>
-          </List>
-        ))}
+        {cuts?.length > 1 &&
+          cuts?.map((cut, index) => (
+            <List
+              onClick={() => setCut(cut)}
+              id={`List${index + 1}`}
+              onMouseEnter={() => document.getElementById(`Cut${index + 1}`)?.classList.add('isHover')}
+              onMouseLeave={() => document.getElementById(`Cut${index + 1}`)?.classList.remove('isHover')}
+            >
+              <A href={`#Cut${index + 1}`}>Cut{index + 1}</A>
+            </List>
+          ))}
       </Accordion>
     </>
   );

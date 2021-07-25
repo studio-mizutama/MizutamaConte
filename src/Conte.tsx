@@ -1,5 +1,5 @@
 import React, { useGlobal, useState, useEffect } from 'reactn';
-import { Grid, Heading, View, Flex } from '@adobe/react-spectrum';
+import { Grid, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { readPsd, Psd, Layer } from 'ag-psd';
 
@@ -109,33 +109,34 @@ const CutContainer: React.FC = () => {
 
   useEffect(() => {
     const f = async () => {
-      try {
-        const psdfiles = await api.loadPSD();
-        const json = await api.loadJSON();
-        const psds = psdfiles.map((psdfile) => readPsd(psdfile));
-        const cutsWithNoPicture: Cut[] = json;
-        const cutsWithNoJson: Cut[] = psds.map((psd) => {
-          return { picture: psd };
-        });
+      const psdfiles = await api.loadPSD();
+      const json = await api.loadJSON();
+      const psds = psdfiles?.map((psdfile) => readPsd(psdfile));
+      const cutsWithNoPicture: Cut[] = json;
+      const cutsWithNoJson: Cut[] = psds?.map((psd) => {
+        return { picture: psd };
+      });
 
-        const joinBy = (arr1: Cut[], arr2: Cut[]) => {
-          const arr2Dict = new Map(arr2.map((o, index) => [index, o]));
+      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
+        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
+        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
+      };
 
-          return arr1.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
-        };
-
-        const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-        setCuts(cuts);
-      } catch (e) {
-        alert(e);
-      }
+      const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
+      setCuts(cuts);
     };
     f();
-  }, []);
+  }, [setCuts]);
 
   return (
     <>
-      {cuts.length > 1 &&
+      {cuts?.length === 1 && (
+        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+          <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
+          <Heading>Now Loading...</Heading>
+        </Flex>
+      )}
+      {cuts?.length > 1 &&
         cuts.map((cut, index) => {
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
           return (
@@ -232,7 +233,7 @@ const CutContainer: React.FC = () => {
   );
 };
 
-export const Conte: React.FC = () => {
+export const Conte: React.FC = React.memo(() => {
   return (
     <>
       <Grid
@@ -263,4 +264,4 @@ export const Conte: React.FC = () => {
       </Scroll>
     </>
   );
-};
+});

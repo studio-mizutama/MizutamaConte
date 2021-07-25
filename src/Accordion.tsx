@@ -42,7 +42,7 @@ export const Accordion: React.FC<{ labelName: string }> = ({ labelName, children
         </Flex>
       </Label>
 
-      <Ul>{toggle && children}</Ul>
+      <Ul style={{ display: `${toggle ? 'block' : 'none'}` }}>{children}</Ul>
     </>
   );
 };
