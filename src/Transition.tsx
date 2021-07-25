@@ -8,7 +8,7 @@ export const Transition: React.FC = () => {
     <>
       <Flex direction="row" gap="size-200" wrap>
         <LabelLL>Fade In</LabelLL>
-        <Picker width="184px" selectedKey={cut.action?.fadeIn}>
+        <Picker width="184px" selectedKey={cut.action?.fadeIn} defaultSelectedKey="None">
           <Item key="None">
             <Text>None</Text>
           </Item>
@@ -24,7 +24,7 @@ export const Transition: React.FC = () => {
         </Picker>
         <Slider label="Duration" maxValue={480} value={cut.action?.fadeInDuration} width="100%" />
         <LabelLL>Fade Out</LabelLL>
-        <Picker width="184px" selectedKey={cut.action?.fadeOut}>
+        <Picker width="184px" selectedKey={cut.action?.fadeOut} defaultSelectedKey="None">
           <Item key="None">
             <Text>None</Text>
           </Item>
