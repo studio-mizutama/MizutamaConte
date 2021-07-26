@@ -28,6 +28,7 @@ const MyTextArea = styled.textarea`
 `;
 
 const In = styled.div`
+  color: var(--spectrum-semantic-positive-color-border);
   border: 2px solid var(--spectrum-semantic-positive-color-border);
   border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
   position: absolute;
@@ -35,6 +36,7 @@ const In = styled.div`
 `;
 
 const Out = styled.div`
+  color: var(--spectrum-semantic-negative-color-border);
   border: 2px solid var(--spectrum-semantic-negative-color-border);
   border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
   position: absolute;
@@ -106,9 +108,25 @@ const CutContainer: React.FC = () => {
     picture: prtPsd,
   };
   const [cuts, setCuts] = useState([prtCut]);
+  const globalCuts = useGlobal('globalCuts')[0];
+  const globalPsds = useGlobal('globalPsds')[0];
 
   useEffect(() => {
     const f = async () => {
+      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
+        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
+        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
+      };
+      if (!api) {
+        const psds = globalPsds;
+        const cutsWithNoPicture: Cut[] = globalCuts;
+        const cutsWithNoJson: Cut[] = psds?.map((psd) => {
+          return { picture: psd };
+        });
+        const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
+        setCuts(cuts);
+        return;
+      }
       const psdfiles = await api.loadPSD();
       const json = await api.loadJSON();
       const psds = psdfiles?.map((psdfile) => readPsd(psdfile));
@@ -117,20 +135,21 @@ const CutContainer: React.FC = () => {
         return { picture: psd };
       });
 
-      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
-        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
-        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
-      };
-
       const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
       setCuts(cuts);
     };
     f();
-  }, [setCuts]);
+  }, [globalCuts, globalPsds, setCuts]);
 
   return (
     <>
-      {cuts?.length === 1 && (
+      {!api && cuts?.length > 1 && !cuts[1]?.picture && (
+        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+          <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
+          <Heading>Now Loading...</Heading>
+        </Flex>
+      )}
+      {api && cuts?.length === 1 && (
         <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
           <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
           <Heading>Now Loading...</Heading>
@@ -198,7 +217,11 @@ const CutContainer: React.FC = () => {
                                         2
                                     }px`,
                                   }}
-                                />
+                                >
+                                  <Heading level={4} margin="size-25">
+                                    IN
+                                  </Heading>
+                                </In>
                                 <Out
                                   style={{
                                     height: `${129.6 * cut.cameraWork.scale!.out}px`,
@@ -216,7 +239,11 @@ const CutContainer: React.FC = () => {
                                         2
                                     }px`,
                                   }}
-                                />
+                                >
+                                  <Heading level={4} margin="size-25">
+                                    OUT
+                                  </Heading>
+                                </Out>
                               </>
                             )}
                           </div>

@@ -9,7 +9,14 @@ const prtCut: Cut = {
   picture: prtPsd,
 };
 
-setGlobal({ mode: 'Edit', tool: new Set(['Select']), cut: prtCut });
+setGlobal({
+  mode: 'Edit',
+  tool: new Set(['Select']),
+  cut: prtCut,
+  globalCuts: [prtCut],
+  globalPsds: [prtPsd],
+  globalFileName: '',
+});
 
 ReactDOM.render(
   <React.StrictMode>

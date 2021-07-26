@@ -5,6 +5,9 @@ declare module 'reactn/default' {
     mode: string;
     tool: Set<string> | undefined;
     cut: Cut;
+    globalCuts: Cut[];
+    globalPsds: Psd[];
+    globalFileName: string;
   }
 }
 
@@ -38,4 +41,5 @@ export interface Sandbox {
   loadPlatform: () => Promise<void | string>;
   loadPSD: () => Promise<BufferLike[] | ArrayBuffer[]>;
   loadJSON: () => Promise<Cut[]>;
+  loadFileName: () => Promise<string>;
 }
