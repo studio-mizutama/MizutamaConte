@@ -19,11 +19,17 @@ export const Outline: React.FC = () => {
     picture: prtPsd,
   };
   const [cuts, setCuts] = useState([prtCut]);
+  const globalCuts = useGlobal('globalCuts')[0];
   const setCut = useGlobal('cut')[1];
 
   useEffect(() => {
     const f = async () => {
       try {
+        if (!api) {
+          const cutsWithNoPicture: Cut[] = globalCuts;
+          setCuts(cutsWithNoPicture);
+          return;
+        }
         const json = await api.loadJSON();
         const cutsWithNoPicture: Cut[] = json;
         setCuts(cutsWithNoPicture);
@@ -32,7 +38,7 @@ export const Outline: React.FC = () => {
       }
     };
     f();
-  }, [setCuts]);
+  }, [globalCuts, setCuts]);
   return (
     <>
       <Accordion labelName="Scene1">

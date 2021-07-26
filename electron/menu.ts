@@ -62,8 +62,10 @@ const openFile = () => {
   const conteObject: Cut[] = JSON.parse(conteString);
   ipcMain.removeHandler('load-psd');
   ipcMain.removeHandler('load-json');
+  ipcMain.removeHandler('load-file-name');
 
   ipcMain.handle('load-psd', () => buffurs);
   ipcMain.handle('load-json', () => conteObject);
+  ipcMain.handle('load-file-name', () => jsonFile);
   win.reload();
 };

@@ -23,4 +23,9 @@ contextBridge.exposeInMainWorld('api', {
       .invoke('load-json')
       .then((result) => result)
       .catch((err) => console.log(err)),
+  loadFileName: (): Promise<string> =>
+    ipcRenderer
+      .invoke('load-file-name')
+      .then((result) => result)
+      .catch((err) => console.log(err)),
 });
