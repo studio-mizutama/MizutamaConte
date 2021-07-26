@@ -1,197 +1,153 @@
-React-TypeScript-Electron sample with Create React App and Electron Builder
-===========================================================================
+# Mizutama Conte [\[Demo Site\]](https://studio-mizutama.github.io/MizutamaConte/)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) with `--template typescript`option.
+![screenshot](./screenshot.png)
 
-On the top of it, the following features have been added with realatively small changes:
+React + Electron製の絵コンテエディタ&ビューアです。現在はビューアとしての機能のみ実装済みです。
 
-* TypeScript supports for Electron main process source code
-* Hot-relaod support for Electron app
-* Electron Bulder support
+## Usage
 
-## Available Scripts in addition to the existing ones
+### Install
 
-### `npm run electron:dev`
-
-Runs the Electron app in the development mode.
-
-The Electron app will reload if you make edits in the `electron` directory.<br>
-You will also see any lint errors in the console.
-
-### `npm run electron:build`
-
-Builds the Electron app package for production to the `dist` folder.
-
-Your Electron app is ready to be distributed!
-
-## Project directory structure
-
-```bash
-my-app/
-├── package.json
-│
-## render process
-├── tsconfig.json
-├── public/
-├── src/
-│
-## main process
-├── electron/
-│   ├── main.ts
-│   └── tsconfig.json
-│
-## build output
-├── build/
-│   ├── index.html
-│   ├── static/
-│   │   ├── css/
-│   │   └── js/
-│   │
-│   └── electron/
-│      └── main.js
-│
-## distribution packges
-└── dist/
-    ├── mac/
-    │   └── my-app.app
-    └── my-app-0.1.0.dmg
+```sh
+$ yarn
 ```
 
-## Do it yourself from scratch
+### Development
 
-### Generate a React project and install npm dependencies
-
-```bash
-create-react-app my-app --template typescript
-cd my-app
-yarn add @types/electron-devtools-installer electron-devtools-installer electron-is-dev electron-reload
-yarn add -D concurrently electron electron-builder wait-on cross-env
+```sh
+$ yarn electron:dev
 ```
 
-### Make Electron main process source file
+### Build
 
-#### electron/tsconfig.json
+```sh
+$ yarn electron:build
+```
+
+### Deploy GitHub Pages
+
+```sh
+$ yarn deploy
+```
+
+## Feature
+
+- [x] 絵コンテファイル表示
+- [ ] ファイル編集・保存・上書き保存
+- [ ] 新規プロジェクト作成
+- [ ] 外部ペイントアプリ連携
+- [ ] ビデオコンテプレビュー
+- [ ] ビデオコンテ書き出し
+- [ ] `setting.json`ファイルによるユーザー設定カスタマイズ
+
+## 絵コンテファイル
+
+Mizutama Conteでは、絵コンテをJsonファイル及びPSDファイルにより管理します。
+
+```sh
+conte/
+├── [Your Project Name].json
+│
+├── c001.psd
+├── c002.psd
+├── c003.psd
+├──   .
+├──   .
+├──   .
+└──   .
+```
+
+### Jsonファイルの構成
+
+[スタジオみずたま制作「君と一緒に」](https://youtu.be/sva7WjdEO7k)より
 
 ```json
-{
-  "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "sourceMap": true,
-    "strict": true,
-    "outDir": "../build", // Output transpiled files to build/electron/
-    "rootDir": "../",
-    "noEmitOnError": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ]
-  }
-}
+[
+  {
+    "action": { "fadeIn": "Black In", "fadeInDuration": 96 },
+    "dialogue": "佑希「楽しみだな！」晴奈「そうだね」",
+    "time": 168
+  },
+  {
+    "cameraWork": {
+      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": -0.421875, "y": 0 } },
+      "scale": { "in": 1.421875, "out": 1 }
+    },
+    "dialogue": "佑希「僕と晴奈は飛行機に乗っている。何でかっていうと、色々とあるんだ。」",
+    "time": 156
+  },
+  {
+    "cameraWork": {
+      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": 0, "y": 0 } },
+      "scale": { "in": 1.269792, "out": 1 }
+    },
+    "dialogue": "佑希「まぁ一言で言えば駆け落ちみたいなもの。」",
+    "time": 72
+  },
+  {
+    "cameraWork": {
+      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": 0, "y": 0 } },
+      "scale": { "in": 1, "out": 1.316145 }
+    },
+    "dialogue": "佑希「大学もあと卒業研究だけだったのに、ほっぽり出してきた。」",
+    "time": 132
+  },
+  { "dialogue": "佑希「それぐらい晴奈が好きなんだけどさ……」", "time": 72 },
+  { "dialogue": "佑希「これできっとよかったんだ」", "time": 228 },
+]
 ```
 
-#### electron/main.ts
+アプリ内では`Cut`型のオブジェクトとして扱われます。
 
 ```ts
-import { app, BrowserWindow } from 'electron';
-import * as path from 'path';
-import * as isDev from 'electron-is-dev';
-import installExtension, { REACT_DEVELOPER_TOOLS } from "electron-devtools-installer";
-
-let win: BrowserWindow | null = null;
-
-function createWindow() {
-  win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  })
-
-  if (isDev) {
-    win.loadURL('http://localhost:3000/index.html');
-  } else {
-    // 'build/index.html'
-    win.loadURL(`file://${__dirname}/../index.html`);
-  }
-
-  win.on('closed', () => win = null);
-
-  // Hot Reloading
-  if (isDev) {
-    // 'node_modules/.bin/electronPath'
-    require('electron-reload')(__dirname, {
-      electron: path.join(__dirname, '..', '..', 'node_modules', '.bin', 'electron'),
-      forceHardReset: true,
-      hardResetMethod: 'exit'
-    });
-  }
-
-  // DevTools
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
-
-  if (isDev) {
-    win.webContents.openDevTools();
-  }
+interface Cut {
+  picture?: Psd;
+  cameraWork?: CameraWork;
+  action?: Action;
+  dialogue?: string;
+  time?: number;
 }
 
-app.on('ready', createWindow);
+interface Action {
+  fadeIn?: 'None' | 'White In' | 'Black In' | 'Cross';
+  fadeInDuration?: number;
+  fadeOut?: 'None' | 'White Out' | 'Black Out' | 'Cross';
+  fadeOutDuration?: number;
+  text?: string;
+}
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (win === null) {
-    createWindow();
-  }
-});
+interface CameraWork {
+  position?: { in: { x: number; y: number }; out: { x: number; y: number } };
+  scale?: { in: number; out: number };
+}
 ```
 
-### Adjust package.json
+`Psd`型は、[ag-psd](https://github.com/Agamnentzar/ag-psd)を利用しています。
 
-#### Add properties for Electron
+### PSDファイルの構成
 
-```json
-  "homepage": ".", # see https://create-react-app.dev/docs/deployment#serving-the-same-build-from-different-paths
-  "main": "build/electron/main.js",
-```
+![samplepsd](./samplepsd.png)
 
-#### Add properties for Electron Builder
+#### キャンバスサイズ
+実際のアニメと同じサイズで作ります。(1920 * 1080等)
 
-```json
-  "author": "Your Name",
-  "description": "React-TypeScript-Electron sample with Create React App and Electron Builder",
-  ...
-  "build": {
-    "extends": null, # see https://github.com/electron-userland/electron-builder/issues/2030#issuecomment-386720420
-    "files": [
-      "build/**/*"
-    ],
-    "directories": {
-      "buildResources": "assets" # change the resource directory from 'build' to 'assets'
-    }
-  },
-```
+#### レイヤー構成
+- 最下層に背景レイヤーを置きます。
+- 同一カット内に複数コマがある場合、時系列順に上から並べます。
+- 1コマにつき1レイヤーとします。（将来的に1コマ1グループに変更予定）
+- レイヤー名は任意です。
+- 非表示レイヤーも読み込まれます。
 
-#### Add scripts
+### コンテファイルのサンプル
 
-```json
-  "scripts": {
-    "postinstall": "electron-builder install-app-deps",
-    "electron:dev": "concurrently \"cross-env BROWSER=none yarn start\" \"wait-on http://localhost:3000 && tsc -p electron -w\" \"wait-on http://localhost:3000 && tsc -p electron && electron .\"",
-    "electron:build": "yarn build && tsc -p electron && electron-builder",
-```
+サンプルファイルを以下のリンクよりダウンロードできます。
 
-## Many thanks to the following articles!
+**This sample is NOT under MIT License. ©︎ 2020 Studio Mizutama All Rights Reserved.**
 
-- [⚡️ From React to an Electron app ready for production](https://medium.com/@kitze/%EF%B8%8F-from-react-to-an-electron-app-ready-for-production-a0468ecb1da3)
-- [How to build an Electron app using Create React App and Electron Builder](https://www.codementor.io/randyfindley/how-to-build-an-electron-app-using-create-react-app-and-electron-builder-ss1k0sfer)
-- [Application entry file reset to default (react-cra detected and config changed incorrectly)](https://github.com/electron-userland/electron-builder/issues/2030)
-- [Serving the Same Build from Different Paths](https://create-react-app.dev/docs/deployment#serving-the-same-build-from-different-paths)
+[Google Drive](https://drive.google.com/drive/folders/11lSAHkNsDDrYayZGV87AM5X9dPsFVYGa?usp=sharing)
 
-## 
+Electron版では`File -> Open` `(Cmd or Ctrl + O)`、[Web版](https://studio-mizutama.github.io/MizutamaConte/)では左上のフォルダアイコンをクリックし、ダウンロードしたサンプルをフォルダごと選択してください。
+
+## Many thanks to
+
+[yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder](https://github.com/yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder)
