@@ -6,6 +6,7 @@
   "homepage": "https://studio-mizutama.github.io/MizutamaConte/",
   "main": "build/electron/main.js",
   "private": true,
+  "license": "MIT",
   "dependencies": {
     "@adobe/react-spectrum": "^3.11.2",
     "@spectrum-icons/illustrations": "^3.2.1",
