@@ -1,5 +1,5 @@
 import React, { useGlobal, useState, useEffect, useCallback, useRef } from 'reactn';
-import { ActionButton, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum';
+import { ActionButton, Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { readPsd, Psd, Layer } from 'ag-psd';
 import Rewind from '@spectrum-icons/workflow/Rewind';
@@ -51,7 +51,7 @@ export const Preview: React.FC = React.memo(() => {
   const now = window.performance && performance.now;
   const fps = 24;
 
-  const timeTotal = cuts.reduce((sum, i) => i.time && sum + i.time, 0);
+  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0);
 
   const animationRef: React.MutableRefObject<number> = useRef(0);
   const timeRef: React.MutableRefObject<number> = useRef(0);
@@ -65,8 +65,18 @@ export const Preview: React.FC = React.memo(() => {
     cancelAnimationFrame(animationRef.current);
     setIsPlay(false);
     if (!timeTotal) return;
-    setFrame(timeTotal);
+    setFrame(timeTotal - 1);
   }, [timeTotal]);
+  const step = useCallback(
+    (time: number) => {
+      cancelAnimationFrame(animationRef.current);
+      setIsPlay(false);
+      if (!timeTotal) return;
+      if (time >= timeTotal) time = timeTotal - 1;
+      setFrame(time);
+    },
+    [timeTotal],
+  );
 
   const stop = useCallback(() => {
     cancelAnimationFrame(animationRef.current);
@@ -81,17 +91,11 @@ export const Preview: React.FC = React.memo(() => {
       animationRef.current = requestAnimationFrame(loop);
       const playFrame = (getTime() - timeRef.current) / (1000 / fps);
 
-      if (!timeTotal) return;
-      if (frame > timeTotal) {
-        cancelAnimationFrame(animationRef.current);
-        setIsPlay(false);
-        return;
-      }
       setFrame(frame + playFrame);
     };
     loop();
     setIsPlay(true);
-  }, [frame, now, timeTotal]);
+  }, [frame, now]);
 
   useEffect(() => {
     const f = async () => {
@@ -139,10 +143,22 @@ export const Preview: React.FC = React.memo(() => {
       )}
       {cuts?.length > 1 &&
         cuts.map((cut, index) => {
-          const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0);
-          const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
+          const prePreTimeSum = cuts.slice(0, index - 1).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+          const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+          const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0) || timeTotal;
           const pictureNumber = cut.picture?.children.length - 1;
           const pictureShowDuration = cut?.time && cut?.time / pictureNumber;
+          const scaleOut = cut.cameraWork?.scale?.in || 1;
+          const scaleIn = cut.cameraWork?.scale?.out || 1;
+          const currentFrame = frame - preTimeSum || 1;
+          const scale = scaleIn - (scaleIn - scaleOut) / currentFrame;
+          const xOut = cut.cameraWork?.position?.in.x || 0;
+          const xIn = cut.cameraWork?.position?.out.x || 0;
+          const yIn = cut.cameraWork?.position?.in.y || 0;
+          const yOut = cut.cameraWork?.position?.out.y || 0;
+          const posX = xIn - (xIn - xOut) / currentFrame;
+          const posY = yOut - (yOut - yIn) / currentFrame;
+
           return (
             <>
               {preTimeSum !== undefined &&
@@ -156,83 +172,94 @@ export const Preview: React.FC = React.memo(() => {
                       : layerindex === 1,
                   )
                   .map((child: Layer) => {
-                    const src = child.canvas?.toDataURL('image/png', 0.2);
+                    const src = child.canvas?.toDataURL('image/jxss', 1);
                     return (
-                      <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-                        <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
-                          <CountIn>{`${
-                            preTimeSum! > 24
-                              ? ((preTimeSum! / 24) | 0) + ':' + ('00' + (preTimeSum! % 24)).slice(-2)
-                              : ('00' + preTimeSum).slice(-2)
-                          }`}</CountIn>
-                          <Heading>{('Cut00' + (index + 1)).slice(-6)}</Heading>
-                          <CountOut>{`${
-                            timeSum! > 24
-                              ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
-                              : ('00' + timeSum).slice(-2)
-                          }`}</CountOut>
-                        </PreviewHeader>
+                      <>
+                        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+                          <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
+                            <CountIn>{`${
+                              preTimeSum! > 24
+                                ? ((preTimeSum! / 24) | 0) + ':' + ('00' + (preTimeSum! % 24)).slice(-2)
+                                : ('00' + preTimeSum).slice(-2)
+                            }`}</CountIn>
+                            <Heading>{('Cut00' + (index + 1)).slice(-6)}</Heading>
+                            <CountOut>{`${
+                              timeSum! > 24
+                                ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
+                                : ('00' + timeSum).slice(-2)
+                            }`}</CountOut>
+                          </PreviewHeader>
 
-                        <div
-                          style={{
-                            height: `${1080 * ratio}px`,
-                            width: `${1920 * ratio}px`,
-                            backgroundColor: '#000',
-                            overflow: 'hidden',
-                          }}
-                        >
                           <div
                             style={{
-                              height: `${child.canvas && child.canvas.height * ratio}px`,
-                              width: `${child.canvas && child.canvas.width * ratio}px`,
-                              backgroundColor: '#fff',
-                              position: 'relative',
+                              height: `${1080 * ratio}px`,
+                              width: `${1920 * ratio}px`,
+                              backgroundColor: '#000',
+                              overflow: 'hidden',
                             }}
                           >
-                            <img
-                              style={{ transform: `scale(${ratio})`, transformOrigin: 'left top' }}
-                              src={src}
-                              alt="cut"
-                            />
+                            <div
+                              style={{
+                                height: `${child.canvas && (child.canvas.height * ratio) / scale}px`,
+                                width: `${child.canvas && (child.canvas.width * ratio) / scale}px`,
+                                backgroundColor: '#fff',
+                                position: 'relative',
+                                bottom: `${
+                                  child.canvas && (child.canvas.height * ratio - 1080 * ratio * (scale - posY)) / 2
+                                }px`,
+                                right: `${
+                                  child.canvas && (child.canvas.width * ratio - 1920 * ratio * (scale - posX)) / 2
+                                }px`,
+                              }}
+                            >
+                              <img
+                                style={{
+                                  transform: `scale(${ratio / scale})`,
+                                  transformOrigin: 'left top',
+                                }}
+                                src={src}
+                                alt="cut"
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </Flex>
+                        </Flex>
+                        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+                          <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
+                            <CountIn>{`${
+                              frame! > 24
+                                ? ((frame! / 24) | 0) + ':' + ('00' + (Math.round(frame!) % 24)).slice(-2)
+                                : ('00' + Math.round(frame)).slice(-2)
+                            }`}</CountIn>
+                            <div>
+                              <ActionButton isQuiet onPress={rewind}>
+                                <Rewind />
+                              </ActionButton>
+                              <ActionButton isQuiet onPress={() => step(prePreTimeSum)}>
+                                <StepBackward />
+                              </ActionButton>
+                              <ActionButton isQuiet onPress={isPlay ? stop : start}>
+                                {isPlay ? <Pause /> : <Play />}
+                              </ActionButton>
+                              <ActionButton isQuiet onPress={() => step(timeSum)}>
+                                <StepForward />
+                              </ActionButton>
+                              <ActionButton isQuiet onPress={fastForward}>
+                                <FastForward />
+                              </ActionButton>
+                            </div>
+                            <CountOut>{`${
+                              timeTotal! > 24
+                                ? ((timeTotal! / 24) | 0) + ':' + ('00' + (timeTotal! % 24)).slice(-2)
+                                : ('00' + timeTotal).slice(-2)
+                            }`}</CountOut>
+                          </PreviewHeader>
+                        </Flex>
+                      </>
                     );
                   })}
             </>
           );
         })}
-      <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-        <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
-          <CountIn>{`${
-            frame! > 24
-              ? ((frame! / 24) | 0) + ':' + ('00' + (Math.round(frame!) % 24)).slice(-2)
-              : ('00' + Math.round(frame)).slice(-2)
-          }`}</CountIn>
-          <div>
-            <ActionButton isQuiet onPress={rewind}>
-              <Rewind />
-            </ActionButton>
-            <ActionButton isQuiet>
-              <StepBackward />
-            </ActionButton>
-            <ActionButton isQuiet onPress={isPlay ? stop : start}>
-              {isPlay ? <Pause /> : <Play />}
-            </ActionButton>
-            <ActionButton isQuiet>
-              <StepForward />
-            </ActionButton>
-            <ActionButton isQuiet onPress={fastForward}>
-              <FastForward />
-            </ActionButton>
-          </div>
-          <CountOut>{`${
-            timeTotal! > 24
-              ? ((timeTotal! / 24) | 0) + ':' + ('00' + (timeTotal! % 24)).slice(-2)
-              : ('00' + timeTotal).slice(-2)
-          }`}</CountOut>
-        </PreviewHeader>
-      </Flex>
     </>
   );
 });
