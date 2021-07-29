@@ -6,6 +6,7 @@ import { ToolGroup } from 'ToolGroup';
 import { Header } from 'Header';
 import { Panels } from 'Panels';
 import { Conte } from 'Conte';
+import { Preview } from 'Preview';
 
 const BackGround = styled.div`
   width: 100%;
@@ -56,6 +57,9 @@ const App: React.FC = () => {
       <View gridArea="content">
         <div style={{ display: `${mode === 'Edit' ? 'block' : 'none'}` }}>
           <Conte />
+        </div>
+        <div style={{ display: `${mode === 'Preview' ? 'block' : 'none'}` }}>
+          <Preview />
         </div>
       </View>
     </GlobalGrid>
