@@ -232,19 +232,19 @@ export const Preview: React.FC = React.memo(() => {
                             }`}</CountIn>
                             <div>
                               <ActionButton isQuiet onPress={rewind}>
-                                <Rewind />
+                                <Rewind size="M" />
                               </ActionButton>
                               <ActionButton isQuiet onPress={() => step(prePreTimeSum)}>
-                                <StepBackward />
+                                <StepBackward size="M" />
                               </ActionButton>
                               <ActionButton isQuiet onPress={isPlay ? stop : start}>
-                                {isPlay ? <Pause /> : <Play />}
+                                {isPlay ? <Pause size="M" /> : <Play size="M" />}
                               </ActionButton>
                               <ActionButton isQuiet onPress={() => step(timeSum)}>
-                                <StepForward />
+                                <StepForward size="M" />
                               </ActionButton>
                               <ActionButton isQuiet onPress={fastForward}>
-                                <FastForward />
+                                <FastForward size="M" />
                               </ActionButton>
                             </div>
                             <CountOut>{`${
