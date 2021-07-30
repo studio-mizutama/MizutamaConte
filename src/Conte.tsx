@@ -141,6 +141,24 @@ const CutContainer: React.FC = () => {
     f();
   }, [globalCuts, globalPsds, setCuts]);
 
+  useEffect(() => {
+    api &&
+      cuts?.map((cut, index) => {
+        cut.picture?.children
+          ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
+          .map((child: Layer) => {
+            const element = document.getElementById(`CC${index + 1}PP${child.name}`) || document.createElement('div');
+            const canvas = child.canvas || document.createElement('canvas');
+            canvas.style.width = `${canvas.width * 0.12}px`;
+            element.innerHTML = '';
+            element.style.backgroundColor = '#FFF';
+            element.appendChild(canvas);
+            return 0;
+          });
+        return 0;
+      });
+  }, [cuts]);
+
   return (
     <>
       {!api && cuts?.length > 1 && !cuts[1]?.picture && (
@@ -189,15 +207,26 @@ const CutContainer: React.FC = () => {
                             style={{
                               height: `${child.canvas && child.canvas.height * 0.12}px`,
                               width: `${child.canvas && child.canvas.width * 0.12}px`,
-                              backgroundColor: '#fff',
                               position: 'relative',
                             }}
                           >
-                            <img
-                              style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
-                              src={src}
-                              alt="cut"
-                            />
+                            <div
+                              style={{
+                                height: `${child.canvas && child.canvas.height * 0.12}px`,
+                                width: `${child.canvas && child.canvas.width * 0.12}px`,
+                                position: 'relative',
+                                background: `${api ? 'none' : '#FFF'}`,
+                              }}
+                              id={`CC${index + 1}PP${child.name}`}
+                            >
+                              {!api && (
+                                <img
+                                  style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
+                                  src={src}
+                                  alt="cut"
+                                />
+                              )}
+                            </div>
                             {cut.cameraWork && (
                               <>
                                 <In

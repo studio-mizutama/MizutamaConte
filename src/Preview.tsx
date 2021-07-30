@@ -135,18 +135,20 @@ export const Preview: React.FC = React.memo(() => {
     cuts?.length > 1 &&
       cuts.map((cut, index) => {
         const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-        const pictureNumber = cut.picture?.children.length - 1;
-        const time = cut?.time || 0;
-        const pictureShowDuration = time / pictureNumber;
+        const pictureNumber = cut.picture?.children && cut.picture?.children.length - 1;
+        const time = cut.time || 0;
+        const pictureShowDuration = cut.time && cut.time / pictureNumber;
         const scaleIn = cut.cameraWork?.scale?.in || 1;
         const scaleOut = cut.cameraWork?.scale?.out || 1;
         const currentFrame = frame - preTimeSum || 1;
         const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
         const fadeInDuration = cut.action?.fadeInDuration || 0;
         const fadeOutDuration = cut.action?.fadeOutDuration || 0;
+        const fadeOutTime = time - fadeOutDuration;
         const setOpacity = (currentFrame: number): number => {
           if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
-          if (time - fadeOutDuration <= currentFrame && currentFrame <= time) return 1 - currentFrame / fadeOutDuration;
+          if (time - fadeOutDuration <= currentFrame && currentFrame <= time)
+            return 1 - (currentFrame - fadeOutTime) / fadeOutDuration;
           return 1;
         };
         const opacity = setOpacity(currentFrame);
@@ -180,13 +182,13 @@ export const Preview: React.FC = React.memo(() => {
   return (
     <>
       {!api && cuts?.length > 1 && !cuts[1]?.picture && (
-        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+        <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
           <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
           <Heading>Now Loading...</Heading>
         </Flex>
       )}
       {api && cuts?.length === 1 && (
-        <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
+        <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
           <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
           <Heading>Now Loading...</Heading>
         </Flex>
@@ -196,7 +198,7 @@ export const Preview: React.FC = React.memo(() => {
           const prePreTimeSum = cuts.slice(0, index - 1).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
           const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0) || timeTotal || 0;
-          const pictureNumber = cut.picture?.children.length - 1;
+          const pictureNumber = cut.picture?.children && cut.picture?.children.length - 1;
           const time = cut?.time || 0;
           const pictureShowDuration = time / pictureNumber;
           const scaleIn = cut.cameraWork?.scale?.in || 1;
@@ -211,10 +213,11 @@ export const Preview: React.FC = React.memo(() => {
           const posY = yOut - ((yOut - yIn) * currentFrame) / time;
           const fadeInDuration = cut.action?.fadeInDuration || 0;
           const fadeOutDuration = cut.action?.fadeOutDuration || 0;
+          const fadeOutTime = time - fadeOutDuration;
           const setOpacity = (currentFrame: number): number => {
             if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
             if (time - fadeOutDuration <= currentFrame && currentFrame <= time)
-              return 1 - currentFrame / fadeOutDuration;
+              return 1 - (currentFrame - fadeOutTime) / fadeOutDuration;
             return 1;
           };
           const opacity =
