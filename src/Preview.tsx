@@ -90,12 +90,16 @@ export const Preview: React.FC = React.memo(() => {
     const loop = () => {
       animationRef.current = requestAnimationFrame(loop);
       const playFrame = (getTime() - timeRef.current) / (1000 / fps);
-
+      if (!timeTotal) return;
+      if (frame >= timeTotal - 1) {
+        cancelAnimationFrame(animationRef.current);
+        setIsPlay(false);
+      }
       setFrame(frame + playFrame);
     };
     loop();
     setIsPlay(true);
-  }, [frame, now]);
+  }, [frame, now, timeTotal]);
 
   useEffect(() => {
     const f = async () => {
@@ -125,7 +129,53 @@ export const Preview: React.FC = React.memo(() => {
       setCuts(cuts);
     };
     f();
-  }, [globalCuts, globalPsds, setCuts]);
+  }, [globalCuts, globalPsds]);
+
+  useEffect(() => {
+    cuts?.length > 1 &&
+      cuts.map((cut, index) => {
+        const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+        const pictureNumber = cut.picture?.children.length - 1;
+        const time = cut?.time || 0;
+        const pictureShowDuration = time / pictureNumber;
+        const scaleIn = cut.cameraWork?.scale?.in || 1;
+        const scaleOut = cut.cameraWork?.scale?.out || 1;
+        const currentFrame = frame - preTimeSum || 1;
+        const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
+        const fadeInDuration = cut.action?.fadeInDuration || 0;
+        const fadeOutDuration = cut.action?.fadeOutDuration || 0;
+        const setOpacity = (currentFrame: number): number => {
+          if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
+          if (time - fadeOutDuration <= currentFrame && currentFrame <= time) return 1 - currentFrame / fadeOutDuration;
+          return 1;
+        };
+        const opacity = setOpacity(currentFrame);
+        cut.picture?.children
+          ?.filter((child: Psd['children'], layerindex: number) =>
+            pictureShowDuration
+              ? layerindex === Math.trunc(((frame - preTimeSum) / pictureShowDuration) | 0) + 1
+              : layerindex === 1,
+          )
+          .map((child: Layer) => {
+            const element = document.getElementById(`c${index + 1}p${child.name}`) || document.createElement('div');
+            const canvas = child.canvas || document.createElement('canvas');
+            canvas.style.width = `${(canvas.width * ratio) / scale}px`;
+            canvas.style.opacity = opacity.toString();
+            element.innerHTML = '';
+            element.appendChild(canvas);
+            return 0;
+          });
+        return 0;
+      });
+  }, [cuts, frame, ratio]);
+
+  useEffect(() => {
+    if (!timeTotal) return;
+    if (frame >= timeTotal - 1) {
+      cancelAnimationFrame(animationRef.current);
+      setIsPlay(false);
+    }
+  }, [frame, timeTotal]);
 
   return (
     <>
@@ -145,19 +195,30 @@ export const Preview: React.FC = React.memo(() => {
         cuts.map((cut, index) => {
           const prePreTimeSum = cuts.slice(0, index - 1).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
           const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-          const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0) || timeTotal;
+          const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0) || timeTotal || 0;
           const pictureNumber = cut.picture?.children.length - 1;
-          const pictureShowDuration = cut?.time && cut?.time / pictureNumber;
-          const scaleOut = cut.cameraWork?.scale?.in || 1;
-          const scaleIn = cut.cameraWork?.scale?.out || 1;
+          const time = cut?.time || 0;
+          const pictureShowDuration = time / pictureNumber;
+          const scaleIn = cut.cameraWork?.scale?.in || 1;
+          const scaleOut = cut.cameraWork?.scale?.out || 1;
           const currentFrame = frame - preTimeSum || 1;
-          const scale = scaleIn - (scaleIn - scaleOut) / currentFrame;
-          const xOut = cut.cameraWork?.position?.in.x || 0;
-          const xIn = cut.cameraWork?.position?.out.x || 0;
-          const yIn = cut.cameraWork?.position?.in.y || 0;
-          const yOut = cut.cameraWork?.position?.out.y || 0;
-          const posX = xIn - (xIn - xOut) / currentFrame;
-          const posY = yOut - (yOut - yIn) / currentFrame;
+          const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
+          const xIn = cut.cameraWork?.position?.in.x || 0;
+          const xOut = cut.cameraWork?.position?.out.x || 0;
+          const yOut = cut.cameraWork?.position?.in.y || 0;
+          const yIn = cut.cameraWork?.position?.out.y || 0;
+          const posX = xIn - ((xIn - xOut) * currentFrame) / time;
+          const posY = yOut - ((yOut - yIn) * currentFrame) / time;
+          const fadeInDuration = cut.action?.fadeInDuration || 0;
+          const fadeOutDuration = cut.action?.fadeOutDuration || 0;
+          const setOpacity = (currentFrame: number): number => {
+            if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
+            if (time - fadeOutDuration <= currentFrame && currentFrame <= time)
+              return 1 - currentFrame / fadeOutDuration;
+            return 1;
+          };
+          const opacity =
+            cut.action?.fadeIn === 'Black In' || cut.action?.fadeOut === 'Black Out' ? setOpacity(currentFrame) : 1;
 
           return (
             <>
@@ -172,7 +233,7 @@ export const Preview: React.FC = React.memo(() => {
                       : layerindex === 1,
                   )
                   .map((child: Layer) => {
-                    const src = child.canvas?.toDataURL('image/jxss', 1);
+                    //const src = child.canvas?.toDataURL('image/jxss', 1);
                     return (
                       <>
                         <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
@@ -203,6 +264,7 @@ export const Preview: React.FC = React.memo(() => {
                                 height: `${child.canvas && (child.canvas.height * ratio) / scale}px`,
                                 width: `${child.canvas && (child.canvas.width * ratio) / scale}px`,
                                 backgroundColor: '#fff',
+                                opacity: `${opacity}`,
                                 position: 'relative',
                                 bottom: `${
                                   child.canvas && (child.canvas.height * ratio - 1080 * ratio * (scale - posY)) / 2
@@ -211,16 +273,8 @@ export const Preview: React.FC = React.memo(() => {
                                   child.canvas && (child.canvas.width * ratio - 1920 * ratio * (scale - posX)) / 2
                                 }px`,
                               }}
-                            >
-                              <img
-                                style={{
-                                  transform: `scale(${ratio / scale})`,
-                                  transformOrigin: 'left top',
-                                }}
-                                src={src}
-                                alt="cut"
-                              />
-                            </div>
+                              id={`c${index + 1}p${child.name}`}
+                            ></div>
                           </div>
                         </Flex>
                         <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
