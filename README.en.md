@@ -1,11 +1,12 @@
-Mizutama Conteにようこそ。
-Please refer to [here](README_en.md) for English readme file.
+Welcome to MizutamaConte by Studio Mizutama.
+日本語版READMEは[こちら](README.md)
 
 # Mizutama Conte [\[Demo Site\]](https://studio-mizutama.github.io/MizutamaConte/)
 
 ![screenshot](./screenshot.png)
 
-React + Electron製の絵コンテエディタ&ビューアです。現在はビューアとしての機能のみ実装済みです。
+This is the storyboard management app build with React + Electron.
+Currently only viewer part is available.
 
 ## Usage
 
@@ -35,17 +36,17 @@ $ yarn deploy
 
 ## Feature
 
-- [x] 絵コンテファイル表示
-- [ ] ファイル編集・保存・上書き保存
-- [ ] 新規プロジェクト作成
-- [ ] 外部ペイントアプリ連携
-- [x] ビデオコンテプレビュー
-- [ ] ビデオコンテ書き出し
-- [ ] `setting.json`ファイルによるユーザー設定カスタマイズ
+- [x] Display Storyboard file
+- [ ] Edit/Save/Overwrite
+- [ ] Open new project
+- [ ] Interact with external drawing apps
+- [x] Play the storyboard
+- [ ] Export storybord to the video
+- [ ] Setup user preference with `setting.json`
 
-## 絵コンテファイル
+## storyboard file 
 
-Mizutama Conteでは、絵コンテをJsonファイル及びPSDファイルにより管理します。
+MizutamaConte manages your storyboard with json and psd file.
 
 ```sh
 conte/
@@ -60,9 +61,9 @@ conte/
 └──   .
 ```
 
-### Jsonファイルの構成
+### json file structure
 
-[スタジオみずたま制作「君と一緒に」](https://youtu.be/sva7WjdEO7k)より
+Examle below based on [With You](https://youtu.be/sva7WjdEO7k)
 
 ```json
 [
@@ -99,8 +100,7 @@ conte/
   { "dialogue": "佑希「これできっとよかったんだ」", "time": 228 },
 ]
 ```
-
-アプリ内では`Cut`型のオブジェクトとして扱われます。
+-> Treated as a `Cut` type object. 
 
 ```ts
 interface Cut {
@@ -125,31 +125,32 @@ interface CameraWork {
 }
 ```
 
-`Psd`型は、[ag-psd](https://github.com/Agamnentzar/ag-psd)を利用しています。
+`Psd` type uses [ag-psd](https://github.com/Agamnentzar/ag-psd)
 
-### PSDファイルの構成
+### psd file structure
 
 ![samplepsd](./samplepsd.png)
 
-#### キャンバスサイズ
-実際のアニメと同じサイズで作ります。(1920 * 1080等)
+#### canvas size
+Will be set as the same size with actual Anime e.g. 1920\*1080
 
-#### レイヤー構成
-- 最下層に背景レイヤーを置きます。
-- 同一カット内に複数コマがある場合、時系列順に上から並べます。
-- 1コマにつき1レイヤーとします。（将来的に1コマ1グループに変更予定）
-- レイヤー名は任意です。
-- 非表示レイヤーも読み込まれます。
+#### Layer structure
+- Place the background layer at the bottom
+- If there are multiple frames in the same cut, place them according to the time series
+- Assuming there is one layer per each frames (will enhance the feature as one group per each frames in our future update)
+- Layer name is variable
+- Hidden layes will also be fetched
 
-### コンテファイルのサンプル
+### Sample storyboard file
 
-サンプルファイルを以下のリンクよりダウンロードできます。
+Samples are available for download from below link.
 
 **This sample is NOT under MIT License. ©︎ 2020 Studio Mizutama All Rights Reserved.**
 
 [Google Drive](https://drive.google.com/drive/folders/11lSAHkNsDDrYayZGV87AM5X9dPsFVYGa?usp=sharing)
 
-Electron版では`File -> Open` `(Cmd or Ctrl + O)`、[Web版](https://studio-mizutama.github.io/MizutamaConte/)では左上のフォルダアイコンをクリックし、ダウンロードしたサンプルをフォルダごと選択してください。
+In Electron edition, navigate to `File -> Open` `(Cmd or Ctrl + O)`
+In [Web Edition](https://studio-mizutama.github.io/MizutamaConte/), click the folder icon in upper left corner and select the folder contains the sample. 
 
 ## Many thanks to
 
