@@ -246,7 +246,7 @@ export const Preview: React.FC = React.memo(() => {
                                 ? ((preTimeSum! / 24) | 0) + ':' + ('00' + (preTimeSum! % 24)).slice(-2)
                                 : ('00' + preTimeSum).slice(-2)
                             }`}</CountIn>
-                            <Heading>{('Cut00' + (index + 1)).slice(-6)}</Heading>
+                            <Heading>{`Cut${('00' + (index + 1)).slice(-3)}`}</Heading>
                             <CountOut>{`${
                               timeSum! > 24
                                 ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
