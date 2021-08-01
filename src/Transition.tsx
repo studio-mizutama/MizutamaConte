@@ -22,7 +22,7 @@ export const Transition: React.FC = () => {
             <Text>Cross</Text>
           </Item>
         </Picker>
-        <Slider label="Duration" maxValue={480} value={cut.action?.fadeInDuration} width="100%" />
+        <Slider label="Duration" maxValue={480} value={cut.action?.fadeInDuration} width="256px" />
         <LabelLL>Fade Out</LabelLL>
         <Picker width="184px" selectedKey={cut.action?.fadeOut} defaultSelectedKey="None">
           <Item key="None">
@@ -38,7 +38,7 @@ export const Transition: React.FC = () => {
             <Text>Cross</Text>
           </Item>
         </Picker>
-        <Slider label="Duration" maxValue={480} value={cut.action?.fadeOutDuration} width="100%" />
+        <Slider label="Duration" maxValue={480} value={cut.action?.fadeOutDuration} width="256px" />
       </Flex>
     </>
   );

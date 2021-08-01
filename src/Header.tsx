@@ -160,21 +160,20 @@ export const Header: React.FC = () => {
     loadJSON.then((result) => setCuts(JSON.parse(result)));
   };
 
+  useEffect(() => {
+    const inputDirectory = document.getElementById('inputDirectory');
+    inputDirectory && inputDirectory.setAttribute('webkitdirectory', '');
+    inputDirectory && inputDirectory.setAttribute('directory', '');
+    inputDirectory && inputDirectory.setAttribute('multiple', '');
+  }, []);
+
   return (
     <DragArea>
       <HeaderLeft>
         {!api && (
           <ActionButton isQuiet onPress={() => document.getElementById('inputDirectory')?.click()}>
             <FolderOpenOutline />
-            <input
-              type="file"
-              style={{ display: 'none' }}
-              id="inputDirectory"
-              /* @ts-expect-error */
-              directory=""
-              webkitdirectory=""
-              onChange={loadFile}
-            />
+            <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
           </ActionButton>
         )}
         <ActionButton isQuiet marginX="size-200">

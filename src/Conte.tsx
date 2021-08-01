@@ -186,7 +186,7 @@ const CutContainer: React.FC = () => {
                 onMouseLeave={() => document.getElementById(`List${index + 1}`)?.classList.remove('isHover')}
               >
                 <Grid
-                  columns={['size-900', 'size-3600', 'auto', 'auto', 'size-1600']}
+                  columns={['72px', '288px', 'auto', 'auto', '128px']}
                   areas={['cut picture action dialogue time']}
                   gap="size-200"
                   height="auto"
@@ -292,12 +292,7 @@ const CutContainer: React.FC = () => {
 export const Conte: React.FC = React.memo(() => {
   return (
     <>
-      <Grid
-        columns={['size-900', 'size-3600', 'auto', 'auto', 'size-1600']}
-        rows={['size-500']}
-        height="size-500"
-        gap="size-200"
-      >
+      <Grid columns={['72px', '288px', 'auto', 'auto', '128px']} rows={['size-500']} height="size-500" gap="size-200">
         <Heading alignSelf="center" justifySelf="center">
           CUT
         </Heading>
