@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "author": "Studio Mizutama",
   "description": "Easy tool for creating econte.",
-  "homepage": "https://studio-mizutama.github.io/MizutamaConte/",
+  "homepage": "./",
   "main": "build/electron/main.js",
   "private": true,
   "license": "MIT",
@@ -35,13 +35,15 @@
     "build": "react-scripts build",
     "deploy": "yarn build && gh-pages -d build",
     "test": "react-scripts test",
-    "post": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps",
     "electron:dev": "concurrently \"cross-env BROWSER=none yarn start\" \"wait-on http://localhost:3000 && tsc -p electron -w\" \"wait-on http://localhost:3000 && tsc -p electron && electron .\"",
-    "electron:build": "yarn build && tsc -p electron && electron-builder",
+    "electron:build": "yarn build && tsc -p electron && electron-builder --dir",
     "eject": "react-scripts eject"
   },
   "build": {
     "extends": null,
+    "appId": "net.studio-mizutama.mizutama-conte",
+    "productName": "Mizutama Conte",
     "files": [
       "build/**/*"
     ],
