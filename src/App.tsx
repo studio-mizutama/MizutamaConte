@@ -58,7 +58,7 @@ const App: React.FC = () => {
         <div style={{ display: `${mode === 'Edit' ? 'block' : 'none'}` }}>
           <Conte />
         </div>
-        <div style={{ display: `${mode === 'Preview' ? 'block' : 'none'}` }}>
+        <div style={{ display: `${mode === 'Preview' ? 'block' : 'none'}`, height: '100%' }}>
           <Preview />
         </div>
       </View>
