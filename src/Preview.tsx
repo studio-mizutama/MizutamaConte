@@ -60,7 +60,7 @@ export const Preview: React.FC = React.memo(() => {
   const now = window.performance && performance.now;
   const fps = 24;
 
-  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0);
+  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
 
   const animationRef: React.MutableRefObject<number> = useRef(0);
   const timeRef: React.MutableRefObject<number> = useRef(0);
@@ -336,7 +336,7 @@ export const Preview: React.FC = React.memo(() => {
           gap="size-20"
           position="relative"
         >
-          <Timeline frame={frame}></Timeline>
+          <Timeline frame={frame} timeTotal={timeTotal} setFrame={setFrame}></Timeline>
         </Flex>
       </>
     </Flex>

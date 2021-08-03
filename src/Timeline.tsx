@@ -1,4 +1,4 @@
-import React, { useGlobal, useState, useEffect, useMemo } from 'reactn';
+import React, { useGlobal, useState, useEffect } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { readPsd, Psd, Layer } from 'ag-psd';
@@ -37,15 +37,7 @@ const Scale = styled.div`
 const ScaleNumber = styled.div`
   height: 16px;
   position: absolute;
-`;
-
-const Bar = styled.div`
-  height: 288px;
-  border-right: 2px solid var(--spectrum-semantic-negative-color-border);
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 3;
+  top: 16px;
 `;
 
 const TimelineContainer: React.FC = React.memo(() => {
@@ -127,7 +119,7 @@ const TimelineContainer: React.FC = React.memo(() => {
         {range(0, timeTotal)
           .filter((n) => n % 12 === 0)
           .map((n) => (
-            <Scale style={{ left: `${n * 2}px`, top: '16px', width: '24px' }} />
+            <Scale style={{ left: `${n * 2}px`, top: '32px', width: '24px' }} />
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
@@ -149,7 +141,7 @@ const TimelineContainer: React.FC = React.memo(() => {
             const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
             const time = cut?.time || 0;
             return (
-              <CutArea style={{ left: `${preTimeSum * 2}px`, top: '24px', width: `${time * 2}px`, overflow: 'hidden' }}>
+              <CutArea style={{ left: `${preTimeSum * 2}px`, top: '40px', width: `${time * 2}px`, overflow: 'hidden' }}>
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                   .map((child: Layer) => {
@@ -197,19 +189,48 @@ const TimelineContainer: React.FC = React.memo(() => {
   );
 });
 
-export const Timeline: React.FC<{ frame: number }> = React.memo(({ frame }) => {
-  const frame2 = useMemo(() => {
-    return `${frame * 2}px`;
-  }, [frame]);
+const Slide = styled.input`
+  position: absolute;
+  z-index: 3;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  height: 16px;
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    top: 0;
+    background: var(--spectrum-semantic-negative-color-border);
+    width: 2px;
+    height: 574px;
+  }
+`;
 
-  useEffect(() => {
-    const bar = document.getElementById('bar') || document.createElement('div');
-    bar.style.left = frame2;
-  }, [frame2]);
+export const Timeline: React.FC<{
+  frame: number;
+  timeTotal: number;
+  setFrame: React.Dispatch<React.SetStateAction<number>>;
+}> = React.memo(({ frame, timeTotal, setFrame }) => {
+  const setCurrentFrame = () => {
+    const slide: HTMLInputElement =
+      (document.getElementById('slide') as HTMLInputElement) || document.createElement('input');
+    setFrame(Number.parseInt(slide.value));
+  };
+
   return (
     <ToolArea>
       <TimelineContainer />
-      <Bar id="bar" />
+      <Slide
+        type="range"
+        id="slide"
+        value={frame}
+        min="0"
+        max={timeTotal}
+        onChange={setCurrentFrame}
+        style={{ width: `${timeTotal * 2}px` }}
+      />
     </ToolArea>
   );
 });
