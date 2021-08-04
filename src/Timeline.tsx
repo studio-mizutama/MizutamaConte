@@ -40,7 +40,7 @@ const ScaleNumber = styled.div`
   top: 16px;
 `;
 
-const TimelineContainer: React.FC = React.memo(() => {
+const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) => {
   const prtPsd: Psd = { width: 1, height: 1 };
   const prtCut: Cut = {
     picture: prtPsd,
@@ -108,18 +108,23 @@ const TimelineContainer: React.FC = React.memo(() => {
     <>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % 120 === 0)
+          .filter((n) => n % (240 / scale) === 0)
           .map((n) => (
-            <ScaleNumber style={{ left: `${n * 2}px` }}>
-              {n > 24 ? n / 24 + ':' + ('00' + (n % 24)).slice(-2) : ('00' + n).slice(-2)}
+            <ScaleNumber style={{ left: `${n * scale + 2}px` }}>
+              {n > 24 ? ((n / 24) | 0) + ':' + ('00' + (n % 24)).slice(-2) : ('00' + n).slice(-2)}
             </ScaleNumber>
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % 12 === 0)
+          .filter((n) => n % ((24 / scale) | 0) === 0)
           .map((n) => (
-            <Scale style={{ left: `${n * 2}px`, top: '32px', width: '24px' }} />
+            <Scale style={{ left: `${n * scale}px`, top: '32px', width: '24px' }} />
+          ))}
+        {range(0, timeTotal)
+          .filter((n) => n % (240 / scale) === 0)
+          .map((n) => (
+            <Scale style={{ left: `${n * scale}px`, top: '24px', width: '24px' }} />
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
@@ -141,7 +146,9 @@ const TimelineContainer: React.FC = React.memo(() => {
             const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
             const time = cut?.time || 0;
             return (
-              <CutArea style={{ left: `${preTimeSum * 2}px`, top: '40px', width: `${time * 2}px`, overflow: 'hidden' }}>
+              <CutArea
+                style={{ left: `${preTimeSum * scale}px`, top: '40px', width: `${time * scale}px`, overflow: 'hidden' }}
+              >
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                   .map((child: Layer) => {
@@ -219,9 +226,11 @@ export const Timeline: React.FC<{
     setFrame(Number.parseInt(slide.value));
   };
 
+  const scale = 2;
+
   return (
     <ToolArea>
-      <TimelineContainer />
+      <TimelineContainer scale={scale} />
       <Slide
         type="range"
         id="slide"
@@ -229,7 +238,7 @@ export const Timeline: React.FC<{
         min="0"
         max={timeTotal}
         onChange={setCurrentFrame}
-        style={{ width: `${timeTotal * 2}px` }}
+        style={{ width: `${timeTotal * scale}px` }}
       />
     </ToolArea>
   );
