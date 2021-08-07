@@ -110,7 +110,7 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
         {range(0, timeTotal)
           .filter((n) => n % (240 / scale) === 0)
           .map((n) => (
-            <ScaleNumber style={{ left: `${n * scale + 2}px` }}>
+            <ScaleNumber key={n} style={{ left: `${n * scale + 2}px` }}>
               {n > 24 ? ((n / 24) | 0) + ':' + ('00' + (n % 24)).slice(-2) : ('00' + n).slice(-2)}
             </ScaleNumber>
           ))}
@@ -119,12 +119,12 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
         {range(0, timeTotal)
           .filter((n) => n % ((24 / scale) | 0) === 0)
           .map((n) => (
-            <Scale style={{ left: `${n * scale}px`, top: '32px', width: '24px' }} />
+            <Scale key={n} style={{ left: `${n * scale}px`, top: '32px', width: '24px' }} />
           ))}
         {range(0, timeTotal)
           .filter((n) => n % (240 / scale) === 0)
           .map((n) => (
-            <Scale style={{ left: `${n * scale}px`, top: '24px', width: '24px' }} />
+            <Scale key={n} style={{ left: `${n * scale}px`, top: '24px', width: '24px' }} />
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
@@ -148,39 +148,39 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
             return (
               <CutArea
                 style={{ left: `${preTimeSum * scale}px`, top: '40px', width: `${time * scale}px`, overflow: 'hidden' }}
+                key={index}
               >
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                   .map((child: Layer) => {
                     const src = child.canvas?.toDataURL('image/png', 0.4);
                     return (
-                      <>
+                      <div
+                        style={{
+                          height: `${child.canvas && child.canvas.height * 0.12}px`,
+                          width: `${child.canvas && child.canvas.width * 0.12}px`,
+                          position: 'relative',
+                        }}
+                        key={`CCC${index + 1}PPP${child.name}`}
+                      >
                         <div
                           style={{
                             height: `${child.canvas && child.canvas.height * 0.12}px`,
                             width: `${child.canvas && child.canvas.width * 0.12}px`,
                             position: 'relative',
+                            background: `${api ? 'none' : '#FFF'}`,
                           }}
+                          id={`CCC${index + 1}PPP${child.name}`}
                         >
-                          <div
-                            style={{
-                              height: `${child.canvas && child.canvas.height * 0.12}px`,
-                              width: `${child.canvas && child.canvas.width * 0.12}px`,
-                              position: 'relative',
-                              background: `${api ? 'none' : '#FFF'}`,
-                            }}
-                            id={`CCC${index + 1}PPP${child.name}`}
-                          >
-                            {!api && (
-                              <img
-                                style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
-                                src={src}
-                                alt="cut"
-                              />
-                            )}
-                          </div>
+                          {!api && (
+                            <img
+                              style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
+                              src={src}
+                              alt="cut"
+                            />
+                          )}
                         </div>
-                      </>
+                      </div>
                     );
                   })}
                 <CutNumber>

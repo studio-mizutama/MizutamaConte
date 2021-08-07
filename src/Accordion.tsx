@@ -33,7 +33,7 @@ export const Accordion: React.FC<{ labelName: string }> = ({ labelName, children
   const [toggle, setToggle] = useState(false);
   return (
     <>
-      <Toggle type="checkbox" id={labelName} checked={toggle} onClick={() => setToggle(!toggle)} />
+      <Toggle type="checkbox" id={labelName} checked={toggle} onChange={() => setToggle(!toggle)} />
 
       <Label labelFor={labelName}>
         <Flex direction="row" gap="size-100" alignItems="center">

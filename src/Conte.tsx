@@ -177,7 +177,7 @@ const CutContainer: React.FC = () => {
         cuts.map((cut, index) => {
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
           return (
-            <View backgroundColor="gray-100">
+            <View backgroundColor="gray-100" key={index}>
               <div
                 className={'hover'}
                 id={`Cut${index + 1}`}
@@ -209,6 +209,7 @@ const CutContainer: React.FC = () => {
                               width: `${child.canvas && child.canvas.width * 0.12}px`,
                               position: 'relative',
                             }}
+                            key={`CC${index + 1}PP${child.name}`}
                           >
                             <div
                               style={{

@@ -248,7 +248,7 @@ export const Preview: React.FC = React.memo(() => {
                     .map((child: Layer) => {
                       //const src = child.canvas?.toDataURL('image/jxss', 1);
                       return (
-                        <>
+                        <div key={`c${index + 1}p${child.name}`}>
                           <Flex direction="column" alignItems="center" margin="size-0">
                             <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
                               <CountIn>{`${
@@ -321,7 +321,7 @@ export const Preview: React.FC = React.memo(() => {
                               }`}</CountOut>
                             </PreviewHeader>
                           </Flex>
-                        </>
+                        </div>
                       );
                     })}
               </>

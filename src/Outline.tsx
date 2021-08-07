@@ -47,6 +47,7 @@ export const Outline: React.FC = () => {
             <List
               onClick={() => setCut(cut)}
               id={`List${index + 1}`}
+              key={index}
               onMouseEnter={() => document.getElementById(`Cut${index + 1}`)?.classList.add('isHover')}
               onMouseLeave={() => document.getElementById(`Cut${index + 1}`)?.classList.remove('isHover')}
             >
