@@ -1,7 +1,7 @@
-import React, { useGlobal, useState, useEffect, useCallback, useRef } from 'reactn';
+import React, { useState, useEffect, useCallback, useRef } from 'reactn';
 import { ActionButton, Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import { readPsd, Psd, Layer } from 'ag-psd';
+import { Psd, Layer } from 'ag-psd';
 import Rewind from '@spectrum-icons/workflow/Rewind';
 import StepBackward from '@spectrum-icons/workflow/StepBackward';
 import Play from '@spectrum-icons/workflow/Play';
@@ -9,6 +9,7 @@ import Pause from '@spectrum-icons/workflow/Pause';
 import StepForward from '@spectrum-icons/workflow/StepForward';
 import FastForward from '@spectrum-icons/workflow/FastForward';
 import { Timeline } from 'Timeline';
+import { usePsd } from 'hooks/usePsd';
 
 const { api } = window;
 
@@ -37,9 +38,7 @@ export const Preview: React.FC = React.memo(() => {
   const prtCut: Cut = {
     picture: prtPsd,
   };
-  const [cuts, setCuts] = useState([prtCut]);
-  const globalCuts = useGlobal('globalCuts')[0];
-  const globalPsds = useGlobal('globalPsds')[0];
+  const cuts = usePsd(prtCut);
 
   const [frame, setFrame] = useState(0);
   const [isPlay, setIsPlay] = useState(false);
@@ -109,36 +108,6 @@ export const Preview: React.FC = React.memo(() => {
     loop();
     setIsPlay(true);
   }, [frame, now, timeTotal]);
-
-  useEffect(() => {
-    const f = async () => {
-      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
-        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
-        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
-      };
-      if (!api) {
-        const psds = globalPsds;
-        const cutsWithNoPicture: Cut[] = globalCuts;
-        const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-          return { picture: psd };
-        });
-        const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-        setCuts(cuts);
-        return;
-      }
-      const psdfiles = await api.loadPSD();
-      const json = await api.loadJSON();
-      const psds = psdfiles?.map((psdfile) => readPsd(psdfile));
-      const cutsWithNoPicture: Cut[] = json;
-      const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-        return { picture: psd };
-      });
-
-      const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-      setCuts(cuts);
-    };
-    f();
-  }, [globalCuts, globalPsds]);
 
   useEffect(() => {
     cuts?.length > 1 &&

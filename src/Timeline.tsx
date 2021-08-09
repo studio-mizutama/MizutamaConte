@@ -1,7 +1,8 @@
-import React, { useGlobal, useState, useEffect } from 'reactn';
+import React, { useState, useEffect } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import { readPsd, Psd, Layer } from 'ag-psd';
+import { Psd, Layer } from 'ag-psd';
+import { usePsd } from 'hooks/usePsd';
 
 const { api } = window;
 
@@ -45,43 +46,11 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
   const prtCut: Cut = {
     picture: prtPsd,
   };
-  const [cuts, setCuts] = useState([prtCut]);
-  const globalCuts = useGlobal('globalCuts')[0];
-  const globalPsds = useGlobal('globalPsds')[0];
+  const cuts = usePsd(prtCut);
 
   const [width, setWidth] = useState(window.innerWidth - 340);
 
   window.addEventListener('resize', () => setWidth(window.innerWidth - 340));
-
-  useEffect(() => {
-    const f = async () => {
-      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
-        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
-        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
-      };
-      if (!api) {
-        const psds = globalPsds;
-        const cutsWithNoPicture: Cut[] = globalCuts;
-        const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-          return { picture: psd };
-        });
-        const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-        setCuts(cuts);
-        return;
-      }
-      const psdfiles = await api.loadPSD();
-      const json = await api.loadJSON();
-      const psds = psdfiles?.map((psdfile) => readPsd(psdfile));
-      const cutsWithNoPicture: Cut[] = json;
-      const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-        return { picture: psd };
-      });
-
-      const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-      setCuts(cuts);
-    };
-    f();
-  }, [globalCuts, globalPsds, setCuts]);
 
   useEffect(() => {
     api &&
