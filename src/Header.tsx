@@ -126,7 +126,9 @@ export const Header: React.FC = () => {
     const files = Array.from(filelist);
     const psdFiles = files.filter((file) => file.name.indexOf('.psd') !== -1);
     const jsonFile = files.filter((file) => file.name.indexOf('.json') !== -1)![0];
-    psdFiles.sort((a, b) => Number.parseInt(a.name.slice(1, 4)) - Number.parseInt(b.name.slice(1, 4)));
+    const sortedPsdFiles = psdFiles
+      .slice()
+      .sort((a, b) => Number.parseInt(a.name.slice(1, 4)) - Number.parseInt(b.name.slice(1, 4)));
 
     setFileName(jsonFile.name);
 
@@ -141,7 +143,7 @@ export const Header: React.FC = () => {
 
     (async () => {
       let psds: Psd[] = [];
-      await psdFiles.reduce(async (promise, file) => {
+      await sortedPsdFiles.reduce(async (promise, file) => {
         return promise.then(async () => {
           psds.push(readPsd((await loadPSD(file)) as ArrayBuffer));
         });
