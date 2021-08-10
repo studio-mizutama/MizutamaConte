@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'reactn';
+import React, { useState, useEffect, useRef } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
@@ -16,7 +16,7 @@ const ToolArea = styled.div`
   background-color: var(--spectrum-alias-toolbar-background-color);
   height: 100%;
   width: 100%;
-  overflow-x: scroll;
+  overflow: hidden;
   position: relative;
 `;
 
@@ -197,8 +197,31 @@ export const Timeline: React.FC<{
 
   const scale = 2;
 
+  const width = timeTotal * scale;
+
+  const toolAreaRef = useRef<HTMLDivElement>(null);
+
+  const toolArea = toolAreaRef.current ?? document.createElement('div');
+
+  const [scroll, setScroll] = useState(toolArea.scrollLeft);
+
+  toolArea.addEventListener('scroll', () => {
+    setScroll(toolArea.scrollLeft);
+  });
+
+  useEffect(() => {
+    const currentPos = frame * scale - scroll;
+    console.log(scroll, currentPos, width - 24);
+    if (window.innerWidth - 364 < currentPos) {
+      toolArea.scrollBy(window.innerWidth - 364, 0);
+    }
+    if (currentPos < 0) {
+      toolArea.scrollBy(currentPos, 0);
+    }
+  }, [frame, scroll, toolArea, width]);
+
   return (
-    <ToolArea>
+    <ToolArea ref={toolAreaRef}>
       <TimelineContainer scale={scale} />
       <Slide
         type="range"
@@ -207,7 +230,7 @@ export const Timeline: React.FC<{
         min="0"
         max={timeTotal}
         onChange={setCurrentFrame}
-        style={{ width: `${timeTotal * scale}px` }}
+        style={{ width: `${width}px` }}
       />
     </ToolArea>
   );
