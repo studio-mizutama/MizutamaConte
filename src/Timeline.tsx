@@ -211,7 +211,6 @@ export const Timeline: React.FC<{
 
   useEffect(() => {
     const currentPos = frame * scale - scroll;
-    console.log(scroll, currentPos, width - 24);
     if (window.innerWidth - 364 < currentPos) {
       toolArea.scrollBy(window.innerWidth - 364, 0);
     }

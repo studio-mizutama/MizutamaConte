@@ -67,11 +67,14 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
   return (
     <>
       <View gridArea="action" width="100%" position="relative" height="auto">
-        <MyTextArea className={tool.has('Text') ? 'hover' : ''} disabled={!tool.has('Text')} onKeyDown={escKeyDown}>
-          {`${action?.fadeIn ? action?.fadeIn : ''}\n${action?.fadeInDuration ? action?.fadeInDuration : ''}\n${
+        <MyTextArea
+          className={tool.has('Text') ? 'hover' : ''}
+          disabled={!tool.has('Text')}
+          onKeyDown={escKeyDown}
+          value={`${action?.fadeIn ? action?.fadeIn : ''}\n${action?.fadeInDuration ? action?.fadeInDuration : ''}\n${
             action?.fadeOut ? action?.fadeOut : ''
           }\n${action?.fadeOutDuration ? action?.fadeOutDuration : ''}\n${action?.text ? action?.text : ''}\n`}
-        </MyTextArea>
+        />
         {action?.fadeIn && (
           <Fade viewBox="0 0 96 48" width="96px">
             <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
@@ -84,18 +87,26 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
         )}
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
-        <MyTextArea className={tool.has('Text') ? 'hover' : ''} disabled={!tool.has('Text')} onKeyDown={escKeyDown}>
-          {dialogue}
-        </MyTextArea>
+        <MyTextArea
+          className={tool.has('Text') ? 'hover' : ''}
+          disabled={!tool.has('Text')}
+          onKeyDown={escKeyDown}
+          value={dialogue}
+        />
       </View>
       <View gridArea="time" width="100%" position="relative" height="auto">
-        <MyTextArea className={tool.has('Text') ? 'hover' : ''} disabled={!tool.has('Text')} onKeyDown={escKeyDown}>
-          {`${time! > 24 ? ((time! / 24) | 0) + ':' + ('00' + (time! % 24)).slice(-2) : ('00' + time).slice(-2)}\n${
+        <MyTextArea
+          className={tool.has('Text') ? 'hover' : ''}
+          disabled={!tool.has('Text')}
+          onKeyDown={escKeyDown}
+          value={`${
+            time! > 24 ? ((time! / 24) | 0) + ':' + ('00' + (time! % 24)).slice(-2) : ('00' + time).slice(-2)
+          }\n${
             timeSum! > 24
               ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
               : ('00' + timeSum).slice(-2)
           }`}
-        </MyTextArea>
+        />
       </View>
     </>
   );

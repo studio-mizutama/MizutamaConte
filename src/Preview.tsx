@@ -203,7 +203,7 @@ export const Preview: React.FC = React.memo(() => {
               cut.action?.fadeIn === 'Black In' || cut.action?.fadeOut === 'Black Out' ? setOpacity(currentFrame) : 1;
 
             return (
-              <>
+              <div key={index}>
                 {preTimeSum !== undefined &&
                   timeSum !== undefined &&
                   preTimeSum <= frame &&
@@ -293,7 +293,7 @@ export const Preview: React.FC = React.memo(() => {
                         </div>
                       );
                     })}
-              </>
+              </div>
             );
           })}
         <Flex
