@@ -1,9 +1,8 @@
-import { app, Menu, dialog, ipcMain } from 'electron';
+import { app, Menu, dialog, ipcMain, BrowserWindow } from 'electron';
 import * as fs from 'fs';
 import { Cut } from './@types/cut';
-import { win } from './main';
 
-export const createMenu = () => {
+export const createMenu = (win: BrowserWindow) => {
   const template = [
     {
       label: 'Mizutama Conte',
@@ -25,7 +24,7 @@ export const createMenu = () => {
           label: 'Open..',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
-            openFile();
+            openFile(win);
           },
         },
       ],
@@ -47,7 +46,7 @@ export const createMenu = () => {
   Menu.setApplicationMenu(menu);
 };
 
-const openFile = () => {
+const openFile = (win: BrowserWindow) => {
   const filePaths = dialog.showOpenDialogSync({ properties: ['openDirectory'] });
   if (!filePaths) return;
   const files = fs.readdirSync(filePaths[0]);

@@ -5,24 +5,34 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import * as fs from 'fs';
 import { createMenu } from './menu';
 
-//const buffer = fs.readFileSync('conte/c001.psd');
-
-// read only document structure
-//const psd = readPsd(buffer, { skipLayerImageData: false, skipCompositeImageData: true, skipThumbnail: true });
+interface bounds {
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+}
 
 const info_path = path.join(app.getPath('userData'), 'bounds-info.json');
 
-let bounds_info: { width: number; height: number; x?: number; y?: number };
-try {
-  bounds_info = JSON.parse(fs.readFileSync(info_path, 'utf8'));
-} catch (e) {
-  bounds_info = { width: 1200, height: 800 };
-}
+const tryBoundsInfo = (width: number, height: number): bounds => {
+  try {
+    return JSON.parse(fs.readFileSync(info_path, 'utf8')) as unknown as bounds;
+  } catch (e) {
+    return {
+      width: width,
+      height: height,
+    };
+  }
+};
 
-export let win: BrowserWindow;
+const bounds_info = tryBoundsInfo(1200, 800);
+
+const frame = process.platform === 'darwin' ? true : false;
+const fullscreenable = process.platform === 'darwin' ? true : false;
+const autoHideMenuBar = process.platform === 'darwin' ? false : true;
 
 const createWindow = () => {
-  win = new BrowserWindow({
+  const win = new BrowserWindow({
     titleBarStyle: 'hiddenInset',
     width: bounds_info.width,
     height: bounds_info.height,
@@ -30,8 +40,10 @@ const createWindow = () => {
     y: bounds_info.y,
     minWidth: 1024,
     minHeight: 768,
+    frame: frame,
+    fullscreenable: fullscreenable,
+    autoHideMenuBar: autoHideMenuBar,
     webPreferences: {
-      // contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
@@ -69,6 +81,7 @@ const createWindow = () => {
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));
   });
+  createMenu(win);
 };
 
 app.whenReady().then(() => {
@@ -76,7 +89,6 @@ app.whenReady().then(() => {
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log('An error occurred: ', err));
-  createMenu();
   createWindow();
 
   app.on('activate', () => {
