@@ -14,7 +14,7 @@ import FolderOpenOutline from '@spectrum-icons/workflow/FolderOpenOutline';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 import { readPsd, Psd } from 'ag-psd';
 import { useTitle } from 'hooks/useTitle';
-import { PressEvent } from '@react-types/shared';
+import { useTitleEffects } from 'hooks/useTitleEffects';
 
 const { api } = window;
 
@@ -42,13 +42,74 @@ const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   margin-left: auto;
-  margin-right: var(--spectrum-global-dimension-size-100, var(--spectrum-alias-size-100));
+  ${window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api
+    ? `margin-right: 0;`
+    : `margin-right: var(--spectrum-global-dimension-size-100, var(--spectrum-alias-size-100));`}
   ${window.navigator.userAgent.toLowerCase().indexOf('mac') !== -1 &&
   api &&
   `&::before {
     content: '';
     padding-left: var(--spectrum-global-dimension-size-700, var(--spectrum-alias-size-700));
   }`}
+`;
+
+const WindowsButtons = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: var(--spectrum-global-dimension-size-400, var(--spectrum-alias-size-400));
+  margin-right: 0;
+  padding: 0;
+`;
+
+const Button = styled.svg`
+  padding: 0;
+  margin: 0;
+  fill: none;
+  stroke: var(--spectrum-alias-text-color);
+  path {
+    fill: none;
+    stroke: var(--spectrum-alias-text-color);
+  }
+  rect {
+    fill: none;
+    stroke: var(--spectrum-alias-text-color);
+  }
+`;
+
+const ButtonWrapper = styled.div`
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  :hover {
+    background-color: var(--spectrum-alias-highlight-hover);
+  }
+`;
+
+const CloseButtonWrapper = styled.div`
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  :hover {
+    background-color: var(--spectrum-semantic-negative-color-border);
+    margin-right: -1px;
+    border-right: 1px solid var(--spectrum-semantic-negative-color-border);
+    path {
+      fill: none;
+      stroke: var(--spectrum-global-color-static-gray-200);
+    }
+    rect {
+      fill: none;
+      stroke: var(--spectrum-global-color-static-gray-200);
+    }
+  }
 `;
 
 const Tab: React.FC = () => {
@@ -175,7 +236,7 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
-  const [maximized, setMaximized, blur] = useTitle(false, false);
+  const [maximized, setMaximized, blur, setBlur] = useTitle(false, false);
 
   const onMinimize = async () => {
     await api.minimize();
@@ -193,9 +254,11 @@ export const Header: React.FC = () => {
 
   const onClose = async () => await api.close();
 
-  const onContextMenu = (e: PressEvent) => {
+  const onContextMenu = () => {
     api.contextMenu();
   };
+
+  useTitleEffects(setMaximized, setBlur);
 
   return (
     <DragArea>
@@ -234,33 +297,41 @@ export const Header: React.FC = () => {
           </Item>
         </ActionGroup>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
-          <div className="controls">
-            <div className={blur ? 'button-container blur' : 'button-container'} onClick={onMinimize}>
-              <svg width="10" height="1" viewBox="0 0 10 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="10" height="1" fill="black" />
-              </svg>
-            </div>
+          <WindowsButtons>
+            <ActionButton isQuiet onPress={onMinimize}>
+              <ButtonWrapper>
+                <Button width="10" height="1" viewBox="0 0 10 1" fill="none" xmlns="http://www.w3.org/2000/Button">
+                  <rect width="10" height="1" />
+                </Button>
+              </ButtonWrapper>
+            </ActionButton>
             {maximized ? (
-              <div className={blur ? 'button-container blur' : 'button-container'} onClick={onRestore}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M9 1H3V2H2V1V0H3H9H10V1V7V8H9H8V7H9V1Z" fill="black" />
-                  <rect x="0.5" y="2.5" width="7" height="7" stroke="black" />
-                </svg>
-              </div>
+              <ActionButton isQuiet onPress={onRestore}>
+                <ButtonWrapper>
+                  <Button width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/Button">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M9 1H3V2H2V1V0H3H9H10V1V7V8H9H8V7H9V1Z" />
+                    <rect x="0.5" y="2.5" width="7" height="7" />
+                  </Button>
+                </ButtonWrapper>
+              </ActionButton>
             ) : (
-              <div className={blur ? 'button-container blur' : 'button-container'} onClick={onMaximize}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="0.5" y="0.5" width="9" height="9" stroke="black" />
-                </svg>
-              </div>
+              <ActionButton isQuiet onPress={onMaximize}>
+                <ButtonWrapper>
+                  <Button width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/Button">
+                    <rect x="0.5" y="0.5" width="9" height="9" />
+                  </Button>
+                </ButtonWrapper>
+              </ActionButton>
             )}
-            <div className={blur ? 'button-container close blur' : 'button-container close'} onClick={onClose}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 11L11 1" className="close" />
-                <path d="M1 1L11 11" className="close" />
-              </svg>
-            </div>
-          </div>
+            <ActionButton isQuiet onPress={onClose}>
+              <CloseButtonWrapper>
+                <Button width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/Button">
+                  <path d="M1 11L11 1" />
+                  <path d="M1 1L11 11" />
+                </Button>
+              </CloseButtonWrapper>
+            </ActionButton>
+          </WindowsButtons>
         )}
       </HeaderRight>
     </DragArea>

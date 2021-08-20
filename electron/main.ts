@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as isDev from 'electron-is-dev';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
@@ -43,6 +43,7 @@ const createWindow = () => {
     frame: frame,
     fullscreenable: fullscreenable,
     autoHideMenuBar: autoHideMenuBar,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#252525' : '#FAFAFA',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -77,6 +78,20 @@ const createWindow = () => {
   }
 
   ipcMain.handle('load-platform', () => process.platform);
+
+  ipcMain.handle('minimize', () => win.minimize());
+  ipcMain.handle('maximize', () => win.maximize());
+  ipcMain.handle('restore', () => win.unmaximize());
+  ipcMain.handle('close', () => win.close());
+
+  win.on('maximize', () => win.webContents.send('maximized'));
+  win.on('unmaximize', () => win.webContents.send('unMaximized'));
+  win.on('resized', () => {
+    if (win.isMaximized()) return;
+    win.webContents.send('resized');
+  });
+  win.on('focus', () => win.webContents.send('get-focus'));
+  win.on('blur', () => win.webContents.send('get-blur'));
 
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));

@@ -44,6 +44,9 @@ export const createMenu = (win: BrowserWindow) => {
   ];
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+  if (process.platform !== 'darwin') {
+    ipcMain.on('show-context-menu', () => menu.popup());
+  }
 };
 
 const openFile = (win: BrowserWindow) => {
@@ -51,7 +54,7 @@ const openFile = (win: BrowserWindow) => {
   if (!filePaths) return;
   const files = fs.readdirSync(filePaths[0]);
   const psdFiles = files.filter((file) => file.indexOf('.psd') !== -1);
-  //console.log(psdFiles);
+
   const jsonFile = files.filter((file) => file.indexOf('.json') !== -1)![0];
 
   const buffurs: Buffer[] = psdFiles.map((file) => fs.readFileSync(filePaths[0] + '/' + file));
