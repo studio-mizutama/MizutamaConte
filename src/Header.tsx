@@ -11,7 +11,10 @@ import Branch2 from '@spectrum-icons/workflow/Branch2';
 import Settings from '@spectrum-icons/workflow/Settings';
 import DocumentOutline from '@spectrum-icons/workflow/DocumentOutline';
 import FolderOpenOutline from '@spectrum-icons/workflow/FolderOpenOutline';
+import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 import { readPsd, Psd } from 'ag-psd';
+import { useTitle } from 'hooks/useTitle';
+import { PressEvent } from '@react-types/shared';
 
 const { api } = window;
 
@@ -172,6 +175,28 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
+  const [maximized, setMaximized, blur] = useTitle(false, false);
+
+  const onMinimize = async () => {
+    await api.minimize();
+  };
+
+  const onMaximize = async () => {
+    setMaximized(!maximized);
+    await api.maximize();
+  };
+
+  const onRestore = async () => {
+    setMaximized(!maximized);
+    await api.restore();
+  };
+
+  const onClose = async () => await api.close();
+
+  const onContextMenu = (e: PressEvent) => {
+    api.contextMenu();
+  };
+
   return (
     <DragArea>
       <HeaderLeft>
@@ -179,6 +204,11 @@ export const Header: React.FC = () => {
           <ActionButton isQuiet onPress={() => document.getElementById('inputDirectory')?.click()}>
             <FolderOpenOutline />
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
+          </ActionButton>
+        )}
+        {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
+          <ActionButton isQuiet onPress={onContextMenu}>
+            <ShowMenu />
           </ActionButton>
         )}
         <ActionButton isQuiet marginX="size-200">
@@ -203,6 +233,35 @@ export const Header: React.FC = () => {
             <Settings />
           </Item>
         </ActionGroup>
+        {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
+          <div className="controls">
+            <div className={blur ? 'button-container blur' : 'button-container'} onClick={onMinimize}>
+              <svg width="10" height="1" viewBox="0 0 10 1" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="10" height="1" fill="black" />
+              </svg>
+            </div>
+            {maximized ? (
+              <div className={blur ? 'button-container blur' : 'button-container'} onClick={onRestore}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M9 1H3V2H2V1V0H3H9H10V1V7V8H9H8V7H9V1Z" fill="black" />
+                  <rect x="0.5" y="2.5" width="7" height="7" stroke="black" />
+                </svg>
+              </div>
+            ) : (
+              <div className={blur ? 'button-container blur' : 'button-container'} onClick={onMaximize}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="9" height="9" stroke="black" />
+                </svg>
+              </div>
+            )}
+            <div className={blur ? 'button-container close blur' : 'button-container close'} onClick={onClose}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 11L11 1" className="close" />
+                <path d="M1 1L11 11" className="close" />
+              </svg>
+            </div>
+          </div>
+        )}
       </HeaderRight>
     </DragArea>
   );
