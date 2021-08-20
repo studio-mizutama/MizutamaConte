@@ -99,6 +99,9 @@ const FilePicker: React.FC = () => {
       }
     };
     f();
+    return () => {
+      api.removeFileName();
+    };
   }, [globalFileName, setSelected]);
   return (
     <Picker

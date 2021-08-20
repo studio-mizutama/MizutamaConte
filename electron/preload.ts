@@ -28,4 +28,7 @@ contextBridge.exposeInMainWorld('api', {
       .invoke('load-file-name')
       .then((result) => result)
       .catch((err) => console.log(err)),
+  removePSD: () => ipcRenderer.removeAllListeners('load-psd'),
+  removeJSON: () => ipcRenderer.removeAllListeners('load-json'),
+  removeFileName: () => ipcRenderer.removeAllListeners('load-file-name'),
 });

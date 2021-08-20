@@ -42,4 +42,7 @@ export interface Sandbox {
   loadPSD: () => Promise<BufferLike[] | ArrayBuffer[]>;
   loadJSON: () => Promise<Cut[]>;
   loadFileName: () => Promise<string>;
+  removePSD: () => Electron.IpcRenderer;
+  removeJSON: () => Electron.IpcRenderer;
+  removeFileName: () => Electron.IpcRenderer;
 }

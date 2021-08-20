@@ -38,6 +38,9 @@ export const Outline: React.FC = () => {
       }
     };
     f();
+    return () => {
+      api.removeJSON();
+    };
   }, [globalCuts, setCuts]);
   return (
     <>
