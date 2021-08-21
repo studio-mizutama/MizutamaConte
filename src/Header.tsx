@@ -236,7 +236,7 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
-  const [maximized, setMaximized, blur, setBlur] = useTitle(false, false);
+  const [maximized, setMaximized, , setBlur] = useTitle(false, false);
 
   const onMinimize = async () => {
     await api.minimize();

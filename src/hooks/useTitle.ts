@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-const { api } = window;
-
 export const useTitle = (
   isMaximized: boolean,
   isBlur: boolean,

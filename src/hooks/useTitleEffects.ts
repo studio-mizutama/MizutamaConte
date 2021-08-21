@@ -11,7 +11,7 @@ export const useTitleEffects = (
     return () => {
       api.removeResized();
     };
-  }, []);
+  }, [setMaximized]);
 
   useEffect(() => {
     api.getFocus(async () => setBlur(false));
@@ -19,7 +19,7 @@ export const useTitleEffects = (
     return () => {
       api.removeGetFocus();
     };
-  }, []);
+  }, [setBlur]);
 
   useEffect(() => {
     api.getBlur(async () => setBlur(true));
@@ -35,7 +35,7 @@ export const useTitleEffects = (
     return () => {
       api.removeMaximized();
     };
-  }, []);
+  }, [setMaximized]);
 
   useEffect(() => {
     api.unMaximized(async () => setMaximized(false));
@@ -43,5 +43,5 @@ export const useTitleEffects = (
     return () => {
       api.removeUnMaximized();
     };
-  }, []);
+  }, [setMaximized]);
 };
