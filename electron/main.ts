@@ -77,21 +77,23 @@ const createWindow = () => {
     win.webContents.openDevTools();
   }
 
-  ipcMain.handle('load-platform', () => process.platform);
+  if (process.platform !== 'darwin') {
+    ipcMain.handle('load-platform', () => process.platform);
 
-  ipcMain.handle('minimize', () => win.minimize());
-  ipcMain.handle('maximize', () => win.maximize());
-  ipcMain.handle('restore', () => win.unmaximize());
-  ipcMain.handle('close', () => win.close());
+    ipcMain.handle('minimize', () => win.minimize());
+    ipcMain.handle('maximize', () => win.maximize());
+    ipcMain.handle('restore', () => win.unmaximize());
+    ipcMain.handle('close', () => win.close());
 
-  win.on('maximize', () => win.webContents.send('maximized'));
-  win.on('unmaximize', () => win.webContents.send('unMaximized'));
-  win.on('resized', () => {
-    if (win.isMaximized()) return;
-    win.webContents.send('resized');
-  });
-  win.on('focus', () => win.webContents.send('get-focus'));
-  win.on('blur', () => win.webContents.send('get-blur'));
+    win.on('maximize', () => win.webContents.send('maximized'));
+    win.on('unmaximize', () => win.webContents.send('unMaximized'));
+    win.on('resized', () => {
+      if (win.isMaximized()) return;
+      win.webContents.send('resized');
+    });
+    win.on('focus', () => win.webContents.send('get-focus'));
+    win.on('blur', () => win.webContents.send('get-blur'));
+  }
 
   win.on('close', () => {
     fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));

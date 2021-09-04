@@ -30,9 +30,7 @@ export const useTitleEffects = (
   });
 
   useEffect(() => {
-    window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 &&
-      api &&
-      api.maximized(async () => setMaximized(true));
+    api && api.maximized(async () => setMaximized(true));
 
     return () => {
       api && api.removeMaximized();
@@ -40,9 +38,7 @@ export const useTitleEffects = (
   }, [setMaximized]);
 
   useEffect(() => {
-    window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 &&
-      api &&
-      api.unMaximized(async () => setMaximized(false));
+    api && api.unMaximized(async () => setMaximized(false));
 
     return () => {
       api && api.removeUnMaximized();
