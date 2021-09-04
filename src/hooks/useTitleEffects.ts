@@ -6,28 +6,26 @@ export const useTitleEffects = (
   setBlur: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   useEffect(() => {
-    window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 &&
-      api &&
-      api.resized(async () => setMaximized(false));
+    api && api.resized(async () => setMaximized(false));
 
     return () => {
-      window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.removeResized();
+      api && api.removeResized();
     };
   }, [setMaximized]);
 
   useEffect(() => {
-    window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.getFocus(async () => setBlur(false));
+    api && api.getFocus(async () => setBlur(false));
 
     return () => {
-      window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.removeGetFocus();
+      api && api.removeGetFocus();
     };
   }, [setBlur]);
 
   useEffect(() => {
-    window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.getBlur(async () => setBlur(true));
+    api && api.getBlur(async () => setBlur(true));
 
     return () => {
-      window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.removeGetBlur();
+      api && api.removeGetBlur();
     };
   });
 
@@ -37,7 +35,7 @@ export const useTitleEffects = (
       api.maximized(async () => setMaximized(true));
 
     return () => {
-      window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.removeMaximized();
+      api && api.removeMaximized();
     };
   }, [setMaximized]);
 
@@ -47,7 +45,7 @@ export const useTitleEffects = (
       api.unMaximized(async () => setMaximized(false));
 
     return () => {
-      window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && api.removeUnMaximized();
+      api && api.removeUnMaximized();
     };
   }, [setMaximized]);
 };
