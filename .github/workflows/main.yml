@@ -40,6 +40,9 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: '../../../build'
+          name: upload-test
+          if-no-files-found: error
+          include-hidden-files: true
 
   deploy:
     environment:
