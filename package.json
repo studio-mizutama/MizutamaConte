@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "author": "Studio Mizutama",
   "description": "Easy tool for creating econte.",
-  "homepage": "./",
+  "homepage": "https://studio-mizutama.github.io/MizutamaConte",
   "main": "build/electron/main.js",
   "private": true,
   "license": "MIT",
