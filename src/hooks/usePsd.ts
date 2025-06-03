@@ -36,8 +36,10 @@ export const usePsd = (prtCut: Cut) => {
     };
     f();
     return () => {
-      api.removePSD();
-      api.removeJSON();
+      if (api && typeof api.removeFileName === 'function') {
+        api.removePSD();
+        api.removeJSON();
+      }
     };
   }, [globalCuts, globalPsds, setCuts]);
 
