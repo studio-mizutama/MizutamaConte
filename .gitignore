@@ -24,3 +24,9 @@ conte
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local working files
+/temp
+/todo.md
+/lessons.md
+CLAUDE.md
