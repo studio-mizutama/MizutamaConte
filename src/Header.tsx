@@ -12,9 +12,13 @@ import Settings from '@spectrum-icons/workflow/Settings';
 import DocumentOutline from '@spectrum-icons/workflow/DocumentOutline';
 import FolderOpenOutline from '@spectrum-icons/workflow/FolderOpenOutline';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
-import { readPsd, Psd } from 'ag-psd';
+import { readPsd } from 'ag-psd';
 import { useTitle } from 'hooks/useTitle';
 import { useTitleEffects } from 'hooks/useTitleEffects';
+import { buildProject, sortPsdNames, LoadedPsd } from 'project/load';
+import { useProject } from 'hooks/useProject';
+import { deriveFrame } from 'project/dimensions';
+import { AspectKey, ResolutionKey } from 'project/types';
 
 const { api } = window;
 
@@ -169,49 +173,62 @@ const FilePicker: React.FC = () => {
 };
 
 export const Header: React.FC = () => {
-  const setCuts = useGlobal('globalCuts')[1];
-  const setPsds = useGlobal('globalPsds')[1];
+  const { project, setProject } = useProject();
+  const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
+  const setIsLoading = useGlobal('isLoading')[1];
+
+  // スピナーを描画させてから重い PSD パースに入るための1フレーム譲歩
+  const yieldToPaint = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+  // 構築済みプロジェクトをグローバル状態へ反映する（Web/Electron 共通）
+  const applyProject = (jsonText: string, psds: LoadedPsd[], jsonFileName: string) => {
+    const { project, cache } = buildProject(jsonText, psds, jsonFileName);
+    setFileName(jsonFileName);
+    setProject(project);
+    setPsdCache(cache);
+  };
+
+  // Web: <input webkitdirectory> からの読み込み
   const loadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const filelist = e.target.files;
-    /* @ts-expect-error */
+    if (!filelist) return;
     const files = Array.from(filelist);
-    const psdFiles = files.filter((file) => file.name.indexOf('.psd') !== -1);
-    const jsonFile = files.filter((file) => file.name.indexOf('.json') !== -1)![0];
-    const sortedPsdFiles = psdFiles
-      .slice()
-      .sort((a, b) => Number.parseInt(a.name.slice(1, 4)) - Number.parseInt(b.name.slice(1, 4)));
+    const psdFiles = files.filter((file) => file.name.toLowerCase().endsWith('.psd'));
+    const jsonFile = files.find((file) => file.name.toLowerCase().endsWith('.json'));
+    if (!jsonFile) return;
+    const sortedNames = sortPsdNames(psdFiles.map((file) => file.name));
+    const sortedPsdFiles = sortedNames.map((name) => psdFiles.find((file) => file.name === name)!);
 
-    setFileName(jsonFile.name);
-
-    const loadPSD = (file: File) =>
-      new Promise((resolve) => {
+    const readAsArrayBuffer = (file: File) =>
+      new Promise<ArrayBuffer>((resolve) => {
         const reader = new FileReader();
-        reader.onload = () => {
-          resolve(reader.result as ArrayBuffer);
-        };
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
         reader.readAsArrayBuffer(file);
+      });
+    const readAsText = (file: File) =>
+      new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsText(file, 'utf8');
       });
 
     (async () => {
-      let psds: Psd[] = [];
-      await sortedPsdFiles.reduce(async (promise, file) => {
-        return promise.then(async () => {
-          psds.push(readPsd((await loadPSD(file)) as ArrayBuffer));
-        });
-      }, Promise.resolve());
-      setPsds(psds);
+      try {
+        await setIsLoading(true);
+        await yieldToPaint();
+        const jsonText = await readAsText(jsonFile);
+        const psds: LoadedPsd[] = [];
+        for (const file of sortedPsdFiles) {
+          psds.push({ name: file.name, psd: readPsd(await readAsArrayBuffer(file)) });
+        }
+        applyProject(jsonText, psds, jsonFile.name);
+      } catch (err) {
+        alert(err);
+      } finally {
+        setIsLoading(false);
+      }
     })();
-
-    const loadJSON: Promise<string> = new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve(reader.result as string);
-      };
-      reader.readAsText(jsonFile, 'utf8');
-    });
-    //loadPSD.then((result) => console.log(result));
-    loadJSON.then((result) => setCuts(JSON.parse(result)));
   };
 
   useEffect(() => {
@@ -222,11 +239,18 @@ export const Header: React.FC = () => {
   }, []);
 
   // Electron: main から受け取ったプロジェクト一式をグローバル状態へ反映する
-  const loadFromPayload = (payload: ProjectPayload | null) => {
+  const loadFromPayload = async (payload: ProjectPayload | null) => {
     if (!payload) return;
-    setFileName(payload.jsonFileName);
-    setCuts(JSON.parse(payload.jsonText));
-    setPsds(payload.psds.map((psd) => readPsd(psd.data)));
+    try {
+      await setIsLoading(true);
+      await yieldToPaint();
+      const psds: LoadedPsd[] = payload.psds.map(({ name, data }) => ({ name, psd: readPsd(data) }));
+      applyProject(payload.jsonText, psds, payload.jsonFileName);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const openProject = async () => {
@@ -257,6 +281,19 @@ export const Header: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 開発時の検証用: 解像度・アスペクト比を切り替える（設定UIは Phase 4 で実装）
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__setProjectSettings = (resolution: ResolutionKey, aspect: AspectKey) =>
+        setProject({
+          ...project,
+          settings: { ...project.settings, resolution, aspect, frame: deriveFrame(resolution, aspect) },
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
 
   const [maximized, setMaximized, , setBlur] = useTitle(false, false);
 

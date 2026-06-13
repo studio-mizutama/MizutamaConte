@@ -1,0 +1,57 @@
+import { Psd } from 'ag-psd';
+
+export type AspectKey = '4:3' | '16:9' | '1.85:1' | '2.39:1';
+export type ResolutionKey = 'SD' | 'HD' | 'FHD' | '2K' | '4K';
+
+export interface FrameSize {
+  width: number;
+  height: number;
+}
+
+export interface ProjectSettings {
+  aspect: AspectKey;
+  resolution: ResolutionKey;
+  /** aspect × resolution から導出した値のキャッシュ（JSONを自己記述的にするため明記） */
+  frame: FrameSize;
+  fps: number;
+}
+
+/** 1行 = PSD の1レイヤー（children[1..] に順序対応） */
+export interface CutRow {
+  id: string;
+  /** PSD レイヤー名。読み込みは順序でマップし、名前は表示用 */
+  layer: string;
+  dialogue?: string;
+  /** キャンバス実寸（px）。PSD と不一致の場合は PSD 実寸を正とする */
+  canvas: FrameSize;
+}
+
+export interface ProjectCut {
+  id: string;
+  /** プロジェクトフォルダ相対の PSD ファイル名 */
+  psd?: string;
+  /** カット尺（フレーム数） */
+  time?: number;
+  action?: Action;
+  cameraWork?: CameraWork;
+  rows: CutRow[];
+}
+
+/** 保存される JSON 全体（スキーマ v2） */
+export interface ProjectFile {
+  version: 2;
+  title: string;
+  settings: ProjectSettings;
+  cuts: ProjectCut[];
+}
+
+/** パース済み PSD のキャッシュ（ファイル名 → Psd）。JSON へはシリアライズしない */
+export type PsdCache = Record<string, Psd>;
+
+/** v1 スキーマ（旧形式）: Cut の配列そのもの */
+export interface CutV1 {
+  cameraWork?: CameraWork;
+  action?: Action;
+  dialogue?: string;
+  time?: number;
+}

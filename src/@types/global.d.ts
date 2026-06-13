@@ -1,13 +1,15 @@
 import 'reactn';
+import { ProjectFile, PsdCache } from '../project/types';
 
 declare module 'reactn/default' {
   export interface State {
     mode: string;
     tool: Set<string> | undefined;
     cut: Cut;
-    globalCuts: Cut[];
-    globalPsds: Psd[];
+    project: ProjectFile;
+    psdCache: PsdCache;
     globalFileName: string;
+    isLoading: boolean;
   }
 }
 

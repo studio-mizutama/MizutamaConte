@@ -2,6 +2,7 @@ import React, { useGlobal } from 'reactn';
 import { Accordion } from 'Accordion';
 import { List } from 'List';
 import styled from 'styled-components';
+import { usePsd } from 'hooks/usePsd';
 
 const A = styled.a`
   text-decoration: none;
@@ -12,13 +13,13 @@ const A = styled.a`
 `;
 
 export const Outline: React.FC = () => {
-  const cuts = useGlobal('globalCuts')[0];
+  const cuts = usePsd();
   const setCut = useGlobal('cut')[1];
 
   return (
     <>
       <Accordion labelName="Scene1">
-        {cuts?.length > 1 &&
+        {cuts.length > 0 &&
           cuts?.map((cut, index) => (
             <List
               onClick={() => setCut(cut)}

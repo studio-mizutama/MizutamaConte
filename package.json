@@ -25,6 +25,7 @@
     "build:web": "vite build",
     "dist:dir": "electron-vite build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p electron --noEmit",
     "preview:web": "vite preview",
     "deploy": "yarn build:web && gh-pages -d build"
@@ -52,7 +53,8 @@
     "gh-pages": "^3.2.3",
     "typescript": "^5.7",
     "vite": "^5.4.11",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2"
   },
   "volta": {
     "node": "22.22.3",

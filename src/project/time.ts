@@ -1,0 +1,12 @@
+/**
+ * フレーム数を「秒:コマ」表記に変換する。
+ * 例 (24fps): 168 → "7:00"、30 → "1:06"、12 → "12"
+ * （従来の表示仕様を踏襲: fps 以下はコマ数のみの2桁表示）
+ */
+export const frameToTimecode = (frames: number, fps: number): string => {
+  const value = Math.round(frames);
+  if (value > fps) {
+    return `${(value / fps) | 0}:${('00' + (value % fps)).slice(-2)}`;
+  }
+  return ('00' + value).slice(-2);
+};

@@ -3,6 +3,9 @@ import { Grid, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
+import { useProject } from 'hooks/useProject';
+import { thumbnailScale } from 'project/dimensions';
+import { frameToTimecode } from 'project/time';
 
 const Scroll = styled.div`
   height: calc(100vh - 82px);
@@ -60,6 +63,7 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
   timeSum,
 }) => {
   const tool = useGlobal('tool')[0] as Set<string>;
+  const { fps } = useProject();
   const escKeyDown = (e: React.KeyboardEvent) => {
     const activeElement = document.activeElement as HTMLElement;
     e.key === 'Escape' && activeElement.blur();
@@ -99,13 +103,7 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
           className={tool.has('Text') ? 'hover' : ''}
           disabled={!tool.has('Text')}
           onKeyDown={escKeyDown}
-          value={`${
-            time! > 24 ? ((time! / 24) | 0) + ':' + ('00' + (time! % 24)).slice(-2) : ('00' + time).slice(-2)
-          }\n${
-            timeSum! > 24
-              ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
-              : ('00' + timeSum).slice(-2)
-          }`}
+          value={`${frameToTimecode(time || 0, fps)}\n${frameToTimecode(timeSum || 0, fps)}`}
         />
       </View>
     </>
@@ -113,21 +111,22 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
 };
 
 const CutContainer: React.FC = () => {
-  const prtPsd: Psd = { width: 1, height: 1 };
-  const prtCut: Cut = {
-    picture: prtPsd,
-  };
-  const cuts = usePsd(prtCut);
+  const cuts = usePsd();
+  const isLoading = useGlobal('isLoading')[0];
+  const { frame } = useProject();
+  const thumbScale = thumbnailScale(frame);
+  const frameThumbWidth = frame.width * thumbScale;
+  const frameThumbHeight = frame.height * thumbScale;
 
   return (
     <>
-      {cuts?.length > 1 && !cuts[1]?.picture && (
+      {isLoading && (
         <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
           <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
           <Heading>Now Loading...</Heading>
         </Flex>
       )}
-      {cuts?.length > 1 &&
+      {cuts.length > 0 &&
         cuts.map((cut, index) => {
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
           return (
@@ -159,23 +158,23 @@ const CutContainer: React.FC = () => {
                         return (
                           <div
                             style={{
-                              height: `${child.canvas && child.canvas.height * 0.12}px`,
-                              width: `${child.canvas && child.canvas.width * 0.12}px`,
+                              height: `${child.canvas && child.canvas.height * thumbScale}px`,
+                              width: `${child.canvas && child.canvas.width * thumbScale}px`,
                               position: 'relative',
                             }}
                             key={`CC${index + 1}PP${child.name}`}
                           >
                             <div
                               style={{
-                                height: `${child.canvas && child.canvas.height * 0.12}px`,
-                                width: `${child.canvas && child.canvas.width * 0.12}px`,
+                                height: `${child.canvas && child.canvas.height * thumbScale}px`,
+                                width: `${child.canvas && child.canvas.width * thumbScale}px`,
                                 position: 'relative',
                                 background: '#FFF',
                               }}
                               id={`CC${index + 1}PP${child.name}`}
                             >
                               <img
-                                style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
+                                style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
                                 src={src}
                                 alt="cut"
                               />
@@ -184,18 +183,18 @@ const CutContainer: React.FC = () => {
                               <>
                                 <In
                                   style={{
-                                    height: `${129.6 * cut.cameraWork.scale!.in}px`,
-                                    width: `${230.4 * cut.cameraWork.scale!.in}px`,
+                                    height: `${frameThumbHeight * cut.cameraWork.scale!.in}px`,
+                                    width: `${frameThumbWidth * cut.cameraWork.scale!.in}px`,
                                     top: `${
                                       child.canvas &&
-                                      (child.canvas.height * 0.12 -
-                                        129.6 * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.y!)) /
+                                      (child.canvas.height * thumbScale -
+                                        frameThumbHeight * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.y!)) /
                                         2
                                     }px`,
                                     left: `${
                                       child.canvas &&
-                                      (child.canvas.width * 0.12 -
-                                        230.4 * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.x!)) /
+                                      (child.canvas.width * thumbScale -
+                                        frameThumbWidth * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.x!)) /
                                         2
                                     }px`,
                                   }}
@@ -206,18 +205,18 @@ const CutContainer: React.FC = () => {
                                 </In>
                                 <Out
                                   style={{
-                                    height: `${129.6 * cut.cameraWork.scale!.out}px`,
-                                    width: `${230.4 * cut.cameraWork.scale!.out}px`,
+                                    height: `${frameThumbHeight * cut.cameraWork.scale!.out}px`,
+                                    width: `${frameThumbWidth * cut.cameraWork.scale!.out}px`,
                                     top: `${
                                       child.canvas &&
-                                      (child.canvas.height * 0.12 -
-                                        129.6 * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.y!)) /
+                                      (child.canvas.height * thumbScale -
+                                        frameThumbHeight * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.y!)) /
                                         2
                                     }px`,
                                     left: `${
                                       child.canvas &&
-                                      (child.canvas.width * 0.12 -
-                                        230.4 * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.x!)) /
+                                      (child.canvas.width * thumbScale -
+                                        frameThumbWidth * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.x!)) /
                                         2
                                     }px`,
                                   }}

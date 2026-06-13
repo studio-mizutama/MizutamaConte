@@ -10,6 +10,10 @@ import StepForward from '@spectrum-icons/workflow/StepForward';
 import FastForward from '@spectrum-icons/workflow/FastForward';
 import { Timeline } from 'Timeline';
 import { usePsd } from 'hooks/usePsd';
+import { useProject } from 'hooks/useProject';
+import { defaultCanvasSize } from 'project/dimensions';
+import { frameToTimecode } from 'project/time';
+import { useGlobal } from 'reactn';
 
 const PreviewHeader = styled.div`
   display: flex;
@@ -32,30 +36,28 @@ const CountOut = styled.div`
 `;
 
 export const Preview: React.FC = React.memo(() => {
-  const prtPsd: Psd = { width: 1, height: 1 };
-  const prtCut: Cut = {
-    picture: prtPsd,
-  };
-  const cuts = usePsd(prtCut);
+  const cuts = usePsd();
+  const isLoading = useGlobal('isLoading')[0];
+  const { frame: projectFrame, fps } = useProject();
+  // フィット計算の基準は既定キャンバス（作品フレームの1.25倍）
+  const fitBase = defaultCanvasSize(projectFrame);
 
   const [frame, setFrame] = useState(0);
   const [isPlay, setIsPlay] = useState(false);
-  const [ratio, setRatio] = useState(
-    (window.innerWidth - 340) / 2400 > (window.innerHeight - 419) / 1350
-      ? (window.innerHeight - 419) / 1350
-      : (window.innerWidth - 340) / 2400,
+  const computeRatio = useCallback(
+    () => Math.min((window.innerWidth - 340) / fitBase.width, (window.innerHeight - 419) / fitBase.height),
+    [fitBase.width, fitBase.height],
   );
+  const [ratio, setRatio] = useState(computeRatio);
 
-  window.addEventListener('resize', () =>
-    setRatio(
-      (window.innerWidth - 340) / 2400 > (window.innerHeight - 419) / 1350
-        ? (window.innerHeight - 419) / 1350
-        : (window.innerWidth - 340) / 2400,
-    ),
-  );
+  useEffect(() => {
+    setRatio(computeRatio());
+    const onResize = () => setRatio(computeRatio());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [computeRatio]);
 
   const now = window.performance && performance.now;
-  const fps = 24;
 
   const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
 
@@ -158,13 +160,13 @@ export const Preview: React.FC = React.memo(() => {
   return (
     <Flex direction="column" height="100%">
       <>
-        {cuts?.length > 1 && !cuts[1]?.picture && (
+        {isLoading && (
           <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
             <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
             <Heading>Now Loading...</Heading>
           </Flex>
         )}
-        {cuts?.length > 1 &&
+        {cuts.length > 0 &&
           cuts.map((cut, index) => {
             const prePreTimeSum = cuts.slice(0, index - 1).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
             const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
@@ -178,10 +180,10 @@ export const Preview: React.FC = React.memo(() => {
             const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
             const xIn = cut.cameraWork?.position?.in.x || 0;
             const xOut = cut.cameraWork?.position?.out.x || 0;
-            const yOut = cut.cameraWork?.position?.in.y || 0;
-            const yIn = cut.cameraWork?.position?.out.y || 0;
+            const yIn = cut.cameraWork?.position?.in.y || 0;
+            const yOut = cut.cameraWork?.position?.out.y || 0;
             const posX = xIn - ((xIn - xOut) * currentFrame) / time;
-            const posY = yOut - ((yOut - yIn) * currentFrame) / time;
+            const posY = yIn - ((yIn - yOut) * currentFrame) / time;
             const fadeInDuration = cut.action?.fadeInDuration || 0;
             const fadeOutDuration = cut.action?.fadeOutDuration || 0;
             const fadeOutTime = time - fadeOutDuration;
@@ -211,24 +213,16 @@ export const Preview: React.FC = React.memo(() => {
                       return (
                         <div key={`c${index + 1}p${child.name}`}>
                           <Flex direction="column" alignItems="center" margin="size-0">
-                            <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
-                              <CountIn>{`${
-                                preTimeSum! > 24
-                                  ? ((preTimeSum! / 24) | 0) + ':' + ('00' + (preTimeSum! % 24)).slice(-2)
-                                  : ('00' + preTimeSum).slice(-2)
-                              }`}</CountIn>
+                            <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
+                              <CountIn>{frameToTimecode(preTimeSum, fps)}</CountIn>
                               <Heading>{`Cut${('00' + (index + 1)).slice(-3)}`}</Heading>
-                              <CountOut>{`${
-                                timeSum! > 24
-                                  ? ((timeSum! / 24) | 0) + ':' + ('00' + (timeSum! % 24)).slice(-2)
-                                  : ('00' + timeSum).slice(-2)
-                              }`}</CountOut>
+                              <CountOut>{frameToTimecode(timeSum, fps)}</CountOut>
                             </PreviewHeader>
 
                             <div
                               style={{
-                                height: `${1080 * ratio}px`,
-                                width: `${1920 * ratio}px`,
+                                height: `${projectFrame.height * ratio}px`,
+                                width: `${projectFrame.width * ratio}px`,
                                 backgroundColor: '#000',
                                 overflow: 'hidden',
                               }}
@@ -241,10 +235,12 @@ export const Preview: React.FC = React.memo(() => {
                                   opacity: `${opacity}`,
                                   position: 'relative',
                                   bottom: `${
-                                    child.canvas && (child.canvas.height * ratio - 1080 * ratio * (scale - posY)) / 2
+                                    child.canvas &&
+                                    (child.canvas.height * ratio - projectFrame.height * ratio * (scale - posY)) / 2
                                   }px`,
                                   right: `${
-                                    child.canvas && (child.canvas.width * ratio - 1920 * ratio * (scale - posX)) / 2
+                                    child.canvas &&
+                                    (child.canvas.width * ratio - projectFrame.width * ratio * (scale - posX)) / 2
                                   }px`,
                                 }}
                                 id={`c${index + 1}p${child.name}`}
@@ -252,12 +248,8 @@ export const Preview: React.FC = React.memo(() => {
                             </div>
                           </Flex>
                           <Flex direction="column" alignItems="center" marginTop="size-0">
-                            <PreviewHeader style={{ width: `${1920 * ratio}px` }}>
-                              <CountIn>{`${
-                                frame! > 24
-                                  ? ((frame! / 24) | 0) + ':' + ('00' + (Math.round(frame!) % 24)).slice(-2)
-                                  : ('00' + Math.round(frame)).slice(-2)
-                              }`}</CountIn>
+                            <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
+                              <CountIn>{frameToTimecode(frame, fps)}</CountIn>
                               <div>
                                 <ActionButton isQuiet onPress={rewind}>
                                   <Rewind size="M" />
@@ -275,11 +267,7 @@ export const Preview: React.FC = React.memo(() => {
                                   <FastForward size="M" />
                                 </ActionButton>
                               </div>
-                              <CountOut>{`${
-                                timeTotal! > 24
-                                  ? ((timeTotal! / 24) | 0) + ':' + ('00' + (timeTotal! % 24)).slice(-2)
-                                  : ('00' + timeTotal).slice(-2)
-                              }`}</CountOut>
+                              <CountOut>{frameToTimecode(timeTotal, fps)}</CountOut>
                             </PreviewHeader>
                           </Flex>
                         </div>

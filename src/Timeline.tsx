@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'reactn';
+import React, { useState, useEffect, useRef, useGlobal } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
+import { useProject } from 'hooks/useProject';
+import { thumbnailScale } from 'project/dimensions';
+import { frameToTimecode } from 'project/time';
 
 
 const CutNumber = styled.div`
@@ -41,15 +44,18 @@ const ScaleNumber = styled.div`
 `;
 
 const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) => {
-  const prtPsd: Psd = { width: 1, height: 1 };
-  const prtCut: Cut = {
-    picture: prtPsd,
-  };
-  const cuts = usePsd(prtCut);
+  const cuts = usePsd();
+  const isLoading = useGlobal('isLoading')[0];
+  const { frame, fps } = useProject();
+  const thumbScale = thumbnailScale(frame);
 
   const [width, setWidth] = useState(window.innerWidth - 340);
 
-  window.addEventListener('resize', () => setWidth(window.innerWidth - 340));
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth - 340);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
   const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
@@ -58,34 +64,34 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
     <>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % (240 / scale) === 0)
+          .filter((n) => n % ((fps * 10) / scale) === 0)
           .map((n) => (
             <ScaleNumber key={n} style={{ left: `${n * scale + 2}px` }}>
-              {n > 24 ? ((n / 24) | 0) + ':' + ('00' + (n % 24)).slice(-2) : ('00' + n).slice(-2)}
+              {frameToTimecode(n, fps)}
             </ScaleNumber>
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % ((24 / scale) | 0) === 0)
+          .filter((n) => n % ((fps / scale) | 0) === 0)
           .map((n) => (
             <Scale key={n} style={{ left: `${n * scale}px`, top: '32px', width: '24px' }} />
           ))}
         {range(0, timeTotal)
-          .filter((n) => n % (240 / scale) === 0)
+          .filter((n) => n % ((fps * 10) / scale) === 0)
           .map((n) => (
             <Scale key={n} style={{ left: `${n * scale}px`, top: '24px', width: '24px' }} />
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
-        {cuts?.length > 1 && !cuts[1]?.picture && (
+        {isLoading && (
           <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
             <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
             <Heading>Now Loading...</Heading>
           </Flex>
         )}
 
-        {cuts?.length > 1 &&
+        {cuts.length > 0 &&
           cuts.map((cut, index) => {
             const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
             const time = cut?.time || 0;
@@ -101,23 +107,23 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
                     return (
                       <div
                         style={{
-                          height: `${child.canvas && child.canvas.height * 0.12}px`,
-                          width: `${child.canvas && child.canvas.width * 0.12}px`,
+                          height: `${child.canvas && child.canvas.height * thumbScale}px`,
+                          width: `${child.canvas && child.canvas.width * thumbScale}px`,
                           position: 'relative',
                         }}
                         key={`CCC${index + 1}PPP${child.name}`}
                       >
                         <div
                           style={{
-                            height: `${child.canvas && child.canvas.height * 0.12}px`,
-                            width: `${child.canvas && child.canvas.width * 0.12}px`,
+                            height: `${child.canvas && child.canvas.height * thumbScale}px`,
+                            width: `${child.canvas && child.canvas.width * thumbScale}px`,
                             position: 'relative',
                             background: '#FFF',
                           }}
                           id={`CCC${index + 1}PPP${child.name}`}
                         >
                           <img
-                            style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
+                            style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
                             src={src}
                             alt="cut"
                           />
