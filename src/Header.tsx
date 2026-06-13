@@ -374,10 +374,12 @@ export const Header: React.FC = () => {
   return (
     <DragArea>
       <HeaderLeft>
-        <ActionButton isQuiet onPress={openProject}>
-          <FolderOpenOutline />
-          {!api && <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />}
-        </ActionButton>
+        {!api && (
+          <ActionButton isQuiet onPress={openProject}>
+            <FolderOpenOutline />
+            <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
+          </ActionButton>
+        )}
         <NoDragArea>
           <NewProjectDialog />
         </NoDragArea>
