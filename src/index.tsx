@@ -12,6 +12,7 @@ setGlobal({
   globalFileName: '',
   isLoading: false,
   saveState: 'idle',
+  currentCutIndex: 0,
 });
 
 ReactDOM.render(

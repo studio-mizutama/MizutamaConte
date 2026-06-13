@@ -11,6 +11,8 @@ declare module 'reactn/default' {
     globalFileName: string;
     isLoading: boolean;
     saveState: 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+    /** Preview で再生中のカット index（Dialogue パネルが参照） */
+    currentCutIndex: number;
   }
 }
 

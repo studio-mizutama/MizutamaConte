@@ -157,6 +157,24 @@ export const Preview: React.FC = React.memo(() => {
     }
   }, [frame, timeTotal]);
 
+  // 再生位置のカット index を Dialogue パネルへ共有する（変化時のみ）
+  const setCurrentCutIndex = useGlobal('currentCutIndex')[1];
+  const lastCutIndexRef = useRef(-1);
+  useEffect(() => {
+    let sum = 0;
+    let index = 0;
+    for (let i = 0; i < cuts.length; i++) {
+      const time = cuts[i].time || 0;
+      index = i;
+      if (frame < sum + time) break;
+      sum += time;
+    }
+    if (index !== lastCutIndexRef.current) {
+      lastCutIndexRef.current = index;
+      setCurrentCutIndex(index);
+    }
+  }, [frame, cuts, setCurrentCutIndex]);
+
   return (
     <Flex direction="column" height="100%">
       <>
