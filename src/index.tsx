@@ -11,6 +11,7 @@ setGlobal({
   psdCache: {},
   globalFileName: '',
   isLoading: false,
+  saveState: 'idle',
 });
 
 ReactDOM.render(

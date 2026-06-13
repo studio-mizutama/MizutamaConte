@@ -10,12 +10,18 @@ declare module 'reactn/default' {
     psdCache: PsdCache;
     globalFileName: string;
     isLoading: boolean;
+    saveState: 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
   }
 }
 
 declare global {
   interface Window {
     api: Sandbox;
+    // File System Access API (Chromium 系のみ)
+    showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
+  }
+  interface FileSystemDirectoryHandle {
+    values(): AsyncIterableIterator<FileSystemHandle>;
   }
   // Electron main から受け取るプロジェクト一式
   export interface ProjectPayload {
@@ -53,6 +59,10 @@ export interface Sandbox {
   readProject: (dirPath: string) => Promise<ProjectPayload | null>;
   onOpenProjectRequest: (listener: () => void) => void;
   removeOpenProjectRequest: () => void;
+
+  createProject: (defaultName: string) => Promise<{ name: string } | null>;
+  writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
+  fileExists: (name: string) => Promise<boolean>;
 
   contextMenu: () => void;
 

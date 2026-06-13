@@ -17,8 +17,12 @@ import { useTitle } from 'hooks/useTitle';
 import { useTitleEffects } from 'hooks/useTitleEffects';
 import { buildProject, sortPsdNames, LoadedPsd } from 'project/load';
 import { useProject } from 'hooks/useProject';
+import { useAutoSave } from 'hooks/useAutoSave';
 import { deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey } from 'project/types';
+import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } from 'project/save';
+import { getStorage, StorageOpenResult } from 'storage';
+import { NewProjectDialog } from 'NewProjectDialog';
 
 const { api } = window;
 
@@ -172,6 +176,30 @@ const FilePicker: React.FC = () => {
   );
 };
 
+const SaveIndicator: React.FC = () => {
+  const saveState = useAutoSave();
+  const fileName = useGlobal('globalFileName')[0];
+  const storage = getStorage();
+  if (!fileName) return null;
+  const label = !storage.capabilities.write
+    ? '読み取り専用'
+    : { idle: '', dirty: '未保存', saving: '保存中…', saved: '保存済み', error: '⚠ 保存エラー' }[saveState];
+  if (!label) return null;
+  return (
+    <span
+      style={{
+        fontSize: '11px',
+        opacity: 0.6,
+        whiteSpace: 'nowrap',
+        marginLeft: '8px',
+        color: saveState === 'error' ? 'var(--spectrum-semantic-negative-color-border)' : 'inherit',
+      }}
+    >
+      {label}
+    </span>
+  );
+};
+
 export const Header: React.FC = () => {
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
@@ -183,10 +211,14 @@ export const Header: React.FC = () => {
 
   // 構築済みプロジェクトをグローバル状態へ反映する（Web/Electron 共通）
   const applyProject = (jsonText: string, psds: LoadedPsd[], jsonFileName: string) => {
-    const { project, cache } = buildProject(jsonText, psds, jsonFileName);
-    setFileName(jsonFileName);
-    setProject(project);
+    const { project: loaded, cache, wasV1 } = buildProject(jsonText, psds, jsonFileName);
+    // 読み込み直後は「保存済み」扱い。v1 は初回保存時に元 JSON を退避する
+    setLastPersisted(serializeProject(loaded));
+    setPendingV1Backup(wasV1 ? { name: v1BackupName(jsonFileName), text: jsonText } : null);
+    // fileName は最後に設定する（autoSave が古い project と新 fileName の組で誤発火しないように）
+    setProject(loaded);
     setPsdCache(cache);
+    setFileName(jsonFileName);
   };
 
   // Web: <input webkitdirectory> からの読み込み
@@ -238,8 +270,8 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
-  // Electron: main から受け取ったプロジェクト一式をグローバル状態へ反映する
-  const loadFromPayload = async (payload: ProjectPayload | null) => {
+  // フォルダから読み込んだ一式（PSD未パース）をパースして反映する（Web FSA/Electron 共通）
+  const loadFromPayload = async (payload: StorageOpenResult | null) => {
     if (!payload) return;
     try {
       await setIsLoading(true);
@@ -253,12 +285,15 @@ export const Header: React.FC = () => {
     }
   };
 
+  const storage = getStorage();
+
   const openProject = async () => {
-    if (!api) {
+    if (storage.kind === 'web-readonly') {
+      // File System Access API 非対応ブラウザは webkitdirectory で読み取り専用
       document.getElementById('inputDirectory')?.click();
       return;
     }
-    loadFromPayload(await api.openProject());
+    loadFromPayload(await storage.openProject());
   };
 
   // メニューの File > Open からの読み込み要求
@@ -326,6 +361,9 @@ export const Header: React.FC = () => {
           <FolderOpenOutline />
           {!api && <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />}
         </ActionButton>
+        <NoDragArea>
+          <NewProjectDialog />
+        </NoDragArea>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />
@@ -340,6 +378,9 @@ export const Header: React.FC = () => {
       </HeaderLeft>
 
       <FilePicker />
+      <NoDragArea>
+        <SaveIndicator />
+      </NoDragArea>
 
       <HeaderRight>
         <ActionGroup isQuiet>

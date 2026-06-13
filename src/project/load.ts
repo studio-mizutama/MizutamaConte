@@ -66,7 +66,7 @@ export const buildProject = (
   jsonText: string,
   psds: LoadedPsd[],
   jsonFileName: string,
-): { project: ProjectFile; cache: PsdCache } => {
+): { project: ProjectFile; cache: PsdCache; wasV1: boolean } => {
   const parsed: unknown = JSON.parse(jsonText);
   const cache: PsdCache = {};
   psds.forEach(({ name, psd }) => {
@@ -76,7 +76,7 @@ export const buildProject = (
 
   if (Array.isArray(parsed)) {
     const meta = psds.map(({ name, psd }) => ({ name, width: psd.width, height: psd.height }));
-    return { project: migrateV1(parsed as CutV1[], meta, title), cache };
+    return { project: migrateV1(parsed as CutV1[], meta, title), cache, wasV1: true };
   }
 
   const file = parsed as ProjectFile;
@@ -89,5 +89,5 @@ export const buildProject = (
     if (!psd) return cut;
     return cut; // ドキュメント実寸の補正は行単位リサイズ実装時 (Phase 5) に拡張
   });
-  return { project: { ...file, cuts }, cache };
+  return { project: { ...file, cuts }, cache, wasV1: false };
 };

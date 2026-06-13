@@ -33,6 +33,9 @@ const autoHideMenuBar = process.platform !== 'darwin';
 
 let mainWindow: BrowserWindow | null = null;
 
+/** 現在開いているプロジェクトフォルダ。storage:* 系の書き込み先 */
+let currentProjectDir: string | null = null;
+
 // プロジェクトフォルダ（PSD群 + JSON 1つ）を読み込む
 const readProjectDir = (dirPath: string): ProjectPayload | null => {
   const files = fs.readdirSync(dirPath);
@@ -41,6 +44,7 @@ const readProjectDir = (dirPath: string): ProjectPayload | null => {
   const psdNames = files
     .filter((file) => file.toLowerCase().endsWith('.psd'))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  currentProjectDir = dirPath;
   return {
     dirPath,
     jsonFileName,
@@ -66,6 +70,36 @@ const registerIpcHandlers = () => {
   });
 
   ipcMain.handle('project:read', (_event, dirPath: string) => readProjectDir(dirPath));
+
+  ipcMain.handle('project:create', async (_event, defaultName: string) => {
+    if (!mainWindow) return null;
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'New Project',
+      defaultPath: defaultName,
+      buttonLabel: 'Create',
+      properties: ['createDirectory'],
+    });
+    if (result.canceled || !result.filePath) return null;
+    fs.mkdirSync(result.filePath, { recursive: true });
+    currentProjectDir = result.filePath;
+    return { name: path.basename(result.filePath) };
+  });
+
+  // atomic write (tmp + rename)。書き込み先は現在のプロジェクトフォルダ内に限定する
+  ipcMain.handle('storage:write-file', (_event, name: string, data: string | Uint8Array) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    const target = path.join(currentProjectDir, name);
+    const tmp = target + '.tmp';
+    const buffer = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
+    fs.writeFileSync(tmp, buffer);
+    fs.renameSync(tmp, target);
+  });
+
+  ipcMain.handle('storage:exists', (_event, name: string) => {
+    if (!currentProjectDir) return false;
+    return fs.existsSync(path.join(currentProjectDir, name));
+  });
 };
 
 const createWindow = () => {

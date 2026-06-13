@@ -15,6 +15,11 @@ contextBridge.exposeInMainWorld('api', {
   onOpenProjectRequest: (listener: () => void) => ipcRenderer.on('menu:open-project', listener),
   removeOpenProjectRequest: () => ipcRenderer.removeAllListeners('menu:open-project'),
 
+  // 新規プロジェクトフォルダ作成・保存
+  createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),
+  writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
+  fileExists: (name: string) => ipcRenderer.invoke('storage:exists', name),
+
   contextMenu: () => ipcRenderer.send('show-context-menu'),
 
   close: async () => ipcRenderer.invoke('close'),
