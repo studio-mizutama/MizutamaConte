@@ -20,6 +20,7 @@ import Layers from '@spectrum-icons/workflow/Layers';
 import More from '@spectrum-icons/workflow/More';
 import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
 import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
+import Close from '@spectrum-icons/workflow/Close';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
@@ -189,7 +190,9 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
   collapsed,
   onToggle,
 }) => {
-  const { setSceneTitleAt } = useProjectActions();
+  const { setSceneTitleAt, removeSceneStart } = useProjectActions();
+  const tool = useTool();
+  const editable = tool === 'Text';
   return (
     <Band id={`Scene${scene.sceneNumber}`}>
       <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? 'Expand scene' : 'Collapse scene'}>
@@ -203,7 +206,16 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
         placeholder="（無題シーン）"
         width="size-3000"
         isQuiet
+        isReadOnly={!editable}
       />
+      {scene.startIndex > 0 && (
+        <TooltipTrigger delay={300}>
+          <ActionButton isQuiet onPress={() => removeSceneStart(scene.startIndex)} aria-label="Remove scene break">
+            <Close />
+          </ActionButton>
+          <Tooltip>シーン区切りを解除</Tooltip>
+        </TooltipTrigger>
+      )}
     </Band>
   );
 };
