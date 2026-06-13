@@ -1,12 +1,30 @@
 import React, { useGlobal, useState, useRef } from 'reactn';
-import { ActionButton, Grid, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum';
+import {
+  ActionButton,
+  Grid,
+  Heading,
+  View,
+  Flex,
+  ProgressCircle,
+  TextField,
+  TooltipTrigger,
+  Tooltip,
+  MenuTrigger,
+  Menu,
+  Item,
+} from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import Add from '@spectrum-icons/workflow/Add';
+import Layers from '@spectrum-icons/workflow/Layers';
+import More from '@spectrum-icons/workflow/More';
+import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
+import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
+import { deriveScenes, SceneGroup } from 'project/scene';
 import { frameToTimecode, parseTimecode } from 'project/time';
 
 const Scroll = styled.div`
@@ -145,10 +163,94 @@ const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: st
   );
 };
 
+const Band = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  margin-bottom: var(--spectrum-global-dimension-size-25);
+  background: var(--spectrum-global-color-gray-200);
+  border-radius: var(--spectrum-alias-border-radius-regular);
+`;
+
+const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () => void }> = ({
+  scene,
+  collapsed,
+  onToggle,
+}) => {
+  const { setSceneTitleAt } = useProjectActions();
+  return (
+    <Band id={`Scene${scene.sceneNumber}`}>
+      <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? 'Expand scene' : 'Collapse scene'}>
+        {collapsed ? <ChevronRight /> : <ChevronDown />}
+      </ActionButton>
+      <Heading level={4} margin={0}>{`SCENE ${scene.sceneNumber}`}</Heading>
+      <TextField
+        aria-label={`Scene ${scene.sceneNumber} title`}
+        value={scene.title ?? ''}
+        onChange={(v) => setSceneTitleAt(scene.startIndex, v)}
+        placeholder="（無題シーン）"
+        width="size-3000"
+        isQuiet
+      />
+    </Band>
+  );
+};
+
+const Gutter = styled.div`
+  position: relative;
+  height: 10px;
+  margin: -5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 4;
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const RowInsert: React.FC<{ cutIndex: number; busy: boolean; onInsert: () => void }> = ({ cutIndex, busy, onInsert }) => (
+  <Gutter aria-label={`Insert layer into cut ${cutIndex + 1}`}>
+    <TooltipTrigger delay={300}>
+      <ActionButton isQuiet isDisabled={busy} onPress={onInsert} aria-label="Insert New Layer">
+        <Layers />
+      </ActionButton>
+      <Tooltip>New Layer</Tooltip>
+    </TooltipTrigger>
+  </Gutter>
+);
+
 const CutContainer: React.FC = () => {
   const cuts = usePsd();
   const isLoading = useGlobal('isLoading')[0];
-  const { frame } = useProject();
+  const { project, frame } = useProject();
+  const { addLayer } = useProjectActions();
+  const scenes = deriveScenes(project.cuts);
+  const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
+  const sceneOfIndex = new Map<number, number>();
+  scenes.forEach((s) => s.cutIndices.forEach((i) => sceneOfIndex.set(i, s.startIndex)));
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const toggleScene = (startIndex: number) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(startIndex) ? next.delete(startIndex) : next.add(startIndex);
+      return next;
+    });
+  const [inserting, setInserting] = useState(false);
+  const insertLayer = async (cutIndex: number) => {
+    setInserting(true);
+    try {
+      await addLayer(cutIndex);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setInserting(false);
+    }
+  };
   const thumbScale = thumbnailScale(frame);
   const frameThumbWidth = frame.width * thumbScale;
   const frameThumbHeight = frame.height * thumbScale;
@@ -163,9 +265,21 @@ const CutContainer: React.FC = () => {
       )}
       {cuts.length > 0 &&
         cuts.map((cut, index) => {
+          const band = sceneByStart.get(index);
+          const sceneStart = sceneOfIndex.get(index) ?? 0;
+          const isCollapsed = collapsed.has(sceneStart);
           const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
           return (
-            <View backgroundColor="gray-100" key={index}>
+            <React.Fragment key={index}>
+              {band && (
+                <SceneBand
+                  scene={band}
+                  collapsed={collapsed.has(band.startIndex)}
+                  onToggle={() => toggleScene(band.startIndex)}
+                />
+              )}
+              {!isCollapsed && (
+              <View backgroundColor="gray-100">
               <div
                 className={'hover'}
                 id={`Cut${index + 1}`}
@@ -290,7 +404,10 @@ const CutContainer: React.FC = () => {
                   />
                 </Grid>
               </div>
-            </View>
+              </View>
+              )}
+              {!isCollapsed && <RowInsert cutIndex={index} busy={inserting} onInsert={() => insertLayer(index)} />}
+            </React.Fragment>
           );
         })}
       <AddCutRow />
@@ -298,20 +415,22 @@ const CutContainer: React.FC = () => {
   );
 };
 
-/** CUT 列最終行の＋ボタン。押すと PSD 雛形を自動生成して行を追加する */
+/** CUT 列最終行の追加コントロール。New CUT / New Layer ボタン + New Scene メニュー */
 const AddCutRow: React.FC = () => {
-  const { addCut } = useProjectActions();
+  const { addCut, addLayer, addSceneCut } = useProjectActions();
+  const { project } = useProject();
   const fileName = useGlobal('globalFileName')[0];
-  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState(false);
   if (!fileName) return null;
-  const onAdd = async () => {
-    setAdding(true);
+  const lastCutIndex = project.cuts.length - 1;
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
     try {
-      await addCut();
+      await fn();
     } catch (err) {
       alert(err);
     } finally {
-      setAdding(false);
+      setBusy(false);
     }
   };
   return (
@@ -323,10 +442,32 @@ const AddCutRow: React.FC = () => {
         marginBottom="size-25"
       >
         <View gridArea="cut" width="100%">
-          <Flex direction="column" alignItems="center">
-            <ActionButton isQuiet isDisabled={adding} onPress={onAdd} aria-label="Add Cut" marginY="size-100">
-              <Add />
-            </ActionButton>
+          <Flex direction="row" alignItems="center" justifyContent="center" gap="size-50" marginY="size-100">
+            <TooltipTrigger delay={300}>
+              <ActionButton isQuiet isDisabled={busy} onPress={() => run(addCut)} aria-label="New CUT">
+                <Add />
+              </ActionButton>
+              <Tooltip>New CUT</Tooltip>
+            </TooltipTrigger>
+            <TooltipTrigger delay={300}>
+              <ActionButton
+                isQuiet
+                isDisabled={busy || lastCutIndex < 0}
+                onPress={() => run(() => addLayer(lastCutIndex))}
+                aria-label="New Layer"
+              >
+                <Layers />
+              </ActionButton>
+              <Tooltip>New Layer</Tooltip>
+            </TooltipTrigger>
+            <MenuTrigger>
+              <ActionButton isQuiet isDisabled={busy} aria-label="More add options">
+                <More />
+              </ActionButton>
+              <Menu onAction={(key) => key === 'scene' && run(addSceneCut)}>
+                <Item key="scene">New Scene</Item>
+              </Menu>
+            </MenuTrigger>
           </Flex>
         </View>
       </Grid>
