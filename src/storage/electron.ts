@@ -10,7 +10,12 @@ export const electronStorage: ProjectStorage = {
   async openProject() {
     const payload = await api.openProject();
     if (!payload) return null;
-    return { jsonFileName: payload.jsonFileName, jsonText: payload.jsonText, psds: payload.psds };
+    return {
+      dirPath: payload.dirPath,
+      jsonFileName: payload.jsonFileName,
+      jsonText: payload.jsonText,
+      psds: payload.psds,
+    };
   },
 
   async createProject(defaultName: string) {

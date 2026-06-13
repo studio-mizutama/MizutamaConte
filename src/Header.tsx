@@ -270,9 +270,13 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
+  // 外部編集の再読込用に Electron のフォルダパスを保持する
+  const dirPathRef = React.useRef<string | null>(null);
+
   // フォルダから読み込んだ一式（PSD未パース）をパースして反映する（Web FSA/Electron 共通）
   const loadFromPayload = async (payload: StorageOpenResult | null) => {
     if (!payload) return;
+    if (payload.dirPath) dirPathRef.current = payload.dirPath;
     try {
       await setIsLoading(true);
       await yieldToPaint();
@@ -304,6 +308,19 @@ export const Header: React.FC = () => {
     };
     api.onOpenProjectRequest(listener);
     return () => api.removeOpenProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 外部ペイントアプリで PSD が保存されたら自動で再読込する
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => {
+      if (dirPathRef.current) {
+        api.readProject(dirPathRef.current).then(loadFromPayload);
+      }
+    };
+    api.onProjectFilesChanged(listener);
+    return () => api.removeProjectFilesChanged();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

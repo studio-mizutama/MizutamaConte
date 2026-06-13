@@ -196,8 +196,23 @@ const CutContainer: React.FC = () => {
                               height: `${child.canvas && child.canvas.height * thumbScale}px`,
                               width: `${child.canvas && child.canvas.width * thumbScale}px`,
                               position: 'relative',
+                              cursor: cut.psdName ? 'pointer' : 'default',
                             }}
                             key={`CC${index + 1}PP${child.name}`}
+                            title={cut.psdName ? `${cut.psdName} をペイントアプリで開く` : undefined}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!cut.psdName) return;
+                              if (window.api) {
+                                window.api.openInPaint(cut.psdName).then((result) => {
+                                  if (!result.ok) alert(`ペイントアプリを起動できませんでした: ${result.error ?? ''}`);
+                                });
+                              } else {
+                                alert(
+                                  `${cut.psdName} をローカルのペイントアプリで編集してください。\n保存後にプロジェクトを開き直すと反映されます。`,
+                                );
+                              }
+                            }}
                           >
                             <div
                               style={{

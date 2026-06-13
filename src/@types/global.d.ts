@@ -32,6 +32,8 @@ declare global {
   }
   export interface Cut {
     picture?: Psd;
+    /** プロジェクトフォルダ相対の PSD ファイル名（外部アプリ起動に使用） */
+    psdName?: string;
     cameraWork?: CameraWork;
     action?: Action;
     dialogue?: string;
@@ -63,6 +65,10 @@ export interface Sandbox {
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
   fileExists: (name: string) => Promise<boolean>;
+
+  openInPaint: (psdName: string) => Promise<{ ok: boolean; app?: string; error?: string }>;
+  onProjectFilesChanged: (listener: () => void) => void;
+  removeProjectFilesChanged: () => void;
 
   contextMenu: () => void;
 

@@ -1,5 +1,7 @@
 /** フォルダから読み込んだプロジェクト一式（PSD は未パースのバイナリ） */
 export interface StorageOpenResult {
+  /** Electron のみ: フォルダの絶対パス（外部編集の再読込に使用） */
+  dirPath?: string;
   jsonFileName: string;
   jsonText: string;
   psds: { name: string; data: Uint8Array<ArrayBuffer> }[];

@@ -13,6 +13,7 @@ export const usePsd = (): Cut[] => {
     () =>
       project.cuts.map((cut) => ({
         picture: cut.psd ? psdCache[cut.psd] : undefined,
+        psdName: cut.psd,
         cameraWork: cut.cameraWork,
         action: cut.action,
         dialogue: cut.rows.map((row) => row.dialogue ?? '').join(''),

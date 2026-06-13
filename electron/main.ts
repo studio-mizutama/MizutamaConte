@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createMenu } from './menu';
+import { openInPaintApp } from './paint';
 
 interface Bounds {
   width: number;
@@ -36,6 +37,23 @@ let mainWindow: BrowserWindow | null = null;
 /** 現在開いているプロジェクトフォルダ。storage:* 系の書き込み先 */
 let currentProjectDir: string | null = null;
 
+/** アプリ自身が書いたファイル（watch の自己反応を防ぐ） */
+const recentOwnWrites = new Map<string, number>();
+let watcher: fs.FSWatcher | null = null;
+
+/** プロジェクトフォルダの PSD 変更を監視し、外部アプリでの編集をレンダラへ通知する */
+const watchProjectDir = (dirPath: string) => {
+  watcher?.close();
+  let timer: NodeJS.Timeout | null = null;
+  watcher = fs.watch(dirPath, (_event, fileName) => {
+    if (!fileName || !fileName.toLowerCase().endsWith('.psd')) return;
+    const wroteAt = recentOwnWrites.get(fileName);
+    if (wroteAt && Date.now() - wroteAt < 3000) return;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => mainWindow?.webContents.send('project:files-changed'), 500);
+  });
+};
+
 // プロジェクトフォルダ（PSD群 + JSON 1つ）を読み込む
 const readProjectDir = (dirPath: string): ProjectPayload | null => {
   const files = fs.readdirSync(dirPath);
@@ -45,6 +63,7 @@ const readProjectDir = (dirPath: string): ProjectPayload | null => {
     .filter((file) => file.toLowerCase().endsWith('.psd'))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   currentProjectDir = dirPath;
+  watchProjectDir(dirPath);
   return {
     dirPath,
     jsonFileName,
@@ -92,8 +111,17 @@ const registerIpcHandlers = () => {
     const target = path.join(currentProjectDir, name);
     const tmp = target + '.tmp';
     const buffer = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
+    recentOwnWrites.set(name, Date.now());
     fs.writeFileSync(tmp, buffer);
     fs.renameSync(tmp, target);
+  });
+
+  ipcMain.handle('paint:open', (_event, psdName: string) => {
+    if (!currentProjectDir) return { ok: false, error: 'No project directory' };
+    if (psdName.includes('/') || psdName.includes('\\') || psdName.includes('..')) {
+      return { ok: false, error: 'Invalid file name' };
+    }
+    return openInPaintApp(path.join(currentProjectDir, psdName));
   });
 
   ipcMain.handle('storage:exists', (_event, name: string) => {

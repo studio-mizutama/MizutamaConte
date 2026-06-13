@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('api', {
   writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
   fileExists: (name: string) => ipcRenderer.invoke('storage:exists', name),
 
+  // 外部ペイントアプリで PSD を開く / 外部編集の検知
+  openInPaint: (psdName: string) => ipcRenderer.invoke('paint:open', psdName),
+  onProjectFilesChanged: (listener: () => void) => ipcRenderer.on('project:files-changed', listener),
+  removeProjectFilesChanged: () => ipcRenderer.removeAllListeners('project:files-changed'),
+
   contextMenu: () => ipcRenderer.send('show-context-menu'),
 
   close: async () => ipcRenderer.invoke('close'),
