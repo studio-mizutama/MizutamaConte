@@ -5,10 +5,12 @@ import ImageAlbum from '@spectrum-icons/workflow/ImageAlbum';
 import MovieCamera from '@spectrum-icons/workflow/MovieCamera';
 import ViewList from '@spectrum-icons/workflow/ViewList';
 import Comment from '@spectrum-icons/workflow/Comment';
+import Clock from '@spectrum-icons/workflow/Clock';
 import { Transition } from 'Transition';
 import { CameraWork } from 'CameraWork';
 import { Outline } from 'Outline';
 import { Dialogue } from 'Dialogue';
+import { Duration } from 'Duration';
 
 const ToolArea = styled.div`
   padding-left: var(--spectrum-global-dimension-size-200, var(--spectrum-alias-size-200));
@@ -31,6 +33,7 @@ const Tool: React.FC<{ Title: string }> = ({ Title, children }) => {
     'Camera Work': <MovieCamera size="XS" />,
     Outline: <ViewList size="XS" />,
     Dialogue: <Comment size="XS" />,
+    Duration: <Clock size="XS" />,
   };
 
   const iconRender = (title: string): JSX.Element => tool[title];
@@ -64,6 +67,9 @@ export const Panels: React.FC = () => {
         </Tool>
       </div>
       <div style={mode === 'Preview' ? { display: 'block' } : { display: 'none' }}>
+        <Tool Title="Duration">
+          <Duration />
+        </Tool>
         <Tool Title="Dialogue">
           <Dialogue />
         </Tool>
