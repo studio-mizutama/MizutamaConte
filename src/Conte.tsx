@@ -1,11 +1,13 @@
-import React, { useGlobal } from 'reactn';
-import { Grid, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum';
+import React, { useGlobal, useState, useRef } from 'reactn';
+import { ActionButton, Grid, Heading, View, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
+import Add from '@spectrum-icons/workflow/Add';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
+import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
-import { frameToTimecode } from 'project/time';
+import { frameToTimecode, parseTimecode } from 'project/time';
 
 const Scroll = styled.div`
   height: calc(100vh - 82px);
@@ -56,28 +58,50 @@ const Fade = styled.svg`
   left: calc((100% - 96px) / 2);
 `;
 
-const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: number; timeSum?: number }> = ({
+const TimeSum = styled.div`
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 11px;
+  opacity: 0.6;
+  pointer-events: none;
+`;
+
+const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: string; time?: number; timeSum?: number }> = ({
+  cutIndex,
   action,
   dialogue,
   time,
   timeSum,
 }) => {
-  const tool = useGlobal('tool')[0] as Set<string>;
   const { fps } = useProject();
+  const { setDialogue, setActionText, setTime } = useProjectActions();
+  // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
+  const [timeDraft, setTimeDraft] = useState<string | null>(null);
+  const timeCancelRef = useRef(false);
+
   const escKeyDown = (e: React.KeyboardEvent) => {
     const activeElement = document.activeElement as HTMLElement;
     e.key === 'Escape' && activeElement.blur();
   };
+
+  const commitTime = () => {
+    if (!timeCancelRef.current && timeDraft !== null) {
+      const frames = parseTimecode(timeDraft, fps);
+      if (frames !== null) setTime(cutIndex, frames);
+    }
+    timeCancelRef.current = false;
+    setTimeDraft(null);
+  };
+
   return (
     <>
       <View gridArea="action" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={tool.has('Text') ? 'hover' : ''}
-          disabled={!tool.has('Text')}
+          className="hover"
           onKeyDown={escKeyDown}
-          value={`${action?.fadeIn ? action?.fadeIn : ''}\n${action?.fadeInDuration ? action?.fadeInDuration : ''}\n${
-            action?.fadeOut ? action?.fadeOut : ''
-          }\n${action?.fadeOutDuration ? action?.fadeOutDuration : ''}\n${action?.text ? action?.text : ''}\n`}
+          value={action?.text ?? ''}
+          onChange={(e) => setActionText(cutIndex, e.target.value)}
         />
         {action?.fadeIn && (
           <Fade viewBox="0 0 96 48" width="96px">
@@ -92,19 +116,30 @@ const TextContainer: React.FC<{ action?: Action; dialogue?: string; time?: numbe
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={tool.has('Text') ? 'hover' : ''}
-          disabled={!tool.has('Text')}
+          className="hover"
           onKeyDown={escKeyDown}
-          value={dialogue}
+          value={dialogue ?? ''}
+          onChange={(e) => setDialogue(cutIndex, e.target.value)}
         />
       </View>
       <View gridArea="time" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={tool.has('Text') ? 'hover' : ''}
-          disabled={!tool.has('Text')}
-          onKeyDown={escKeyDown}
-          value={`${frameToTimecode(time || 0, fps)}\n${frameToTimecode(timeSum || 0, fps)}`}
+          className="hover"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              (e.target as HTMLElement).blur();
+            }
+            if (e.key === 'Escape') {
+              timeCancelRef.current = true;
+            }
+            escKeyDown(e);
+          }}
+          value={timeDraft ?? frameToTimecode(time || 0, fps)}
+          onChange={(e) => setTimeDraft(e.target.value)}
+          onBlur={commitTime}
         />
+        <TimeSum>{frameToTimecode(timeSum || 0, fps)}</TimeSum>
       </View>
     </>
   );
@@ -231,13 +266,56 @@ const CutContainer: React.FC = () => {
                         );
                       })}
                   </View>
-                  <TextContainer action={cut?.action} dialogue={cut?.dialogue} time={cut?.time} timeSum={timeSum} />
+                  <TextContainer
+                    cutIndex={index}
+                    action={cut?.action}
+                    dialogue={cut?.dialogue}
+                    time={cut?.time}
+                    timeSum={timeSum}
+                  />
                 </Grid>
               </div>
             </View>
           );
         })}
+      <AddCutRow />
     </>
+  );
+};
+
+/** CUT 列最終行の＋ボタン。押すと PSD 雛形を自動生成して行を追加する */
+const AddCutRow: React.FC = () => {
+  const { addCut } = useProjectActions();
+  const fileName = useGlobal('globalFileName')[0];
+  const [adding, setAdding] = useState(false);
+  if (!fileName) return null;
+  const onAdd = async () => {
+    setAdding(true);
+    try {
+      await addCut();
+    } catch (err) {
+      alert(err);
+    } finally {
+      setAdding(false);
+    }
+  };
+  return (
+    <View backgroundColor="gray-100">
+      <Grid
+        columns={['72px', '288px', 'auto', 'auto', '128px']}
+        areas={['cut picture action dialogue time']}
+        gap="size-200"
+        marginBottom="size-25"
+      >
+        <View gridArea="cut" width="100%">
+          <Flex direction="column" alignItems="center">
+            <ActionButton isQuiet isDisabled={adding} onPress={onAdd} aria-label="Add Cut" marginY="size-100">
+              <Add />
+            </ActionButton>
+          </Flex>
+        </View>
+      </Grid>
+    </View>
   );
 };
 
