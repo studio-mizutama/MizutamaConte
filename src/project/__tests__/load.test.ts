@@ -97,4 +97,16 @@ describe('buildProject', () => {
   it('未知の version は例外を投げる', () => {
     expect(() => buildProject(JSON.stringify({ version: 99 }), [], 'x.json')).toThrow(/Unsupported/);
   });
+
+  it('sceneStart の無い v2 JSON もそのまま読める（後方互換）', () => {
+    const v2 = emptyProject('Legacy');
+    v2.cuts.push({
+      id: 'cut-1',
+      psd: 'c001.psd',
+      time: 48,
+      rows: [{ id: 'row-1', layer: '1', dialogue: 'x', canvas: { width: 1920, height: 1080 } }],
+    });
+    const { project } = buildProject(JSON.stringify(v2), loadedPsds, 'Legacy.json');
+    expect(project.cuts[0].sceneStart).toBeUndefined();
+  });
 });

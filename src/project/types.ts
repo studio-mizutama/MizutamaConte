@@ -28,6 +28,8 @@ export interface CutRow {
 
 export interface ProjectCut {
   id: string;
+  /** このカットで新シーンが始まる。先頭カットは未設定でも暗黙の Scene 1 */
+  sceneStart?: { title?: string };
   /** プロジェクトフォルダ相対の PSD ファイル名 */
   psd?: string;
   /** カット尺（フレーム数） */

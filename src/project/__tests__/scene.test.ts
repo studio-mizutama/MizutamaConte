@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cutCanvas, sameCanvas, canMerge, deriveScenes } from '../scene';
+import { appendLayer, setSceneStart, setSceneTitle, appendSceneCut } from '../actions';
+import { emptyProject } from '../load';
 import { ProjectCut } from '../types';
 
 const cut = (over: Partial<ProjectCut> & { w: number; h: number }): ProjectCut => ({
@@ -56,5 +58,45 @@ describe('deriveScenes', () => {
   });
   it('空配列なら空配列を返す', () => {
     expect(deriveScenes([])).toEqual([]);
+  });
+});
+
+const projectWith = (...cuts: ProjectCut[]) => ({ ...emptyProject('p'), cuts });
+
+describe('appendLayer', () => {
+  it('指定カットへ CUT と同一キャンバスの行を追加する', () => {
+    const base = projectWith(cut({ w: 1920, h: 1080 }));
+    const next = appendLayer(base, 0);
+    expect(next.cuts[0].rows).toHaveLength(2);
+    expect(next.cuts[0].rows[1].layer).toBe('2');
+    expect(next.cuts[0].rows[1].canvas).toEqual({ width: 1920, height: 1080 });
+  });
+  it('元プロジェクトを変更しない（イミュータブル）', () => {
+    const base = projectWith(cut({ w: 100, h: 50 }));
+    appendLayer(base, 0);
+    expect(base.cuts[0].rows).toHaveLength(1);
+  });
+});
+
+describe('setSceneStart / setSceneTitle', () => {
+  it('マーカーを付与・タイトル更新・解除できる', () => {
+    const base = projectWith(cut({ w: 100, h: 50 }), cut({ w: 100, h: 50 }));
+    const marked = setSceneStart(base, 1, { title: '夜' });
+    expect(marked.cuts[1].sceneStart).toEqual({ title: '夜' });
+    const retitled = setSceneTitle(marked, 1, '朝');
+    expect(retitled.cuts[1].sceneStart).toEqual({ title: '朝' });
+    const cleared = setSceneStart(retitled, 1, undefined);
+    expect(cleared.cuts[1].sceneStart).toBeUndefined();
+  });
+});
+
+describe('appendSceneCut', () => {
+  it('新カットを追加し sceneStart を付与する', () => {
+    const base = projectWith(cut({ w: 100, h: 50 }));
+    const next = appendSceneCut(base, 'c002.psd', { width: 200, height: 100 }, 72, '屋上');
+    expect(next.cuts).toHaveLength(2);
+    expect(next.cuts[1].psd).toBe('c002.psd');
+    expect(next.cuts[1].sceneStart).toEqual({ title: '屋上' });
+    expect(next.cuts[1].rows[0].canvas).toEqual({ width: 200, height: 100 });
   });
 });

@@ -1,5 +1,6 @@
 import { FrameSize, ProjectCut, ProjectFile } from './types';
 import { newId } from './load';
+import { cutCanvas } from './scene';
 
 /** index 位置のカットへ patch を適用した新しいプロジェクトを返す */
 export const updateCutAt = (project: ProjectFile, index: number, patch: Partial<ProjectCut>): ProjectFile => ({
@@ -46,3 +47,48 @@ export const appendCut = (
     },
   ],
 });
+
+/** 指定カットへ新規レイヤー行を追加する。キャンバスは CUT 既存と同一（不変条件を維持） */
+export const appendLayer = (project: ProjectFile, cutIndex: number): ProjectFile => ({
+  ...project,
+  cuts: project.cuts.map((cut, i) => {
+    if (i !== cutIndex) return cut;
+    const canvas = cutCanvas(cut);
+    return {
+      ...cut,
+      rows: [...cut.rows, { id: newId(), layer: String(cut.rows.length + 1), dialogue: '', canvas: { ...canvas } }],
+    };
+  }),
+});
+
+/** sceneStart マーカーを設定/解除する。undefined を渡すと解除 */
+export const setSceneStart = (
+  project: ProjectFile,
+  cutIndex: number,
+  sceneStart: { title?: string } | undefined,
+): ProjectFile => ({
+  ...project,
+  cuts: project.cuts.map((cut, i) => {
+    if (i !== cutIndex) return cut;
+    const next: ProjectCut = { ...cut };
+    if (sceneStart === undefined) delete next.sceneStart;
+    else next.sceneStart = sceneStart;
+    return next;
+  }),
+});
+
+/** シーンタイトルを更新する（マーカーが無ければ付与する） */
+export const setSceneTitle = (project: ProjectFile, cutIndex: number, title: string): ProjectFile =>
+  setSceneStart(project, cutIndex, { title });
+
+/** 末尾に新カットを追加し、新シーンの開始としてマークする */
+export const appendSceneCut = (
+  project: ProjectFile,
+  psdName: string,
+  canvas: FrameSize,
+  defaultTime: number,
+  title?: string,
+): ProjectFile => {
+  const appended = appendCut(project, psdName, canvas, defaultTime);
+  return setSceneStart(appended, appended.cuts.length - 1, { title });
+};
