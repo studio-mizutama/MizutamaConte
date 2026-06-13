@@ -25,6 +25,7 @@ import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
 import { deriveScenes, SceneGroup } from 'project/scene';
+import { useTool } from 'hooks/useTool';
 import { frameToTimecode, parseTimecode } from 'project/time';
 
 const Scroll = styled.div`
@@ -48,6 +49,10 @@ const MyTextArea = styled.textarea`
   :focus {
     outline: 2px solid var(--spectrum-alias-border-color-focus);
     border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
+  }
+
+  &[readonly] {
+    cursor: default;
   }
 `;
 
@@ -93,6 +98,8 @@ const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: st
   timeSum,
 }) => {
   const { fps } = useProject();
+  const tool = useTool();
+  const editable = tool === 'Text';
   const { setDialogue, setActionText, setTime } = useProjectActions();
   // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
   const [timeDraft, setTimeDraft] = useState<string | null>(null);
@@ -116,7 +123,8 @@ const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: st
     <>
       <View gridArea="action" width="100%" position="relative" height="auto">
         <MyTextArea
-          className="hover"
+          className={editable ? 'hover' : undefined}
+          readOnly={!editable}
           onKeyDown={escKeyDown}
           value={action?.text ?? ''}
           onChange={(e) => setActionText(cutIndex, e.target.value)}
@@ -134,7 +142,8 @@ const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: st
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea
-          className="hover"
+          className={editable ? 'hover' : undefined}
+          readOnly={!editable}
           onKeyDown={escKeyDown}
           value={dialogue ?? ''}
           onChange={(e) => setDialogue(cutIndex, e.target.value)}
@@ -142,7 +151,8 @@ const TextContainer: React.FC<{ cutIndex: number; action?: Action; dialogue?: st
       </View>
       <View gridArea="time" width="100%" position="relative" height="auto">
         <MyTextArea
-          className="hover"
+          className={editable ? 'hover' : undefined}
+          readOnly={!editable}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -229,6 +239,7 @@ const CutContainer: React.FC = () => {
   const isLoading = useGlobal('isLoading')[0];
   const { project, frame } = useProject();
   const { addLayer } = useProjectActions();
+  const tool = useTool();
   const scenes = deriveScenes(project.cuts);
   const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
   const sceneOfIndex = new Map<number, number>();
@@ -310,7 +321,7 @@ const CutContainer: React.FC = () => {
                               height: `${child.canvas && child.canvas.height * thumbScale}px`,
                               width: `${child.canvas && child.canvas.width * thumbScale}px`,
                               position: 'relative',
-                              cursor: cut.psdName ? 'pointer' : 'default',
+                              cursor: tool === 'Crop' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
                             }}
                             key={`CC${index + 1}PP${child.name}`}
                             title={cut.psdName ? `${cut.psdName} をペイントアプリで開く` : undefined}
