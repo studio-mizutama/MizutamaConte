@@ -37,3 +37,19 @@ export const createTemplatePsd = (
   const buffer = new Uint8Array(writePsd(psd, { generateThumbnail: true }));
   return { psd, buffer };
 };
+
+/**
+ * 既存 PSD の末尾に透明レイヤーを 1 枚追加して書き出す。
+ * children[0]=背景 / children[1..]=描画レイヤー の規約を保つ（末尾 push）。
+ */
+export const appendLayerToPsd = (psd: Psd, name: string): { psd: Psd; buffer: Uint8Array } => {
+  const width = psd.width;
+  const height = psd.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const next: Psd = { ...psd, children: [...(psd.children ?? []), { name, canvas }] };
+  // writePsdBuffer は Node 専用 (Buffer)。ブラウザでも動く writePsd を使う
+  const buffer = new Uint8Array(writePsd(next, { generateThumbnail: true }));
+  return { psd: next, buffer };
+};
