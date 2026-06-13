@@ -15,6 +15,13 @@ declare global {
   interface Window {
     api: Sandbox;
   }
+  // Electron main から受け取るプロジェクト一式
+  export interface ProjectPayload {
+    dirPath: string;
+    jsonFileName: string;
+    jsonText: string;
+    psds: { name: string; data: Uint8Array<ArrayBuffer> }[];
+  }
   export interface Cut {
     picture?: Psd;
     cameraWork?: CameraWork;
@@ -39,14 +46,11 @@ declare global {
 
 export interface Sandbox {
   loadPlatform: () => Promise<void | string>;
-  loadPSD: () => Promise<BufferLike[] | ArrayBuffer[]>;
-  removePSD: () => Electron.IpcRenderer;
 
-  loadJSON: () => Promise<Cut[]>;
-  removeJSON: () => Electron.IpcRenderer;
-
-  loadFileName: () => Promise<string>;
-  removeFileName: () => Electron.IpcRenderer;
+  openProject: () => Promise<ProjectPayload | null>;
+  readProject: (dirPath: string) => Promise<ProjectPayload | null>;
+  onOpenProjectRequest: (listener: () => void) => void;
+  removeOpenProjectRequest: () => void;
 
   contextMenu: () => void;
 

@@ -150,24 +150,7 @@ const FilePicker: React.FC = () => {
   const [selected, setSelected] = useState('');
   const globalFileName = useGlobal('globalFileName')[0];
   useEffect(() => {
-    const f = async () => {
-      try {
-        if (!api) {
-          setSelected(globalFileName);
-          return;
-        }
-        const fileName = await api.loadFileName();
-        setSelected(fileName);
-      } catch (e) {
-        alert(e);
-      }
-    };
-    f();
-    return () => {
-      if (api && typeof api.removeFileName === 'function') {
-        api.removeFileName();
-      }
-    };
+    setSelected(globalFileName);
   }, [globalFileName, setSelected]);
   return (
     <Picker
@@ -238,6 +221,43 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
 
+  // Electron: main から受け取ったプロジェクト一式をグローバル状態へ反映する
+  const loadFromPayload = (payload: ProjectPayload | null) => {
+    if (!payload) return;
+    setFileName(payload.jsonFileName);
+    setCuts(JSON.parse(payload.jsonText));
+    setPsds(payload.psds.map((psd) => readPsd(psd.data)));
+  };
+
+  const openProject = async () => {
+    if (!api) {
+      document.getElementById('inputDirectory')?.click();
+      return;
+    }
+    loadFromPayload(await api.openProject());
+  };
+
+  // メニューの File > Open からの読み込み要求
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => {
+      api.openProject().then(loadFromPayload);
+    };
+    api.onOpenProjectRequest(listener);
+    return () => api.removeOpenProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 開発時の回帰テスト用: ダイアログなしでプロジェクトを開く
+  useEffect(() => {
+    if (api && import.meta.env.DEV) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__loadProjectByPath = async (dirPath: string) =>
+        loadFromPayload(await api.readProject(dirPath));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [maximized, setMaximized, , setBlur] = useTitle(false, false);
 
   const onMinimize = async () => {
@@ -265,12 +285,10 @@ export const Header: React.FC = () => {
   return (
     <DragArea>
       <HeaderLeft>
-        {!api && (
-          <ActionButton isQuiet onPress={() => document.getElementById('inputDirectory')?.click()}>
-            <FolderOpenOutline />
-            <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
-          </ActionButton>
-        )}
+        <ActionButton isQuiet onPress={openProject}>
+          <FolderOpenOutline />
+          {!api && <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />}
+        </ActionButton>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />

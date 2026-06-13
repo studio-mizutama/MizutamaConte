@@ -4,7 +4,7 @@
   "author": "Studio Mizutama",
   "description": "Easy tool for creating econte.",
   "homepage": "https://studio-mizutama.github.io/MizutamaConte",
-  "main": "build/electron/main.js",
+  "main": "out/main/main.js",
   "private": true,
   "license": "MIT",
   "dependencies": {
@@ -19,32 +19,38 @@
     "styled-components": "^5.3.0"
   },
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit",
-    "preview": "vite preview",
-    "deploy": "yarn build && gh-pages -d build"
+    "dev": "electron-vite dev -w",
+    "dev:web": "vite",
+    "build": "electron-vite build",
+    "build:web": "vite build",
+    "dist:dir": "electron-vite build && electron-builder --dir",
+    "dist": "electron-vite build && electron-builder",
+    "typecheck": "tsc --noEmit && tsc -p electron --noEmit",
+    "preview:web": "vite preview",
+    "deploy": "yarn build:web && gh-pages -d build"
   },
   "build": {
     "extends": null,
     "appId": "net.studio-mizutama.mizutama-conte",
     "productName": "Mizutama Conte",
     "files": [
-      "build/**/*"
+      "out/**/*"
     ],
     "directories": {
       "buildResources": "assets"
     }
   },
   "devDependencies": {
-    "@types/node": "^15.6.1",
+    "@types/node": "^22",
     "@types/react": "^17.0.8",
     "@types/react-dom": "^17.0.5",
     "@types/styled-components": "^5.1.11",
     "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
     "gh-pages": "^3.2.3",
-    "typescript": "^4.3.2",
+    "typescript": "^5.7",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4"
   },

@@ -1,11 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { Cut } from './@types/cut';
-
-interface BufferLike {
-  buffer: ArrayBuffer;
-  byteOffset: number;
-  byteLength: number;
-}
 
 contextBridge.exposeInMainWorld('api', {
   loadPlatform: (): Promise<void | string> =>
@@ -13,26 +6,14 @@ contextBridge.exposeInMainWorld('api', {
       .invoke('load-platform')
       .then((result) => result)
       .catch((err) => console.log(err)),
-  loadPSD: (): Promise<BufferLike[] | ArrayBuffer[]> =>
-    ipcRenderer
-      .invoke('load-psd')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removePSD: () => ipcRenderer.removeAllListeners('load-psd'),
 
-  loadJSON: (): Promise<Cut[]> =>
-    ipcRenderer
-      .invoke('load-json')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removeJSON: () => ipcRenderer.removeAllListeners('load-json'),
-
-  loadFileName: (): Promise<string> =>
-    ipcRenderer
-      .invoke('load-file-name')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removeFileName: () => ipcRenderer.removeAllListeners('load-file-name'),
+  // フォルダ選択ダイアログ → プロジェクト読み込み
+  openProject: () => ipcRenderer.invoke('project:open'),
+  // ダイアログなしで指定パスを読み込み（開発・回帰テスト用）
+  readProject: (dirPath: string) => ipcRenderer.invoke('project:read', dirPath),
+  // メニューの File > Open からの読み込み要求
+  onOpenProjectRequest: (listener: () => void) => ipcRenderer.on('menu:open-project', listener),
+  removeOpenProjectRequest: () => ipcRenderer.removeAllListeners('menu:open-project'),
 
   contextMenu: () => ipcRenderer.send('show-context-menu'),
 

@@ -1,19 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2022",
     "module": "commonjs",
-    "sourceMap": true,
+    "moduleResolution": "node",
     "strict": true,
-    "outDir": "../build",
-    "rootDir": "../",
-    "baseUrl": "../electron",
-    "noEmitOnError": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "electron/@types"
-    ],
-    "paths":{
-      "*":["@types/*"]
-   }
-  }
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": ["./**/*.ts"]
 }

@@ -11,8 +11,6 @@ import FastForward from '@spectrum-icons/workflow/FastForward';
 import { Timeline } from 'Timeline';
 import { usePsd } from 'hooks/usePsd';
 
-const { api } = window;
-
 const PreviewHeader = styled.div`
   display: flex;
   justify-content: center;
@@ -160,13 +158,7 @@ export const Preview: React.FC = React.memo(() => {
   return (
     <Flex direction="column" height="100%">
       <>
-        {!api && cuts?.length > 1 && !cuts[1]?.picture && (
-          <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
-          </Flex>
-        )}
-        {api && cuts?.length === 1 && (
+        {cuts?.length > 1 && !cuts[1]?.picture && (
           <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
             <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
             <Heading>Now Loading...</Heading>

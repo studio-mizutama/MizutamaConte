@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
 
-const { api } = window;
 
 const CutNumber = styled.div`
   position: absolute;
@@ -52,24 +51,6 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
 
   window.addEventListener('resize', () => setWidth(window.innerWidth - 340));
 
-  useEffect(() => {
-    api &&
-      cuts?.map((cut, index) => {
-        cut.picture?.children
-          ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
-          .map((child: Layer) => {
-            const element = document.getElementById(`CCC${index + 1}PPP${child.name}`) || document.createElement('div');
-            const canvas = child.canvas || document.createElement('canvas');
-            canvas.style.width = `${canvas.width * 0.12}px`;
-            element.innerHTML = '';
-            element.style.backgroundColor = '#FFF';
-            element.appendChild(canvas);
-            return 0;
-          });
-        return 0;
-      });
-  }, [cuts]);
-
   const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
   const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
 
@@ -97,13 +78,7 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
-        {!api && cuts?.length > 1 && !cuts[1]?.picture && (
-          <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
-          </Flex>
-        )}
-        {api && cuts?.length === 1 && (
+        {cuts?.length > 1 && !cuts[1]?.picture && (
           <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
             <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
             <Heading>Now Loading...</Heading>
@@ -137,17 +112,15 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
                             height: `${child.canvas && child.canvas.height * 0.12}px`,
                             width: `${child.canvas && child.canvas.width * 0.12}px`,
                             position: 'relative',
-                            background: `${api ? 'none' : '#FFF'}`,
+                            background: '#FFF',
                           }}
                           id={`CCC${index + 1}PPP${child.name}`}
                         >
-                          {!api && (
-                            <img
-                              style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
-                              src={src}
-                              alt="cut"
-                            />
-                          )}
+                          <img
+                            style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
+                            src={src}
+                            alt="cut"
+                          />
                         </div>
                       </div>
                     );
