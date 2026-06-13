@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
+import { useViewportSize } from 'hooks/useViewportSize';
 import { thumbnailScale } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 
@@ -49,13 +50,8 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
   const { frame, fps } = useProject();
   const thumbScale = thumbnailScale(frame);
 
-  const [width, setWidth] = useState(window.innerWidth - 340);
-
-  useEffect(() => {
-    const onResize = () => setWidth(window.innerWidth - 340);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+  const viewport = useViewportSize();
+  const width = viewport.width - 340;
 
   const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
   const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
@@ -178,6 +174,8 @@ export const Timeline: React.FC<{
 
   const width = timeTotal * scale;
 
+  const viewport = useViewportSize();
+
   const toolAreaRef = useRef<HTMLDivElement>(null);
 
   const toolArea = toolAreaRef.current ?? document.createElement('div');
@@ -190,13 +188,13 @@ export const Timeline: React.FC<{
 
   useEffect(() => {
     const currentPos = frame * scale - scroll;
-    if (window.innerWidth - 364 < currentPos) {
-      toolArea.scrollBy(window.innerWidth - 364, 0);
+    if (viewport.width - 364 < currentPos) {
+      toolArea.scrollBy(viewport.width - 364, 0);
     }
     if (currentPos < 0) {
       toolArea.scrollBy(currentPos, 0);
     }
-  }, [frame, scroll, toolArea, width]);
+  }, [frame, scroll, toolArea, width, viewport.width]);
 
   return (
     <ToolArea ref={toolAreaRef}>

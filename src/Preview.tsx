@@ -11,6 +11,7 @@ import FastForward from '@spectrum-icons/workflow/FastForward';
 import { Timeline } from 'Timeline';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
+import { useViewportSize } from 'hooks/useViewportSize';
 import { defaultCanvasSize } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 import { useGlobal } from 'reactn';
@@ -44,18 +45,8 @@ export const Preview: React.FC = React.memo(() => {
 
   const [frame, setFrame] = useState(0);
   const [isPlay, setIsPlay] = useState(false);
-  const computeRatio = useCallback(
-    () => Math.min((window.innerWidth - 340) / fitBase.width, (window.innerHeight - 419) / fitBase.height),
-    [fitBase.width, fitBase.height],
-  );
-  const [ratio, setRatio] = useState(computeRatio);
-
-  useEffect(() => {
-    setRatio(computeRatio());
-    const onResize = () => setRatio(computeRatio());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [computeRatio]);
+  const viewport = useViewportSize();
+  const ratio = Math.min((viewport.width - 340) / fitBase.width, (viewport.height - 419) / fitBase.height);
 
   const now = window.performance && performance.now;
 
@@ -179,7 +170,7 @@ export const Preview: React.FC = React.memo(() => {
     <Flex direction="column" height="100%">
       <>
         {isLoading && (
-          <Flex direction="column" alignItems="center" justifyContent="center" height={window.innerHeight - 42}>
+          <Flex direction="column" alignItems="center" justifyContent="center" height={viewport.height - 42}>
             <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
             <Heading>Now Loading...</Heading>
           </Flex>
