@@ -1,8 +1,8 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
-import { appendCut, appendLayer, appendSceneCut, nextPsdName, resizeCutCanvas, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
+import { appendCut, appendLayer, appendSceneCut, mergeCuts, nextPsdName, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
 import { defaultCanvasSize } from 'project/dimensions';
-import { createTemplatePsd, appendLayerToPsd, resizeDocPsd } from 'psd/template';
+import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd } from 'psd/template';
 import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 
@@ -71,8 +71,52 @@ export const useProjectActions = () => {
     await setProject(appendSceneCut(project, psdName, size, fps * 3));
   };
 
+  /** 🔗 結合: 隣接する index と index+1 のカットを統合（PSD 連結 + TIME 合算） */
+  const mergeCutWithNext = async (index: number) => {
+    const a = project.cuts[index];
+    const b = project.cuts[index + 1];
+    if (!a?.psd || !b?.psd) return;
+    const pa = psdCache[a.psd];
+    const pb = psdCache[b.psd];
+    if (!pa || !pb) return;
+    const { psd: mergedPsd, buffer } = mergePsd(pa, pb);
+    if (storage.capabilities.write) {
+      await storage.writeFile(a.psd, buffer);
+    }
+    await setPsdCache({ ...psdCache, [a.psd]: mergedPsd });
+    await setProject(mergeCuts(project, index));
+  };
+
+  /** 分離: 複数レイヤーCUTの最終レイヤーを新規CUTへ切り出す（New Layer の逆） */
+  const splitCutLastLayer = async (cutIndex: number) => {
+    const cut = project.cuts[cutIndex];
+    if (!cut?.psd || cut.rows.length < 2) return;
+    const psd = psdCache[cut.psd];
+    if (!psd) return;
+    const { base, layer } = splitTopLayerPsd(psd);
+    const newPsdName = nextPsdName(project);
+    if (storage.capabilities.write) {
+      await storage.writeFile(cut.psd, base.buffer);
+      await storage.writeFile(newPsdName, layer.buffer);
+    }
+    await setPsdCache({ ...psdCache, [cut.psd]: base.psd, [newPsdName]: layer.psd });
+    await setProject(splitLastLayer(project, cutIndex, newPsdName, fps * 3));
+  };
+
   const setSceneTitleAt = (cutIndex: number, title: string) => setProject(setSceneTitle(project, cutIndex, title));
   const removeSceneStart = (cutIndex: number) => setProject(setSceneStart(project, cutIndex, undefined));
 
-  return { setDialogue, setActionText, setTime, addCut, addLayer, addSceneCut, setSceneTitleAt, removeSceneStart, resizeCanvas };
+  return {
+    setDialogue,
+    setActionText,
+    setTime,
+    addCut,
+    addLayer,
+    addSceneCut,
+    setSceneTitleAt,
+    removeSceneStart,
+    resizeCanvas,
+    mergeCutWithNext,
+    splitCutLastLayer,
+  };
 };
