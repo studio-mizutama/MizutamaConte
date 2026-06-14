@@ -57,3 +57,11 @@ export interface CutV1 {
   dialogue?: string;
   time?: number;
 }
+
+/** アプリ全体設定（settings.json）。プロジェクトではなくアプリ単位 */
+export interface AppSettings {
+  paintApp?: {
+    mode?: 'auto' | 'custom';
+    customPath?: string;
+  };
+}

@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { AppSettings } from './settings';
 
 contextBridge.exposeInMainWorld('api', {
   loadPlatform: (): Promise<void | string> =>
@@ -25,6 +26,11 @@ contextBridge.exposeInMainWorld('api', {
 
   // 外部ペイントアプリで PSD を開く / 外部編集の検知
   openInPaint: (psdName: string) => ipcRenderer.invoke('paint:open', psdName),
+  // アプリ全体設定（settings.json）の読み書き / ペイントアプリ検出・選択
+  loadSettings: () => ipcRenderer.invoke('settings:load'),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke('settings:save', settings),
+  detectPaintApp: () => ipcRenderer.invoke('settings:detect-paint'),
+  selectPaintAppPath: () => ipcRenderer.invoke('dialog:select-file'),
   onProjectFilesChanged: (listener: () => void) => ipcRenderer.on('project:files-changed', listener),
   removeProjectFilesChanged: () => ipcRenderer.removeAllListeners('project:files-changed'),
 

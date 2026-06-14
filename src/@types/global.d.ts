@@ -1,5 +1,5 @@
 import 'reactn';
-import { ProjectFile, PsdCache } from '../project/types';
+import { ProjectFile, PsdCache, AppSettings } from '../project/types';
 
 declare module 'reactn/default' {
   export interface State {
@@ -75,6 +75,10 @@ export interface Sandbox {
   fileExists: (name: string) => Promise<boolean>;
 
   openInPaint: (psdName: string) => Promise<{ ok: boolean; app?: string; error?: string }>;
+  loadSettings: () => Promise<AppSettings>;
+  saveSettings: (settings: AppSettings) => Promise<void>;
+  detectPaintApp: () => Promise<{ kind: 'mac-app' | 'exe'; path: string } | null>;
+  selectPaintAppPath: () => Promise<string | null>;
   onProjectFilesChanged: (listener: () => void) => void;
   removeProjectFilesChanged: () => void;
 

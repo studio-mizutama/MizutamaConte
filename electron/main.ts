@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createMenu } from './menu';
-import { openInPaintApp } from './paint';
+import { openInPaintApp, findPaintApp } from './paint';
+import { loadSettings, saveSettings, AppSettings } from './settings';
 
 interface Bounds {
   width: number;
@@ -129,6 +130,22 @@ const registerIpcHandlers = () => {
   ipcMain.handle('storage:exists', (_event, name: string) => {
     if (!currentProjectDir) return false;
     return fs.existsSync(path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('settings:load', () => loadSettings());
+
+  ipcMain.handle('settings:save', (_event, settings: AppSettings) => saveSettings(settings));
+
+  ipcMain.handle('settings:detect-paint', () => findPaintApp());
+
+  ipcMain.handle('dialog:select-file', async () => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'お絵描きアプリを選択',
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
   });
 };
 
