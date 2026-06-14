@@ -1,6 +1,7 @@
 import { FrameSize, ProjectCut, ProjectFile } from './types';
 import { newId } from './load';
 import { cutCanvas } from './scene';
+import { coverCamera } from './camera';
 
 /** index 位置のカットへ patch を適用した新しいプロジェクトを返す */
 export const updateCutAt = (project: ProjectFile, index: number, patch: Partial<ProjectCut>): ProjectFile => ({
@@ -92,3 +93,22 @@ export const appendSceneCut = (
   const appended = appendCut(project, psdName, canvas, defaultTime);
   return setSceneStart(appended, appended.cuts.length - 1, { title });
 };
+
+/** カットのキャンバスを新サイズへ。全レイヤーを同値にし(不変条件)、cover カメラを自動付与する */
+export const resizeCutCanvas = (
+  project: ProjectFile,
+  cutIndex: number,
+  size: FrameSize,
+  frame: FrameSize,
+): ProjectFile => ({
+  ...project,
+  cuts: project.cuts.map((cut, i) =>
+    i === cutIndex
+      ? {
+          ...cut,
+          rows: cut.rows.map((row) => ({ ...row, canvas: { ...size } })),
+          cameraWork: coverCamera(size, frame),
+        }
+      : cut,
+  ),
+});

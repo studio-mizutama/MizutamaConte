@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cutCanvas, sameCanvas, canMerge, deriveScenes } from '../scene';
-import { appendLayer, setSceneStart, setSceneTitle, appendSceneCut } from '../actions';
+import { appendLayer, setSceneStart, setSceneTitle, appendSceneCut, resizeCutCanvas } from '../actions';
 import { emptyProject } from '../load';
 import { ProjectCut } from '../types';
 
@@ -98,5 +98,26 @@ describe('appendSceneCut', () => {
     expect(next.cuts[1].psd).toBe('c002.psd');
     expect(next.cuts[1].sceneStart).toEqual({ title: '屋上' });
     expect(next.cuts[1].rows[0].canvas).toEqual({ width: 200, height: 100 });
+  });
+});
+
+describe('resizeCutCanvas', () => {
+  const frame = { width: 1920, height: 1080 };
+  it('全レイヤーの canvas を新サイズにし cover カメラを付与する', () => {
+    const base = projectWith({
+      ...cut({ w: 2400, h: 1350 }),
+      rows: [
+        { id: 'a', layer: '1', canvas: { width: 2400, height: 1350 } },
+        { id: 'b', layer: '2', canvas: { width: 2400, height: 1350 } },
+      ],
+    });
+    const next = resizeCutCanvas(base, 0, { width: 3000, height: 1350 }, frame);
+    expect(next.cuts[0].rows.every((r) => r.canvas.width === 3000 && r.canvas.height === 1350)).toBe(true);
+    expect(next.cuts[0].cameraWork?.scale?.in).toBeCloseTo(1.25, 5);
+  });
+  it('元プロジェクトを変更しない', () => {
+    const base = projectWith(cut({ w: 2400, h: 1350 }));
+    resizeCutCanvas(base, 0, { width: 1000, height: 1000 }, frame);
+    expect(base.cuts[0].rows[0].canvas).toEqual({ width: 2400, height: 1350 });
   });
 });
