@@ -178,7 +178,7 @@ const CutContainer: React.FC = () => {
           const band = sceneByStart.get(index);
           const sceneStart = sceneOfIndex.get(index) ?? 0;
           const isCollapsed = collapsed.has(sceneStart);
-          const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0);
+          const timeSum = cuts.slice(0, index + 1).reduce<number>((sum, c) => sum + (c.time ?? 0), 0);
           return (
             <React.Fragment key={index}>
               {band && (
@@ -198,7 +198,7 @@ const CutContainer: React.FC = () => {
                   frameThumbHeight={frameThumbHeight}
                   tool={tool}
                   inserting={inserting}
-                  timeSum={timeSum as number | undefined}
+                  timeSum={timeSum}
                   fps={fps}
                   onSplitLast={splitLast}
                   setDialogue={setDialogue}

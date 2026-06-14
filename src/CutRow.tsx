@@ -173,6 +173,8 @@ const TextContainer: React.FC<{
   );
 });
 
+TextContainer.displayName = 'TextContainer';
+
 /** Crop モードでカットのキャンバスを右下ドラッグでリサイズするハンドル */
 const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; thumbScale: number }> = ({
   cutIndex,
@@ -413,3 +415,4 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     );
   },
 );
+CutRow.displayName = 'CutRow';
