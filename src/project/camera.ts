@@ -18,3 +18,25 @@ export const applyShiftSnap = (dw: number, dh: number, shift: boolean): { dw: nu
   if (!shift) return { dw, dh };
   return Math.abs(dw) >= Math.abs(dh) ? { dw, dh: 0 } : { dw: 0, dh };
 };
+
+export interface CameraRanges {
+  /** canvas.w / frame.w */
+  ratioW: number;
+  /** canvas.h / frame.h */
+  ratioH: number;
+  scaleMin: number;
+  /** これ以上ズームアウトするとフレームがキャンバス外に出る上限 */
+  scaleMax: number;
+}
+
+/** カメラワークの可動範囲（キャンバス外に出ないクランプ用）を導出する */
+export const cameraRanges = (canvas: FrameSize, frame: FrameSize): CameraRanges => {
+  const ratioW = canvas.width / frame.width;
+  const ratioH = canvas.height / frame.height;
+  return { ratioW, ratioH, scaleMin: 0.1, scaleMax: Math.min(ratioW, ratioH) };
+};
+
+/** あるスケールでの position 許容範囲（±この値まで。負は 0 にクランプ） */
+export const posBound = (ratio: number, scale: number): number => Math.max(0, ratio - scale);
+
+export const clampNum = (v: number, min: number, max: number): number => Math.min(Math.max(v, min), max);

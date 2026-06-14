@@ -444,7 +444,8 @@ const CutContainer: React.FC = () => {
                       )}
                     </Flex>
                   </View>
-                  <View gridArea="picture" width="100%" height="auto" UNSAFE_style={{ position: 'relative' }}>
+                  <View gridArea="picture" width="100%" height="auto">
+                    <div style={{ position: 'relative', width: `${cutCanvas(project.cuts[index]).width * thumbScale}px` }}>
                     {tool === 'Crop' && cut.psdName && (
                       <ResizeHandle cutIndex={index} canvas={cutCanvas(project.cuts[index])} thumbScale={thumbScale} />
                     )}
@@ -542,6 +543,7 @@ const CutContainer: React.FC = () => {
                           </div>
                         );
                       })}
+                    </div>
                   </View>
                   <TextContainer
                     cutIndex={index}

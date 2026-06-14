@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coverCamera, applyShiftSnap } from '../camera';
+import { coverCamera, applyShiftSnap, cameraRanges, posBound, clampNum } from '../camera';
 
 describe('coverCamera', () => {
   it('同アスペクト(1.25倍キャンバス)は scale=1.25 の静止カメラ', () => {
@@ -27,5 +27,31 @@ describe('applyShiftSnap', () => {
   it('shift 有りは絶対値の小さい方を 0 にする', () => {
     expect(applyShiftSnap(30, -10, true)).toEqual({ dw: 30, dh: 0 });
     expect(applyShiftSnap(-5, 40, true)).toEqual({ dw: 0, dh: 40 });
+  });
+});
+
+describe('cameraRanges', () => {
+  it('scaleMax は min(canvas/frame) 比、ratio は各軸比', () => {
+    const r = cameraRanges({ width: 2400, height: 1350 }, { width: 1920, height: 1080 });
+    expect(r.ratioW).toBeCloseTo(1.25, 5);
+    expect(r.ratioH).toBeCloseTo(1.25, 5);
+    expect(r.scaleMax).toBeCloseTo(1.25, 5);
+    expect(r.scaleMin).toBeGreaterThan(0);
+  });
+});
+
+describe('posBound', () => {
+  it('|pos| 許容範囲は ratio - scale（負は 0 でクランプ）', () => {
+    expect(posBound(1.25, 1)).toBeCloseTo(0.25, 5);
+    expect(posBound(1.25, 1.25)).toBeCloseTo(0, 5);
+    expect(posBound(1.25, 2)).toBe(0);
+  });
+});
+
+describe('clampNum', () => {
+  it('範囲内に収める', () => {
+    expect(clampNum(5, 0, 10)).toBe(5);
+    expect(clampNum(-3, 0, 10)).toBe(0);
+    expect(clampNum(99, 0, 10)).toBe(10);
   });
 });
