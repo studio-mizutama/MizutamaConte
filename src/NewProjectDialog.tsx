@@ -11,6 +11,7 @@ import {
   Heading,
   Item,
   Picker,
+  Text,
   TextField,
 } from '@adobe/react-spectrum';
 import NewItem from '@spectrum-icons/workflow/NewItem';
@@ -95,9 +96,11 @@ export const NewProjectDialog: React.FC = () => {
                     <Item key={key}>{key}</Item>
                   ))}
                 </Picker>
-                <Picker label="fps" selectedKey={fps} onSelectionChange={(key) => setFps(key as string)} width="size-1000">
+                <Picker label="fps" selectedKey={fps} onSelectionChange={(key) => setFps(key as string)} width="size-1250">
                   {FPS_OPTIONS.map((key) => (
-                    <Item key={key}>{key}</Item>
+                    <Item key={key} textValue={key}>
+                      <Text>{key}</Text>
+                    </Item>
                   ))}
                 </Picker>
               </Flex>

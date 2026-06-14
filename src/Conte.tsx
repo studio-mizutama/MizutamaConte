@@ -9,15 +9,12 @@ import {
   TextField,
   TooltipTrigger,
   Tooltip,
-  MenuTrigger,
-  Menu,
-  Item,
 } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import Add from '@spectrum-icons/workflow/Add';
 import Layers from '@spectrum-icons/workflow/Layers';
-import More from '@spectrum-icons/workflow/More';
+import FolderAdd from '@spectrum-icons/workflow/FolderAdd';
 import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
 import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
 import Close from '@spectrum-icons/workflow/Close';
@@ -226,14 +223,14 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
 
 const Handle = styled.div`
   position: absolute;
-  left: -6px;
+  right: -6px;
   bottom: -6px;
   width: 14px;
   height: 14px;
   border: 2px solid var(--spectrum-semantic-informative-color-border, #2680eb);
   background: var(--spectrum-global-color-gray-50, #fff);
   border-radius: 2px;
-  cursor: nesw-resize;
+  cursor: nwse-resize;
   z-index: 5;
 `;
 
@@ -264,8 +261,8 @@ const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; thumbScale: 
     let latest = { ...canvas };
 
     const onMove = (ev: MouseEvent) => {
-      // 左下ハンドル: 左へドラッグ(dx<0)で幅増、下へドラッグ(dy>0)で高さ増
-      const rawDw = -(ev.clientX - startX) / thumbScale;
+      // 右下ハンドル: 右へドラッグ(dx>0)で幅増、下へドラッグ(dy>0)で高さ増
+      const rawDw = (ev.clientX - startX) / thumbScale;
       const rawDh = (ev.clientY - startY) / thumbScale;
       const { dw, dh } = applyShiftSnap(rawDw, rawDh, ev.shiftKey);
       latest = {
@@ -464,8 +461,8 @@ const CutContainer: React.FC = () => {
                               cursor: tool === 'Crop' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
                             }}
                             key={`CC${index + 1}PP${child.name}`}
-                            title={cut.psdName ? `${cut.psdName} をペイントアプリで開く` : undefined}
-                            onClick={(e) => {
+                            title={cut.psdName ? `${cut.psdName} をダブルクリックでペイントアプリで開く` : undefined}
+                            onDoubleClick={(e) => {
                               e.stopPropagation();
                               if (!cut.psdName) return;
                               if (window.api) {
@@ -593,43 +590,32 @@ const AddCutRow: React.FC = () => {
     }
   };
   return (
-    <View backgroundColor="gray-100">
-      <Grid
-        columns={['72px', '288px', 'auto', 'auto', '128px']}
-        areas={['cut picture action dialogue time']}
-        gap="size-200"
-        marginBottom="size-25"
-      >
-        <View gridArea="cut" width="100%">
-          <Flex direction="row" alignItems="center" justifyContent="center" gap="size-50" marginY="size-100">
-            <TooltipTrigger delay={300}>
-              <ActionButton isQuiet isDisabled={busy} onPress={() => run(addCut)} aria-label="New CUT">
-                <Add />
-              </ActionButton>
-              <Tooltip>New CUT</Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={300}>
-              <ActionButton
-                isQuiet
-                isDisabled={busy || lastCutIndex < 0}
-                onPress={() => run(() => addLayer(lastCutIndex))}
-                aria-label="New Layer"
-              >
-                <Layers />
-              </ActionButton>
-              <Tooltip>New Layer</Tooltip>
-            </TooltipTrigger>
-            <MenuTrigger>
-              <ActionButton isQuiet isDisabled={busy} aria-label="More add options">
-                <More />
-              </ActionButton>
-              <Menu onAction={(key) => key === 'scene' && run(addSceneCut)}>
-                <Item key="scene">New Scene</Item>
-              </Menu>
-            </MenuTrigger>
-          </Flex>
-        </View>
-      </Grid>
+    <View backgroundColor="gray-100" paddingX="size-200" paddingY="size-100">
+      <Flex direction="row" alignItems="center" gap="size-100">
+        <TooltipTrigger delay={300}>
+          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addCut)} aria-label="New CUT">
+            <Add />
+          </ActionButton>
+          <Tooltip>New CUT</Tooltip>
+        </TooltipTrigger>
+        <TooltipTrigger delay={300}>
+          <ActionButton
+            isQuiet
+            isDisabled={busy || lastCutIndex < 0}
+            onPress={() => run(() => addLayer(lastCutIndex))}
+            aria-label="New Layer"
+          >
+            <Layers />
+          </ActionButton>
+          <Tooltip>New Layer</Tooltip>
+        </TooltipTrigger>
+        <TooltipTrigger delay={300}>
+          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addSceneCut)} aria-label="New Scene">
+            <FolderAdd />
+          </ActionButton>
+          <Tooltip>New Scene</Tooltip>
+        </TooltipTrigger>
+      </Flex>
     </View>
   );
 };
