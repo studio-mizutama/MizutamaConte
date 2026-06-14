@@ -121,6 +121,18 @@ const registerIpcHandlers = () => {
     fs.renameSync(tmp, target);
   });
 
+  // 孤立 PSD の掃除。プロジェクトフォルダ内に限定し、存在しなければ無視する（ベストエフォート）
+  ipcMain.handle('storage:delete-file', (_event, name: string) => {
+    if (!currentProjectDir) return;
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    const target = path.join(currentProjectDir, name);
+    try {
+      fs.rmSync(target, { force: true });
+    } catch {
+      // 削除不可は無視
+    }
+  });
+
   ipcMain.handle('paint:open', (_event, psdName: string) => {
     if (!currentProjectDir) return { ok: false, error: 'No project directory' };
     if (psdName.includes('/') || psdName.includes('\\') || psdName.includes('..')) {

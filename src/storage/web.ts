@@ -56,6 +56,15 @@ export const webFsaStorage: ProjectStorage = {
     await writable.close();
   },
 
+  async deleteFile(name) {
+    if (!dirHandle) return;
+    try {
+      await dirHandle.removeEntry(name);
+    } catch {
+      // 存在しない/削除不可は無視（掃除はベストエフォート）
+    }
+  },
+
   async exists(name) {
     if (!dirHandle) return false;
     try {
@@ -79,6 +88,9 @@ export const webReadonlyStorage: ProjectStorage = {
   },
   async writeFile() {
     throw new Error('このブラウザでは保存できません');
+  },
+  async deleteFile() {
+    // 読み取り専用環境では何もしない
   },
   async exists() {
     return false;

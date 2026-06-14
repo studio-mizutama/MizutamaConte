@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('api', {
   // 新規プロジェクトフォルダ作成・保存
   createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),
   writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
+  deleteFile: (name: string) => ipcRenderer.invoke('storage:delete-file', name),
   fileExists: (name: string) => ipcRenderer.invoke('storage:exists', name),
 
   // 外部ペイントアプリで PSD を開く / 外部編集の検知

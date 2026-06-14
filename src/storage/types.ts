@@ -28,5 +28,7 @@ export interface ProjectStorage {
   createProject(defaultName: string): Promise<{ name: string } | null>;
   /** 現在のプロジェクトフォルダへ書き込む（atomic） */
   writeFile(name: string, data: string | Uint8Array): Promise<void>;
+  /** 現在のプロジェクトフォルダからファイルを削除する（孤立 PSD の掃除）。存在しなければ無視 */
+  deleteFile(name: string): Promise<void>;
   exists(name: string): Promise<boolean>;
 }

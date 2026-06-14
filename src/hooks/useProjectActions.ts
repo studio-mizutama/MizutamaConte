@@ -1,6 +1,6 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
-import { appendCut, appendLayer, appendSceneCut, mergeCuts, nextPsdName, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
+import { appendCut, appendLayer, appendSceneCut, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd } from 'psd/template';
 import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
@@ -85,11 +85,17 @@ export const useProjectActions = () => {
     const pa = psdCache[a.psd];
     const pb = psdCache[b.psd];
     if (!pa || !pb) return;
+    // mergePsd で下CUTの内容は上CUTへコピーされるため、結合後に孤立する下CUTの PSD は掃除対象
+    const orphan = orphanedPsdAfterMerge(project, index);
     const { psd: mergedPsd, buffer } = mergePsd(pa, pb);
     if (storage.capabilities.write) {
       await storage.writeFile(a.psd, buffer);
+      // 掃除はベストエフォート（失敗してもマージ自体は成功扱い）
+      if (orphan) await storage.deleteFile(orphan).catch(() => undefined);
     }
-    await setPsdCache({ ...psdCache, [a.psd]: mergedPsd });
+    const nextCache = { ...psdCache, [a.psd]: mergedPsd };
+    if (orphan) delete nextCache[orphan];
+    await setPsdCache(nextCache);
     await setProject(mergeCuts(project, index));
   };
 

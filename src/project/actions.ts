@@ -111,6 +111,18 @@ export const mergeCuts = (project: ProjectFile, index: number): ProjectFile => {
   };
 };
 
+/** 結合(index と index+1)で孤立する下CUTの PSD 名を返す。
+ *  結合後にどのカットからも参照されない場合のみ返し、それ以外（参照あり・上CUTと同名・存在しない）は null。
+ *  ※ mergePsd は下CUTの内容を上CUTへコピー済みなので、ここで返る PSD の削除は内容を失わない掃除になる。 */
+export const orphanedPsdAfterMerge = (project: ProjectFile, index: number): string | null => {
+  const a = project.cuts[index];
+  const b = project.cuts[index + 1];
+  if (!a || !b || !b.psd) return null;
+  if (b.psd === a.psd) return null;
+  const merged = mergeCuts(project, index);
+  return merged.cuts.some((cut) => cut.psd === b.psd) ? null : b.psd;
+};
+
 /** 複数レイヤーCUTの最終レイヤーを、直後の新規単層CUTとして切り出す（New Layer の逆操作） */
 export const splitLastLayer = (
   project: ProjectFile,
