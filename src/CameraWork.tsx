@@ -1,5 +1,6 @@
 import React, { useGlobal, useState, useEffect } from 'reactn';
-import { Grid, Slider, Text } from '@adobe/react-spectrum';
+import { Grid, Slider, TextField, ActionButton, TooltipTrigger, Tooltip, View, Text } from '@adobe/react-spectrum';
+import Switch from '@spectrum-icons/workflow/Switch';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { cutCanvas } from 'project/scene';
@@ -14,31 +15,86 @@ interface Draft {
   scaleOut: number;
 }
 
-/** position スライダー（トップレベル定義: コンポーネント内定義による毎レンダリング再マウントを防ぐ）。
- *  onChange は表示用ドラフト更新、onChangeEnd で project へ確定する二段構え。 */
-const PosSlider: React.FC<{
+const labelStyle: React.CSSProperties = {
+  fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+  color: 'var(--spectrum-alias-label-text-color)',
+  whiteSpace: 'nowrap',
+};
+
+/** ラベル + 数値入力(quiet TextField) + スライダー の1項目。
+ *  数値はローカル下書き → Enter/blur で確定（クランプは親 onCommit が担う）。
+ *  スライダーは onChange=ドラッグ表示更新 / onChangeEnd=確定の二段構え。 */
+const CameraField: React.FC<{
   label: string;
-  bound: number;
   value: number;
+  minValue: number;
+  maxValue: number;
   isDisabled: boolean;
-  onChange: (v: number) => void;
-  onChangeEnd: (v: number) => void;
-}> = ({ label, bound, value, isDisabled, onChange, onChangeEnd }) => (
-  <Slider
-    label={label}
-    isDisabled={isDisabled || bound === 0}
-    minValue={-(bound || 0.5)}
-    maxValue={bound || 0.5}
-    step={0.01}
-    value={clampNum(value, -bound, bound)}
-    onChange={onChange}
-    onChangeEnd={onChangeEnd}
-    width="100%"
-    getValueLabel={(v) => v.toFixed(2)}
-  />
+  onDrag: (v: number) => void;
+  onCommit: (v: number) => void;
+}> = ({ label, value, minValue, maxValue, isDisabled, onDrag, onCommit }) => {
+  const [text, setText] = useState<string | null>(null);
+  const commitText = () => {
+    if (text !== null) {
+      const n = Number(text);
+      if (Number.isFinite(n)) onCommit(n);
+    }
+    setText(null);
+  };
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+        <span style={labelStyle}>{label}</span>
+        <TextField
+          aria-label={label}
+          isQuiet
+          isDisabled={isDisabled}
+          width="size-700"
+          value={text ?? value.toFixed(2)}
+          onChange={setText}
+          onBlur={commitText}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              (e.target as HTMLElement).blur();
+            }
+            if (e.key === 'Escape') {
+              setText(null);
+              (e.target as HTMLElement).blur();
+            }
+          }}
+        />
+      </div>
+      <Slider
+        aria-label={label}
+        isDisabled={isDisabled}
+        minValue={minValue}
+        maxValue={maxValue}
+        step={0.01}
+        value={clampNum(value, minValue, maxValue)}
+        onChange={onDrag}
+        onChangeEnd={onCommit}
+        width="100%"
+      />
+    </div>
+  );
+};
+
+/** in/out 入れ替えボタン（Spectrum Switch アイコン） */
+const SwapButton: React.FC<{ label: string; isDisabled: boolean; onPress: () => void }> = ({
+  label,
+  isDisabled,
+  onPress,
+}) => (
+  <TooltipTrigger delay={300}>
+    <ActionButton isQuiet isDisabled={isDisabled} onPress={onPress} aria-label={label}>
+      <Switch />
+    </ActionButton>
+    <Tooltip>{label}</Tooltip>
+  </TooltipTrigger>
 );
 
-/** 選択中カットのカメラワーク（IN/OUT の位置・スケール）をスライダーで編集するパネル。
+/** 選択中カットのカメラワーク（IN/OUT の位置・スケール）を編集するパネル。
  *  スライダーの可動域をキャンバス内に制限するため、フレームが作画の外には出ない。 */
 export const CameraWork: React.FC = () => {
   const index = useGlobal('selectedCutIndex')[0];
@@ -50,7 +106,7 @@ export const CameraWork: React.FC = () => {
   // canvas が frame と両軸で等しい（ネイティブ解像度）= カメラ可動域ゼロ → 編集不可
   const noCameraRoom = canvas.width <= frame.width && canvas.height <= frame.height;
   const disabled = !cut || noCameraRoom;
-  // 片軸のみ拡張されたキャンバスは scale 固定（=1）でパンのみ可能 → Scale スライダーは無効
+  // 片軸のみ拡張されたキャンバスは scale 固定（=1）でパンのみ可能 → Scale 編集は無効
   const scaleLocked = scaleMin >= scaleMax;
   const cw = cut?.cameraWork;
 
@@ -89,50 +145,102 @@ export const CameraWork: React.FC = () => {
         out: { x: clampNum(s.posOutX, -bxOut, bxOut), y: clampNum(s.posOutY, -byOut, byOut) },
       },
     });
-    // 確定と同時に draft をクリアする。クランプで値が補正された場合に
-    // useEffect の発火を待たず即座に base 表示へ戻し、1フレームの未クランプ表示を防ぐ。
     setDraft(null);
   };
 
   // ドラッグ中: draft のみ更新（CameraWork 自身だけ再描画。project は触らない）
   const onDrag = (over: Partial<Draft>) => setDraft({ ...cur, ...over });
 
-  // position スライダーの ± 可動域（0 のときは min=max を避けるため微小幅 + 無効化）
+  // position スライダーの ± 可動域（0 のときは可動なし → 無効）
   const bxIn = posBound(ratioW, cur.scaleIn);
   const byIn = posBound(ratioH, cur.scaleIn);
   const bxOut = posBound(ratioW, cur.scaleOut);
   const byOut = posBound(ratioH, cur.scaleOut);
 
+  const scaleDisabled = disabled || scaleLocked;
+
   return (
-    <Grid columns={['1fr', '1fr']} columnGap="size-200" rowGap="size-100" width="100%">
-      <Slider
+    <Grid columns={['1fr', 'auto', '1fr']} columnGap="size-100" rowGap="size-100" alignItems="center">
+      {/* Scale 行: In | swap | Out */}
+      <CameraField
         label="Scale In"
-        isDisabled={disabled || scaleLocked}
-        minValue={scaleMin}
-        maxValue={scaleMax}
-        step={0.01}
         value={cur.scaleIn}
-        onChange={(v) => onDrag({ scaleIn: v })}
-        onChangeEnd={(v) => commit({ scaleIn: v })}
-        width="100%"
-        getValueLabel={(v) => v.toFixed(2)}
-      />
-      <Slider
-        label="Scale Out"
-        isDisabled={disabled || scaleLocked}
         minValue={scaleMin}
         maxValue={scaleMax}
-        step={0.01}
-        value={cur.scaleOut}
-        onChange={(v) => onDrag({ scaleOut: v })}
-        onChangeEnd={(v) => commit({ scaleOut: v })}
-        width="100%"
-        getValueLabel={(v) => v.toFixed(2)}
+        isDisabled={scaleDisabled}
+        onDrag={(v) => onDrag({ scaleIn: v })}
+        onCommit={(v) => commit({ scaleIn: v })}
       />
-      <PosSlider label="Pos In X" bound={bxIn} value={cur.posInX} isDisabled={disabled} onChange={(v) => onDrag({ posInX: v })} onChangeEnd={(v) => commit({ posInX: v })} />
-      <PosSlider label="Pos In Y" bound={byIn} value={cur.posInY} isDisabled={disabled} onChange={(v) => onDrag({ posInY: v })} onChangeEnd={(v) => commit({ posInY: v })} />
-      <PosSlider label="Pos Out X" bound={bxOut} value={cur.posOutX} isDisabled={disabled} onChange={(v) => onDrag({ posOutX: v })} onChangeEnd={(v) => commit({ posOutX: v })} />
-      <PosSlider label="Pos Out Y" bound={byOut} value={cur.posOutY} isDisabled={disabled} onChange={(v) => onDrag({ posOutY: v })} onChangeEnd={(v) => commit({ posOutY: v })} />
+      <SwapButton
+        label="Scale を In/Out 入替"
+        isDisabled={scaleDisabled || cur.scaleIn === cur.scaleOut}
+        onPress={() => commit({ scaleIn: cur.scaleOut, scaleOut: cur.scaleIn })}
+      />
+      <CameraField
+        label="Scale Out"
+        value={cur.scaleOut}
+        minValue={scaleMin}
+        maxValue={scaleMax}
+        isDisabled={scaleDisabled}
+        onDrag={(v) => onDrag({ scaleOut: v })}
+        onCommit={(v) => commit({ scaleOut: v })}
+      />
+
+      {/* Pos In 行 */}
+      <CameraField
+        label="Pos In X"
+        value={cur.posInX}
+        minValue={-(bxIn || 0.5)}
+        maxValue={bxIn || 0.5}
+        isDisabled={disabled || bxIn === 0}
+        onDrag={(v) => onDrag({ posInX: v })}
+        onCommit={(v) => commit({ posInX: v })}
+      />
+      <View />
+      <CameraField
+        label="Pos In Y"
+        value={cur.posInY}
+        minValue={-(byIn || 0.5)}
+        maxValue={byIn || 0.5}
+        isDisabled={disabled || byIn === 0}
+        onDrag={(v) => onDrag({ posInY: v })}
+        onCommit={(v) => commit({ posInY: v })}
+      />
+
+      {/* スワップ行: posX | (空) | posY */}
+      <SwapButton
+        label="Pos X を In/Out 入替"
+        isDisabled={disabled || cur.posInX === cur.posOutX}
+        onPress={() => commit({ posInX: cur.posOutX, posOutX: cur.posInX })}
+      />
+      <View />
+      <SwapButton
+        label="Pos Y を In/Out 入替"
+        isDisabled={disabled || cur.posInY === cur.posOutY}
+        onPress={() => commit({ posInY: cur.posOutY, posOutY: cur.posInY })}
+      />
+
+      {/* Pos Out 行 */}
+      <CameraField
+        label="Pos Out X"
+        value={cur.posOutX}
+        minValue={-(bxOut || 0.5)}
+        maxValue={bxOut || 0.5}
+        isDisabled={disabled || bxOut === 0}
+        onDrag={(v) => onDrag({ posOutX: v })}
+        onCommit={(v) => commit({ posOutX: v })}
+      />
+      <View />
+      <CameraField
+        label="Pos Out Y"
+        value={cur.posOutY}
+        minValue={-(byOut || 0.5)}
+        maxValue={byOut || 0.5}
+        isDisabled={disabled || byOut === 0}
+        onDrag={(v) => onDrag({ posOutY: v })}
+        onCommit={(v) => commit({ posOutY: v })}
+      />
+
       {!cut ? (
         <Text gridColumn="1 / -1">カットを選択してください</Text>
       ) : noCameraRoom ? (
