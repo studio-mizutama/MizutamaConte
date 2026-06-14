@@ -86,6 +86,8 @@ export const CameraWork: React.FC = () => {
         out: { x: clampNum(s.posOutX, -bxOut, bxOut), y: clampNum(s.posOutY, -byOut, byOut) },
       },
     });
+    // 確定と同時に draft をクリアする。クランプで値が補正された場合に
+    // useEffect の発火を待たず即座に base 表示へ戻し、1フレームの未クランプ表示を防ぐ。
     setDraft(null);
   };
 
