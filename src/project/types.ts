@@ -58,7 +58,8 @@ export interface CutV1 {
   time?: number;
 }
 
-/** アプリ全体設定（settings.json）。プロジェクトではなくアプリ単位 */
+/** アプリ全体設定（settings.json）。プロジェクトではなくアプリ単位。
+ *  NOTE: main 側の同型 `electron/settings.ts` の AppSettings と構造を一致させること（意図的な二重定義）。 */
 export interface AppSettings {
   paintApp?: {
     mode?: 'auto' | 'custom';

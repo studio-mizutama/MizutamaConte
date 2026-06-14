@@ -2,6 +2,8 @@ import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// NOTE: renderer 側の同型 `src/project/types.ts` の AppSettings と構造を一致させること
+// （main/renderer は tsconfig が分かれており import で共有できないため意図的に二重定義）。
 export interface AppSettings {
   paintApp?: {
     mode?: 'auto' | 'custom';
