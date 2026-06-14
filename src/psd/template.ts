@@ -91,3 +91,48 @@ export const resizeDocPsd = (psd: Psd, width: number, height: number): { psd: Ps
   const buffer = new Uint8Array(writePsd(next, { generateThumbnail: true }));
   return { psd: next, buffer };
 };
+
+const whiteCanvas = (width: number, height: number): HTMLCanvasElement => {
+  const c = document.createElement('canvas');
+  c.width = width;
+  c.height = height;
+  const ctx = c.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+  }
+  return c;
+};
+
+/** 2つの PSD を統合する。base の末尾に add の描画レイヤー(children[1..])を連結する */
+export const mergePsd = (base: Psd, add: Psd): { psd: Psd; buffer: Uint8Array } => {
+  const addLayers = (add.children ?? []).slice(1);
+  const next: Psd = { ...base, children: [...(base.children ?? []), ...addLayers] };
+  const buffer = new Uint8Array(writePsd(next, { generateThumbnail: true }));
+  return { psd: next, buffer };
+};
+
+/**
+ * PSD の最終描画レイヤーを切り離す。
+ * base = そのレイヤーを除いた PSD / layer = 白背景 + そのレイヤー1枚の新規 PSD。
+ */
+export const splitTopLayerPsd = (
+  psd: Psd,
+): { base: { psd: Psd; buffer: Uint8Array }; layer: { psd: Psd; buffer: Uint8Array } } => {
+  const children = psd.children ?? [];
+  const top = children[children.length - 1];
+  const baseChildren = children.slice(0, -1);
+  const basePsd: Psd = { ...psd, children: baseChildren, canvas: baseChildren[0]?.canvas ?? psd.canvas };
+  const baseBuffer = new Uint8Array(writePsd(basePsd, { generateThumbnail: true }));
+
+  const bg = whiteCanvas(psd.width, psd.height);
+  const layerPsd: Psd = {
+    width: psd.width,
+    height: psd.height,
+    children: [{ name: 'background', canvas: bg }, { name: '1', canvas: top?.canvas }],
+    canvas: bg,
+  };
+  const layerBuffer = new Uint8Array(writePsd(layerPsd, { generateThumbnail: true }));
+
+  return { base: { psd: basePsd, buffer: baseBuffer }, layer: { psd: layerPsd, buffer: layerBuffer } };
+};
