@@ -1,6 +1,5 @@
 import React, { useGlobal, useState, useEffect } from 'reactn';
-import { Flex, Slider, Text } from '@adobe/react-spectrum';
-import { LabelTop } from 'Label';
+import { Grid, Slider, Text } from '@adobe/react-spectrum';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { cutCanvas } from 'project/scene';
@@ -101,10 +100,9 @@ export const CameraWork: React.FC = () => {
   const byOut = posBound(ratioH, cur.scaleOut);
 
   return (
-    <Flex direction="column" gap="size-100">
-      <LabelTop>Scale</LabelTop>
+    <Grid columns={['1fr', '1fr']} columnGap="size-200" rowGap="size-100" width="100%">
       <Slider
-        label="In"
+        label="Scale In"
         isDisabled={disabled}
         minValue={scaleMin}
         maxValue={scaleMax}
@@ -116,7 +114,7 @@ export const CameraWork: React.FC = () => {
         getValueLabel={(v) => v.toFixed(2)}
       />
       <Slider
-        label="Out"
+        label="Scale Out"
         isDisabled={disabled}
         minValue={scaleMin}
         maxValue={scaleMax}
@@ -127,13 +125,11 @@ export const CameraWork: React.FC = () => {
         width="100%"
         getValueLabel={(v) => v.toFixed(2)}
       />
-      <LabelTop>Position In</LabelTop>
-      <PosSlider label="X" bound={bxIn} value={cur.posInX} isDisabled={disabled} onChange={(v) => onDrag({ posInX: v })} onChangeEnd={(v) => commit({ posInX: v })} />
-      <PosSlider label="Y" bound={byIn} value={cur.posInY} isDisabled={disabled} onChange={(v) => onDrag({ posInY: v })} onChangeEnd={(v) => commit({ posInY: v })} />
-      <LabelTop>Position Out</LabelTop>
-      <PosSlider label="X" bound={bxOut} value={cur.posOutX} isDisabled={disabled} onChange={(v) => onDrag({ posOutX: v })} onChangeEnd={(v) => commit({ posOutX: v })} />
-      <PosSlider label="Y" bound={byOut} value={cur.posOutY} isDisabled={disabled} onChange={(v) => onDrag({ posOutY: v })} onChangeEnd={(v) => commit({ posOutY: v })} />
-      {disabled ? <Text>カットを選択してください</Text> : <></>}
-    </Flex>
+      <PosSlider label="Pos In X" bound={bxIn} value={cur.posInX} isDisabled={disabled} onChange={(v) => onDrag({ posInX: v })} onChangeEnd={(v) => commit({ posInX: v })} />
+      <PosSlider label="Pos In Y" bound={byIn} value={cur.posInY} isDisabled={disabled} onChange={(v) => onDrag({ posInY: v })} onChangeEnd={(v) => commit({ posInY: v })} />
+      <PosSlider label="Pos Out X" bound={bxOut} value={cur.posOutX} isDisabled={disabled} onChange={(v) => onDrag({ posOutX: v })} onChangeEnd={(v) => commit({ posOutX: v })} />
+      <PosSlider label="Pos Out Y" bound={byOut} value={cur.posOutY} isDisabled={disabled} onChange={(v) => onDrag({ posOutY: v })} onChangeEnd={(v) => commit({ posOutY: v })} />
+      {disabled ? <Text gridColumn="1 / -1">カットを選択してください</Text> : <></>}
+    </Grid>
   );
 };
