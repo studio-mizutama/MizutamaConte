@@ -15,6 +15,7 @@ setGlobal({
   currentCutIndex: 0,
   selectedCutIndex: 0,
   newProjectOpen: false,
+  settingsOpen: false,
 });
 
 ReactDOM.render(

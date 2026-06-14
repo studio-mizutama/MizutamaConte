@@ -17,6 +17,8 @@ declare module 'reactn/default' {
     selectedCutIndex: number;
     /** 新規プロジェクトダイアログの開閉（メニュー/ハンバーガーから開く） */
     newProjectOpen: boolean;
+    /** 設定ダイアログの開閉（Header の歯車から開く） */
+    settingsOpen: boolean;
   }
 }
 

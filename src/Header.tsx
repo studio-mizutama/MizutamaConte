@@ -22,6 +22,7 @@ import { AspectKey, ResolutionKey } from 'project/types';
 import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } from 'project/save';
 import { getStorage, StorageOpenResult } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
+import { SettingsDialog } from 'SettingsDialog';
 
 const { api } = window;
 
@@ -290,6 +291,7 @@ export const Header: React.FC = () => {
 
   const storage = getStorage();
   const setNewProjectOpen = useGlobal('newProjectOpen')[1];
+  const setSettingsOpen = useGlobal('settingsOpen')[1];
 
   const openProject = async () => {
     if (storage.kind === 'web-readonly') {
@@ -396,6 +398,9 @@ export const Header: React.FC = () => {
         <NoDragArea>
           <NewProjectDialog />
         </NoDragArea>
+        <NoDragArea>
+          <SettingsDialog />
+        </NoDragArea>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />
@@ -415,7 +420,12 @@ export const Header: React.FC = () => {
       </NoDragArea>
 
       <HeaderRight>
-        <ActionGroup isQuiet>
+        <ActionGroup
+          isQuiet
+          onAction={(key) => {
+            if (key === 'Settings') setSettingsOpen(true);
+          }}
+        >
           <Item key="Share">
             <Share />
           </Item>
