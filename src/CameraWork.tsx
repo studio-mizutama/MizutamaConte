@@ -45,9 +45,13 @@ export const CameraWork: React.FC = () => {
   const { project, frame } = useProject();
   const { setCameraWork } = useProjectActions();
   const cut = project.cuts[index];
-  const disabled = !cut;
   const canvas = cut ? cutCanvas(cut) : frame;
   const { ratioW, ratioH, scaleMin, scaleMax } = cameraRanges(canvas, frame);
+  // canvas が frame と両軸で等しい（ネイティブ解像度）= カメラ可動域ゼロ → 編集不可
+  const noCameraRoom = canvas.width <= frame.width && canvas.height <= frame.height;
+  const disabled = !cut || noCameraRoom;
+  // 片軸のみ拡張されたキャンバスは scale 固定（=1）でパンのみ可能 → Scale スライダーは無効
+  const scaleLocked = scaleMin >= scaleMax;
   const cw = cut?.cameraWork;
 
   // project 上の現在値（onChangeEnd 確定後の真の値）
@@ -103,7 +107,7 @@ export const CameraWork: React.FC = () => {
     <Grid columns={['1fr', '1fr']} columnGap="size-200" rowGap="size-100" width="100%">
       <Slider
         label="Scale In"
-        isDisabled={disabled}
+        isDisabled={disabled || scaleLocked}
         minValue={scaleMin}
         maxValue={scaleMax}
         step={0.01}
@@ -115,7 +119,7 @@ export const CameraWork: React.FC = () => {
       />
       <Slider
         label="Scale Out"
-        isDisabled={disabled}
+        isDisabled={disabled || scaleLocked}
         minValue={scaleMin}
         maxValue={scaleMax}
         step={0.01}
@@ -129,7 +133,13 @@ export const CameraWork: React.FC = () => {
       <PosSlider label="Pos In Y" bound={byIn} value={cur.posInY} isDisabled={disabled} onChange={(v) => onDrag({ posInY: v })} onChangeEnd={(v) => commit({ posInY: v })} />
       <PosSlider label="Pos Out X" bound={bxOut} value={cur.posOutX} isDisabled={disabled} onChange={(v) => onDrag({ posOutX: v })} onChangeEnd={(v) => commit({ posOutX: v })} />
       <PosSlider label="Pos Out Y" bound={byOut} value={cur.posOutY} isDisabled={disabled} onChange={(v) => onDrag({ posOutY: v })} onChangeEnd={(v) => commit({ posOutY: v })} />
-      {disabled ? <Text gridColumn="1 / -1">カットを選択してください</Text> : <></>}
+      {!cut ? (
+        <Text gridColumn="1 / -1">カットを選択してください</Text>
+      ) : noCameraRoom ? (
+        <Text gridColumn="1 / -1">ネイティブ解像度のカットにはカメラワークがありません（クロップで拡大すると有効）</Text>
+      ) : (
+        <></>
+      )}
     </Grid>
   );
 };
