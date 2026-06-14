@@ -49,4 +49,9 @@ describe('orphanedPsdAfterMerge', () => {
     const p = project([cut('a', 'c001.psd')]);
     expect(orphanedPsdAfterMerge(p, 0)).toBeNull();
   });
+
+  it('is case-insensitive: does not orphan a PSD still referenced under different casing (Mac/Win FS)', () => {
+    const p = project([cut('a', 'c001.psd'), cut('b', 'c002.psd'), cut('c', 'C002.PSD')]);
+    expect(orphanedPsdAfterMerge(p, 0)).toBeNull();
+  });
 });

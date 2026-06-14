@@ -118,9 +118,12 @@ export const orphanedPsdAfterMerge = (project: ProjectFile, index: number): stri
   const a = project.cuts[index];
   const b = project.cuts[index + 1];
   if (!a || !b || !b.psd) return null;
-  if (b.psd === a.psd) return null;
+  // ファイル名比較は大文字小文字を無視する（Mac/Windows は大小無視 FS のため、
+  // 別カットが同じ PSD を別表記で参照していても削除しない＝破壊的操作を保守的に倒す）
+  const target = b.psd.toLowerCase();
+  if (a.psd?.toLowerCase() === target) return null;
   const merged = mergeCuts(project, index);
-  return merged.cuts.some((cut) => cut.psd === b.psd) ? null : b.psd;
+  return merged.cuts.some((cut) => cut.psd?.toLowerCase() === target) ? null : b.psd;
 };
 
 /** 複数レイヤーCUTの最終レイヤーを、直後の新規単層CUTとして切り出す（New Layer の逆操作） */

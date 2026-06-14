@@ -23,9 +23,6 @@ const writeLocal = (settings: AppSettings): void => {
   }
 };
 
-/** Web の localStorage から同期で読む（boot 時の初期 locale/theme 推定用）。Electron では空を返す。 */
-export const readAppSettingsSync = (): AppSettings => (window.api ? {} : readLocal());
-
 /** アプリ設定を読み込む。 */
 export const loadAppSettings = async (): Promise<AppSettings> => {
   if (window.api) return window.api.loadSettings();
