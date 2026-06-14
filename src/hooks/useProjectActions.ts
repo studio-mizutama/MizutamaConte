@@ -1,7 +1,6 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
 import { appendCut, appendLayer, appendSceneCut, mergeCuts, nextPsdName, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
-import { defaultCanvasSize } from 'project/dimensions';
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd } from 'psd/template';
 import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
@@ -24,9 +23,11 @@ export const useProjectActions = () => {
   const setCameraWork = (index: number, cameraWork: CameraWork) =>
     setProject(updateCutAt(project, index, { cameraWork }));
 
-  /** 行追加: PSD 雛形を生成・保存し、カットを末尾に追加する */
+  /** 行追加: PSD 雛形を生成・保存し、カットを末尾に追加する。
+   *  新規カットはネイティブ解像度（canvas=frame）で生成する。カメラワークが必要なら
+   *  クロップツールでキャンバスを拡大する（拡大した余白の中をフレームが動く）。 */
   const addCut = async () => {
-    const size = defaultCanvasSize(frame);
+    const size = { ...frame };
     const { psd, buffer } = createTemplatePsd(size.width, size.height);
     const psdName = nextPsdName(project);
     if (storage.capabilities.write) {
@@ -64,9 +65,9 @@ export const useProjectActions = () => {
     await setProject(resizeCutCanvas(project, cutIndex, size, frame));
   };
 
-  /** New Scene: 既定解像度で新カットを生成し、新シーン開始としてマークする */
+  /** New Scene: ネイティブ解像度で新カットを生成し、新シーン開始としてマークする */
   const addSceneCut = async () => {
-    const size = defaultCanvasSize(frame);
+    const size = { ...frame };
     const { psd, buffer } = createTemplatePsd(size.width, size.height);
     const psdName = nextPsdName(project);
     if (storage.capabilities.write) {
