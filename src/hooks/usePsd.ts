@@ -1,7 +1,7 @@
 import { useMemo, useGlobal, useRef } from 'reactn';
 import { useProject } from 'hooks/useProject';
 import { reconcileDisplayCuts, DisplayCacheEntry } from 'project/displayCut';
-import { ProjectCut } from 'project/types';
+import type { ProjectCut } from 'project/types';
 
 /**
  * プロジェクト (v2) + psdCache から、表示用の Cut 配列（旧形式）を導出する。
