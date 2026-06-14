@@ -18,6 +18,7 @@ export const Outline: React.FC = () => {
   const cuts = usePsd();
   const { project } = useProject();
   const setCut = useGlobal('cut')[1];
+  const setSelectedCutIndex = useGlobal('selectedCutIndex')[1];
   const scenes = deriveScenes(project.cuts);
 
   return (
@@ -26,7 +27,10 @@ export const Outline: React.FC = () => {
         <Accordion key={scene.startIndex} labelName={`Scene${scene.sceneNumber}${scene.title ? ` ${scene.title}` : ''}`}>
           {scene.cutIndices.map((index) => (
             <List
-              onClick={() => setCut(cuts[index])}
+              onClick={() => {
+                setCut(cuts[index]);
+                setSelectedCutIndex(index);
+              }}
               id={`List${index + 1}`}
               key={index}
               onMouseEnter={() => document.getElementById(`Cut${index + 1}`)?.classList.add('isHover')}

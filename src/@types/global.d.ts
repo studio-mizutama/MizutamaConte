@@ -13,6 +13,8 @@ declare module 'reactn/default' {
     saveState: 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
     /** Preview で再生中のカット index（Dialogue パネルが参照） */
     currentCutIndex: number;
+    /** Edit で選択中のカット index（Transition/CameraWork パネルが参照・編集） */
+    selectedCutIndex: number;
   }
 }
 

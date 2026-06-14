@@ -19,6 +19,11 @@ export const useProjectActions = () => {
 
   const setTime = (index: number, time: number) => setProject(updateCutAt(project, index, { time }));
 
+  const setAction = (index: number, action: Action) => setProject(updateCutAt(project, index, { action }));
+
+  const setCameraWork = (index: number, cameraWork: CameraWork) =>
+    setProject(updateCutAt(project, index, { cameraWork }));
+
   /** 行追加: PSD 雛形を生成・保存し、カットを末尾に追加する */
   const addCut = async () => {
     const size = defaultCanvasSize(frame);
@@ -110,6 +115,8 @@ export const useProjectActions = () => {
     setDialogue,
     setActionText,
     setTime,
+    setAction,
+    setCameraWork,
     addCut,
     addLayer,
     addSceneCut,

@@ -13,6 +13,7 @@ setGlobal({
   isLoading: false,
   saveState: 'idle',
   currentCutIndex: 0,
+  selectedCutIndex: 0,
 });
 
 ReactDOM.render(
