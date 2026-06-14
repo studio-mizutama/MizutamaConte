@@ -1,8 +1,9 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
-import { appendCut, appendLayer, appendSceneCut, nextPsdName, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
+import { appendCut, appendLayer, appendSceneCut, nextPsdName, resizeCutCanvas, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
 import { defaultCanvasSize } from 'project/dimensions';
-import { createTemplatePsd, appendLayerToPsd } from 'psd/template';
+import { createTemplatePsd, appendLayerToPsd, resizeDocPsd } from 'psd/template';
+import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
@@ -44,6 +45,20 @@ export const useProjectActions = () => {
     await setProject(appendLayer(project, cutIndex));
   };
 
+  /** Crop: カットのキャンバスをリサイズ（PSD 再書き込み + 全レイヤー canvas + cover カメラ） */
+  const resizeCanvas = async (cutIndex: number, size: FrameSize) => {
+    const cut = project.cuts[cutIndex];
+    if (!cut?.psd) return;
+    const psd = psdCache[cut.psd];
+    if (!psd) return;
+    const { psd: nextPsd, buffer } = resizeDocPsd(psd, size.width, size.height);
+    if (storage.capabilities.write) {
+      await storage.writeFile(cut.psd, buffer);
+    }
+    await setPsdCache({ ...psdCache, [cut.psd]: nextPsd });
+    await setProject(resizeCutCanvas(project, cutIndex, size, frame));
+  };
+
   /** New Scene: 既定解像度で新カットを生成し、新シーン開始としてマークする */
   const addSceneCut = async () => {
     const size = defaultCanvasSize(frame);
@@ -59,5 +74,5 @@ export const useProjectActions = () => {
   const setSceneTitleAt = (cutIndex: number, title: string) => setProject(setSceneTitle(project, cutIndex, title));
   const removeSceneStart = (cutIndex: number) => setProject(setSceneStart(project, cutIndex, undefined));
 
-  return { setDialogue, setActionText, setTime, addCut, addLayer, addSceneCut, setSceneTitleAt, removeSceneStart };
+  return { setDialogue, setActionText, setTime, addCut, addLayer, addSceneCut, setSceneTitleAt, removeSceneStart, resizeCanvas };
 };
