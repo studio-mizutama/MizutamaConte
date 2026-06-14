@@ -100,13 +100,7 @@ export const NewProjectDialog: React.FC = () => {
                     <Item key={key}>{key}</Item>
                   ))}
                 </Picker>
-                <Picker
-                  label="fps"
-                  selectedKey={fps}
-                  onSelectionChange={(key) => setFps(key as string)}
-                  width="size-1200"
-                  menuWidth="size-1000"
-                >
+                <Picker label="fps" selectedKey={fps} onSelectionChange={(key) => setFps(key as string)}>
                   {FPS_OPTIONS.map((key) => (
                     <Item key={key} textValue={key}>
                       <Text>{key}</Text>
