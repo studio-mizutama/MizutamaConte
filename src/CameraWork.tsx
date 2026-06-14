@@ -1,5 +1,5 @@
 import React, { useGlobal, useState, useEffect } from 'reactn';
-import { Grid, Slider, TextField, ActionButton, TooltipTrigger, Tooltip, View, Text } from '@adobe/react-spectrum';
+import { Grid, Slider, TextField, ActionButton, TooltipTrigger, Tooltip, View } from '@adobe/react-spectrum';
 import Switch from '@spectrum-icons/workflow/Switch';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
@@ -43,13 +43,13 @@ const CameraField: React.FC<{
   };
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <span style={labelStyle}>{label}</span>
         <TextField
           aria-label={label}
           isQuiet
           isDisabled={isDisabled}
-          width="size-700"
+          width="size-600"
           value={text ?? value.toFixed(2)}
           onChange={setText}
           onBlur={commitText}
@@ -80,15 +80,17 @@ const CameraField: React.FC<{
   );
 };
 
-/** in/out 入れ替えボタン（Spectrum Switch アイコン） */
-const SwapButton: React.FC<{ label: string; isDisabled: boolean; onPress: () => void }> = ({
+/** in/out 入れ替えボタン（Spectrum Switch アイコン）。
+ *  vertical=true で縦向き（上下に並ぶ pos in/out 用に矢印を90°回転）。 */
+const SwapButton: React.FC<{ label: string; isDisabled: boolean; vertical?: boolean; onPress: () => void }> = ({
   label,
   isDisabled,
+  vertical,
   onPress,
 }) => (
   <TooltipTrigger delay={300}>
     <ActionButton isQuiet isDisabled={isDisabled} onPress={onPress} aria-label={label}>
-      <Switch />
+      <Switch UNSAFE_style={vertical ? { transform: 'rotate(90deg)' } : undefined} />
     </ActionButton>
     <Tooltip>{label}</Tooltip>
   </TooltipTrigger>
@@ -210,12 +212,14 @@ export const CameraWork: React.FC = () => {
       {/* スワップ行: posX | (空) | posY */}
       <SwapButton
         label="Pos X を In/Out 入替"
+        vertical
         isDisabled={disabled || cur.posInX === cur.posOutX}
         onPress={() => commit({ posInX: cur.posOutX, posOutX: cur.posInX })}
       />
       <View />
       <SwapButton
         label="Pos Y を In/Out 入替"
+        vertical
         isDisabled={disabled || cur.posInY === cur.posOutY}
         onPress={() => commit({ posInY: cur.posOutY, posOutY: cur.posInY })}
       />
@@ -240,14 +244,6 @@ export const CameraWork: React.FC = () => {
         onDrag={(v) => onDrag({ posOutY: v })}
         onCommit={(v) => commit({ posOutY: v })}
       />
-
-      {!cut ? (
-        <Text gridColumn="1 / -1">カットを選択してください</Text>
-      ) : noCameraRoom ? (
-        <Text gridColumn="1 / -1">ネイティブ解像度のカットにはカメラワークがありません（クロップで拡大すると有効）</Text>
-      ) : (
-        <></>
-      )}
     </Grid>
   );
 };
