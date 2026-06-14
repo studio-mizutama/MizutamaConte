@@ -309,7 +309,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                 )}
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
-                  .map((child: Layer) => {
+                  .map((child: Layer, layerI: number, layerArr: Layer[]) => {
                     const src = canvasToDataURL(child.canvas);
                     return (
                       <div
@@ -350,8 +350,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                             alt="cut"
                           />
                         </div>
-                        {cut.cameraWork && (
-                          <>
+                        {cut.cameraWork && layerI === 0 && (
                             <In
                               style={{
                                 height: `${frameThumbHeight * cut.cameraWork.scale!.in}px`,
@@ -374,6 +373,8 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                                 IN
                               </Heading>
                             </In>
+                        )}
+                        {cut.cameraWork && layerI === layerArr.length - 1 && (
                             <Out
                               style={{
                                 height: `${frameThumbHeight * cut.cameraWork.scale!.out}px`,
@@ -396,7 +397,6 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                                 OUT
                               </Heading>
                             </Out>
-                          </>
                         )}
                       </div>
                     );
