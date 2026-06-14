@@ -1,7 +1,7 @@
 import { FrameSize, ProjectCut, ProjectFile } from './types';
 import { newId } from './load';
 import { cutCanvas } from './scene';
-import { coverCamera } from './camera';
+import { defaultCameraForResize } from './camera';
 
 /** index 位置のカットへ patch を適用した新しいプロジェクトを返す */
 export const updateCutAt = (project: ProjectFile, index: number, patch: Partial<ProjectCut>): ProjectFile => ({
@@ -147,7 +147,7 @@ export const resizeCutCanvas = (
       ? {
           ...cut,
           rows: cut.rows.map((row) => ({ ...row, canvas: { ...size } })),
-          cameraWork: coverCamera(size, frame),
+          cameraWork: defaultCameraForResize(size, frame),
         }
       : cut,
   ),

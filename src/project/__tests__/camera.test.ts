@@ -1,22 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { coverCamera, applyShiftSnap, cameraRanges, posBound, clampNum } from '../camera';
+import { defaultCameraForResize, applyShiftSnap, cameraRanges, posBound, clampNum } from '../camera';
 
-describe('coverCamera', () => {
-  it('同アスペクト(1.25倍キャンバス)は scale=1.25 の静止カメラ', () => {
-    const cam = coverCamera({ width: 2400, height: 1350 }, { width: 1920, height: 1080 });
+describe('defaultCameraForResize', () => {
+  it('横のみ拡大: scale固定1・左→右パン', () => {
+    // canvas 2880x1080, frame 1920x1080 -> ratioW=1.5, ratioH=1
+    const cam = defaultCameraForResize({ width: 2880, height: 1080 }, { width: 1920, height: 1080 });
+    expect(cam.scale).toEqual({ in: 1, out: 1 });
+    expect(cam.position!.in).toEqual({ x: -0.5, y: 0 }); // 左端
+    expect(cam.position!.out).toEqual({ x: 0.5, y: 0 }); // 右端
+  });
+  it('縦のみ拡大: scale固定1・下→上パン（pos.y>0=下）', () => {
+    // canvas 1920x2160, frame 1920x1080 -> ratioW=1, ratioH=2
+    const cam = defaultCameraForResize({ width: 1920, height: 2160 }, { width: 1920, height: 1080 });
+    expect(cam.scale).toEqual({ in: 1, out: 1 });
+    expect(cam.position!.in).toEqual({ x: 0, y: 1 }); // 下端
+    expect(cam.position!.out).toEqual({ x: 0, y: -1 }); // 上端
+  });
+  it('両方拡大: ズームイン（in=scaleMax / out=1, pos=0）', () => {
+    // canvas 2400x1350, frame 1920x1080 -> ratioW=ratioH=1.25 -> scaleMax=1.25
+    const cam = defaultCameraForResize({ width: 2400, height: 1350 }, { width: 1920, height: 1080 });
     expect(cam.scale!.in).toBeCloseTo(1.25, 5);
-    expect(cam.scale!.out).toBeCloseTo(1.25, 5);
+    expect(cam.scale!.out).toBe(1);
     expect(cam.position).toEqual({ in: { x: 0, y: 0 }, out: { x: 0, y: 0 } });
   });
-  it('横長キャンバスは高さ基準(min)で cover する', () => {
-    // canvas 3000x1350, frame 1920x1080 -> w比1.5625, h比1.25 -> min=1.25
-    const cam = coverCamera({ width: 3000, height: 1350 }, { width: 1920, height: 1080 });
-    expect(cam.scale!.in).toBeCloseTo(1.25, 5);
-  });
-  it('縦長キャンバスは幅基準(min)で cover する', () => {
-    // canvas 1920x2160 -> w比1.0, h比2.0 -> min=1.0
-    const cam = coverCamera({ width: 1920, height: 2160 }, { width: 1920, height: 1080 });
-    expect(cam.scale!.in).toBeCloseTo(1.0, 5);
+  it('非拡大(native): 静止', () => {
+    const cam = defaultCameraForResize({ width: 1920, height: 1080 }, { width: 1920, height: 1080 });
+    expect(cam.scale).toEqual({ in: 1, out: 1 });
+    expect(cam.position).toEqual({ in: { x: 0, y: 0 }, out: { x: 0, y: 0 } });
   });
 });
 

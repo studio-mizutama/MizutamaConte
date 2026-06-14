@@ -1,16 +1,32 @@
 import { FrameSize } from './types';
 
 /**
- * キャンバスリサイズ時の自動カメラワーク（cover フィット・静止）。
- * scale = min(canvas.w/frame.w, canvas.h/frame.h) で画面を作画で埋める（黒帯なし）。
- * はみ出す軸は後からパンを付ける余白になる。position は中央(0)。
+ * キャンバスリサイズ時の方向別デフォルトカメラワーク。
+ * よく使う動きを初期値として入れ、手動調整をほぼ不要にする。
+ * - 横のみ拡大: scale 固定(1)、左→右パン（in 左端 / out 右端）
+ * - 縦のみ拡大: scale 固定(1)、下→上パン（in 下端 / out 上端、pos.y>0=下）
+ * - 両方拡大: ズームイン（in=scaleMax で広く / out=1 でネイティブ、位置は中央0）
+ * - 非拡大(native): 静止
  */
-export const coverCamera = (canvas: FrameSize, frame: FrameSize): CameraWork => {
-  const coverScale = Math.min(canvas.width / frame.width, canvas.height / frame.height);
-  return {
-    scale: { in: coverScale, out: coverScale },
-    position: { in: { x: 0, y: 0 }, out: { x: 0, y: 0 } },
-  };
+export const defaultCameraForResize = (canvas: FrameSize, frame: FrameSize): CameraWork => {
+  const ratioW = canvas.width / frame.width;
+  const ratioH = canvas.height / frame.height;
+  const wEnlarged = ratioW > 1;
+  const hEnlarged = ratioH > 1;
+
+  if (wEnlarged && !hEnlarged) {
+    const maxX = ratioW - 1; // posBound(ratioW, 1)
+    return { scale: { in: 1, out: 1 }, position: { in: { x: -maxX, y: 0 }, out: { x: maxX, y: 0 } } };
+  }
+  if (hEnlarged && !wEnlarged) {
+    const maxY = ratioH - 1; // posBound(ratioH, 1)
+    return { scale: { in: 1, out: 1 }, position: { in: { x: 0, y: maxY }, out: { x: 0, y: -maxY } } };
+  }
+  if (wEnlarged && hEnlarged) {
+    const scaleMax = Math.min(ratioW, ratioH);
+    return { scale: { in: scaleMax, out: 1 }, position: { in: { x: 0, y: 0 }, out: { x: 0, y: 0 } } };
+  }
+  return { scale: { in: 1, out: 1 }, position: { in: { x: 0, y: 0 }, out: { x: 0, y: 0 } } };
 };
 
 /**
