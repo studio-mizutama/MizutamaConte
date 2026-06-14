@@ -1,24 +1,8 @@
-import { app, shell } from 'electron';
+import { shell } from 'electron';
 import { spawn, spawnSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-
-interface AppSettings {
-  paintApp?: {
-    mode?: 'auto' | 'custom';
-    customPath?: string;
-  };
-}
-
-const settingsPath = (): string => path.join(app.getPath('userData'), 'settings.json');
-
-export const loadSettings = (): AppSettings => {
-  try {
-    return JSON.parse(fs.readFileSync(settingsPath(), 'utf8')) as AppSettings;
-  } catch {
-    return {};
-  }
-};
+import { loadSettings } from './settings';
 
 /** /Applications 内で prefix に一致する .app を探す（Photoshop 2024 等の年次フォルダ対応） */
 const findMacAppByPrefix = (prefix: string): string | null => {
