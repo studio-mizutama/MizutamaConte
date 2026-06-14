@@ -1,5 +1,5 @@
 import React, { useGlobal, useState, useEffect } from 'reactn';
-import { Slider, TextField, ActionButton, TooltipTrigger, Tooltip } from '@adobe/react-spectrum';
+import { Slider, ActionButton, TooltipTrigger, Tooltip } from '@adobe/react-spectrum';
 import Switch from '@spectrum-icons/workflow/Switch';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
@@ -25,6 +25,21 @@ const labelStyle: React.CSSProperties = {
   textOverflow: 'ellipsis',
 };
 
+/** スライダーの値表示と同サイズの編集可能な数値入力（react-spectrum TextField は min-width が
+ *  大きく狭いセルに収まらないため、小さなプレーン input を使う）。 */
+const valueInputStyle = (isDisabled: boolean): React.CSSProperties => ({
+  width: '40px',
+  flexShrink: 0,
+  textAlign: 'right',
+  fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+  fontFamily: 'inherit',
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  margin: 0,
+  color: isDisabled ? 'var(--spectrum-alias-text-color-disabled, #b3b3b3)' : 'var(--spectrum-alias-text-color)',
+});
+
 /** ラベル + 数値入力(quiet TextField) + スライダー の1項目。
  *  数値はローカル下書き → Enter/blur で確定（クランプは親 onCommit が担う）。
  *  ラベル行はセル幅(100%)に制約し、はみ出しを防ぐ。 */
@@ -49,25 +64,25 @@ const CameraField: React.FC<{
     <div style={{ width: '100%', minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', minWidth: 0 }}>
         <span style={labelStyle}>{label}</span>
-        <TextField
+        <input
           aria-label={label}
-          isQuiet
-          isDisabled={isDisabled}
-          width="size-600"
-          flexShrink={0}
+          type="text"
+          inputMode="decimal"
+          disabled={isDisabled}
           value={text ?? value.toFixed(2)}
-          onChange={setText}
+          onChange={(e) => setText(e.target.value)}
           onBlur={commitText}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              (e.target as HTMLElement).blur();
+              e.currentTarget.blur();
             }
             if (e.key === 'Escape') {
               setText(null);
-              (e.target as HTMLElement).blur();
+              e.currentTarget.blur();
             }
           }}
+          style={valueInputStyle(isDisabled)}
         />
       </div>
       <Slider
@@ -101,9 +116,8 @@ const SwapButton: React.FC<{ label: string; isDisabled: boolean; vertical?: bool
   </TooltipTrigger>
 );
 
-// スケールの swap は2列を跨いで中央寄せ、pos の swap は各列で中央寄せ
-const swapRowSpan: React.CSSProperties = { gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' };
-const swapCell: React.CSSProperties = { display: 'flex', justifyContent: 'center' };
+// 3カラム [1fr, auto(swap), 1fr]。中央列はスケールswap専用、pos行では空セル。
+const centerCell: React.CSSProperties = { display: 'flex', justifyContent: 'center', alignItems: 'center' };
 
 /** 選択中カットのカメラワーク（IN/OUT の位置・スケール）を編集するパネル。
  *  スライダーの可動域をキャンバス内に制限するため、フレームが作画の外には出ない。 */
@@ -171,8 +185,8 @@ export const CameraWork: React.FC = () => {
   const scaleDisabled = disabled || scaleLocked;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignItems: 'start' }}>
-      {/* Scale 行（col1=In / col2=Out）+ 中央寄せの横スワップ */}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', columnGap: '4px', rowGap: '8px', alignItems: 'center' }}>
+      {/* Scale 行: In | ⇄(中央) | Out */}
       <CameraField
         label="Scale In"
         value={cur.scaleIn}
@@ -182,6 +196,13 @@ export const CameraWork: React.FC = () => {
         onDrag={(v) => onDrag({ scaleIn: v })}
         onCommit={(v) => commit({ scaleIn: v })}
       />
+      <div style={centerCell}>
+        <SwapButton
+          label="Scale を In/Out 入替"
+          isDisabled={scaleDisabled || cur.scaleIn === cur.scaleOut}
+          onPress={() => commit({ scaleIn: cur.scaleOut, scaleOut: cur.scaleIn })}
+        />
+      </div>
       <CameraField
         label="Scale Out"
         value={cur.scaleOut}
@@ -191,15 +212,8 @@ export const CameraWork: React.FC = () => {
         onDrag={(v) => onDrag({ scaleOut: v })}
         onCommit={(v) => commit({ scaleOut: v })}
       />
-      <div style={swapRowSpan}>
-        <SwapButton
-          label="Scale を In/Out 入替"
-          isDisabled={scaleDisabled || cur.scaleIn === cur.scaleOut}
-          onPress={() => commit({ scaleIn: cur.scaleOut, scaleOut: cur.scaleIn })}
-        />
-      </div>
 
-      {/* Pos In 行（col1=X / col2=Y） */}
+      {/* Pos In 行（col1=X / col3=Y） */}
       <CameraField
         label="Pos In X"
         value={cur.posInX}
@@ -209,6 +223,7 @@ export const CameraWork: React.FC = () => {
         onDrag={(v) => onDrag({ posInX: v })}
         onCommit={(v) => commit({ posInX: v })}
       />
+      <div />
       <CameraField
         label="Pos In Y"
         value={cur.posInY}
@@ -219,8 +234,8 @@ export const CameraWork: React.FC = () => {
         onCommit={(v) => commit({ posInY: v })}
       />
 
-      {/* 縦スワップ（X列 / Y列） */}
-      <div style={swapCell}>
+      {/* 縦スワップ行: X列 | (空) | Y列 */}
+      <div style={centerCell}>
         <SwapButton
           label="Pos X を In/Out 入替"
           vertical
@@ -228,7 +243,8 @@ export const CameraWork: React.FC = () => {
           onPress={() => commit({ posInX: cur.posOutX, posOutX: cur.posInX })}
         />
       </div>
-      <div style={swapCell}>
+      <div />
+      <div style={centerCell}>
         <SwapButton
           label="Pos Y を In/Out 入替"
           vertical
@@ -237,7 +253,7 @@ export const CameraWork: React.FC = () => {
         />
       </div>
 
-      {/* Pos Out 行（col1=X / col2=Y） */}
+      {/* Pos Out 行（col1=X / col3=Y） */}
       <CameraField
         label="Pos Out X"
         value={cur.posOutX}
@@ -247,6 +263,7 @@ export const CameraWork: React.FC = () => {
         onDrag={(v) => onDrag({ posOutX: v })}
         onCommit={(v) => commit({ posOutX: v })}
       />
+      <div />
       <CameraField
         label="Pos Out Y"
         value={cur.posOutY}
