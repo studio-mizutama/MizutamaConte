@@ -175,10 +175,13 @@ const TextContainer: React.FC<{
 
 TextContainer.displayName = 'TextContainer';
 
-/** Crop モードでカットのキャンバスを右下ドラッグでリサイズするハンドル */
-const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; thumbScale: number }> = ({
+/** Crop モードでカットのキャンバスを右下ドラッグでリサイズするハンドル。
+ *  最小はフレーム(ネイティブ解像度)。絵コンテのフレームは必ず作画内に収まる必要があるため
+ *  キャンバスをフレームより小さくはできない。 */
+const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; frame: FrameSize; thumbScale: number }> = ({
   cutIndex,
   canvas,
+  frame,
   thumbScale,
 }) => {
   const { resizeCanvas } = useProjectActions();
@@ -198,8 +201,8 @@ const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; thumbScale: 
       const rawDh = (ev.clientY - startY) / thumbScale;
       const { dw, dh } = applyShiftSnap(rawDw, rawDh, ev.shiftKey);
       latest = {
-        width: Math.max(64, Math.round(base.width + dw)),
-        height: Math.max(64, Math.round(base.height + dh)),
+        width: Math.max(frame.width, Math.round(base.width + dw)),
+        height: Math.max(frame.height, Math.round(base.height + dh)),
       };
       setPreview(latest);
     };
@@ -229,6 +232,7 @@ export interface CutRowProps {
   index: number;
   cut: Cut;
   projectCut: ProjectCut;
+  frame: FrameSize;
   thumbScale: number;
   frameThumbWidth: number;
   frameThumbHeight: number;
@@ -248,6 +252,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     index,
     cut,
     projectCut,
+    frame,
     thumbScale,
     frameThumbWidth,
     frameThumbHeight,
@@ -299,7 +304,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
             <View gridArea="picture" width="100%" height="auto">
               <div style={{ position: 'relative', width: `${cutCanvas(projectCut).width * thumbScale}px` }}>
                 {tool === 'Crop' && cut.psdName && (
-                  <ResizeHandle cutIndex={index} canvas={cutCanvas(projectCut)} thumbScale={thumbScale} />
+                  <ResizeHandle cutIndex={index} canvas={cutCanvas(projectCut)} frame={frame} thumbScale={thumbScale} />
                 )}
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)

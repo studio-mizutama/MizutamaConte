@@ -193,6 +193,7 @@ const CutContainer: React.FC = () => {
                   index={index}
                   cut={cut}
                   projectCut={project.cuts[index]}
+                  frame={frame}
                   thumbScale={thumbScale}
                   frameThumbWidth={frameThumbWidth}
                   frameThumbHeight={frameThumbHeight}
