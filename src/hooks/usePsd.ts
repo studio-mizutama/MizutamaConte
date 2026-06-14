@@ -1,24 +1,20 @@
-import { useMemo, useGlobal } from 'reactn';
+import { useMemo, useGlobal, useRef } from 'reactn';
 import { useProject } from 'hooks/useProject';
+import { reconcileDisplayCuts, DisplayCacheEntry } from 'project/displayCut';
+import { ProjectCut } from 'project/types';
 
 /**
  * プロジェクト (v2) + psdCache から、表示用の Cut 配列（旧形式）を導出する。
- * dialogue は行単位の値をカット単位に結合して互換表示にする。
+ * 変化していないカットは前回と同一参照を返し、下流の React.memo を機能させる。
  */
 export const usePsd = (): Cut[] => {
   const { project } = useProject();
   const psdCache = useGlobal('psdCache')[0];
+  const cacheRef = useRef<Map<ProjectCut, DisplayCacheEntry>>(new Map());
 
-  return useMemo(
-    () =>
-      project.cuts.map((cut) => ({
-        picture: cut.psd ? psdCache[cut.psd] : undefined,
-        psdName: cut.psd,
-        cameraWork: cut.cameraWork,
-        action: cut.action,
-        dialogue: cut.rows.map((row) => row.dialogue ?? '').join(''),
-        time: cut.time,
-      })),
-    [project, psdCache],
-  );
+  return useMemo(() => {
+    const { list, cache } = reconcileDisplayCuts(project.cuts, psdCache, cacheRef.current);
+    cacheRef.current = cache;
+    return list;
+  }, [project, psdCache]);
 };
