@@ -25,7 +25,9 @@ import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
-import { deriveScenes, SceneGroup } from 'project/scene';
+import { deriveScenes, SceneGroup, cutCanvas } from 'project/scene';
+import { applyShiftSnap } from 'project/camera';
+import { FrameSize } from 'project/types';
 import { useTool } from 'hooks/useTool';
 import { frameToTimecode, parseTimecode } from 'project/time';
 
@@ -220,6 +222,78 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
   );
 };
 
+const Handle = styled.div`
+  position: absolute;
+  left: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--spectrum-semantic-informative-color-border, #2680eb);
+  background: var(--spectrum-global-color-gray-50, #fff);
+  border-radius: 2px;
+  cursor: nesw-resize;
+  z-index: 5;
+`;
+
+const ResizeOutline = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 2px dashed var(--spectrum-semantic-informative-color-border, #2680eb);
+  pointer-events: none;
+  z-index: 6;
+`;
+
+/** Crop モードでカットのキャンバスを左下ドラッグでリサイズするハンドル */
+const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; thumbScale: number }> = ({
+  cutIndex,
+  canvas,
+  thumbScale,
+}) => {
+  const { resizeCanvas } = useProjectActions();
+  const [preview, setPreview] = useState<FrameSize | null>(null);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const base = { ...canvas };
+    let latest = { ...canvas };
+
+    const onMove = (ev: MouseEvent) => {
+      // 左下ハンドル: 左へドラッグ(dx<0)で幅増、下へドラッグ(dy>0)で高さ増
+      const rawDw = -(ev.clientX - startX) / thumbScale;
+      const rawDh = (ev.clientY - startY) / thumbScale;
+      const { dw, dh } = applyShiftSnap(rawDw, rawDh, ev.shiftKey);
+      latest = {
+        width: Math.max(64, Math.round(base.width + dw)),
+        height: Math.max(64, Math.round(base.height + dh)),
+      };
+      setPreview(latest);
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      setPreview(null);
+      if (latest.width !== base.width || latest.height !== base.height) {
+        resizeCanvas(cutIndex, latest).catch((err) => alert(err));
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  return (
+    <>
+      {preview && (
+        <ResizeOutline style={{ width: `${preview.width * thumbScale}px`, height: `${preview.height * thumbScale}px` }} />
+      )}
+      <Handle onMouseDown={onMouseDown} aria-label={`Resize cut ${cutIndex + 1}`} />
+    </>
+  );
+};
+
 const Gutter = styled.div`
   position: relative;
   height: 10px;
@@ -322,7 +396,10 @@ const CutContainer: React.FC = () => {
                       <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
                     </Flex>
                   </View>
-                  <View gridArea="picture" width="100%" height="auto">
+                  <View gridArea="picture" width="100%" height="auto" UNSAFE_style={{ position: 'relative' }}>
+                    {tool === 'Crop' && cut.psdName && (
+                      <ResizeHandle cutIndex={index} canvas={cutCanvas(project.cuts[index])} thumbScale={thumbScale} />
+                    )}
                     {cut.picture?.children
                       ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                       .map((child: Layer) => {
