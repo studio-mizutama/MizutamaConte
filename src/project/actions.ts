@@ -94,6 +94,46 @@ export const appendSceneCut = (
   return setSceneStart(appended, appended.cuts.length - 1, { title });
 };
 
+/** 隣接する index と index+1 のカットを1つに統合する（下CUTのレイヤーを上CUTへ連結） */
+export const mergeCuts = (project: ProjectFile, index: number): ProjectFile => {
+  const a = project.cuts[index];
+  const b = project.cuts[index + 1];
+  if (!a || !b) return project;
+  const merged: ProjectCut = {
+    ...a,
+    time: (a.time ?? 0) + (b.time ?? 0),
+    // 連結された行は CUT-level の dialogue を汚さないようクリアする（DIALOGUE は上CUTを採用）
+    rows: [...a.rows, ...b.rows.map((row) => ({ ...row, dialogue: '' }))],
+  };
+  return {
+    ...project,
+    cuts: [...project.cuts.slice(0, index), merged, ...project.cuts.slice(index + 2)],
+  };
+};
+
+/** 複数レイヤーCUTの最終レイヤーを、直後の新規単層CUTとして切り出す（New Layer の逆操作） */
+export const splitLastLayer = (
+  project: ProjectFile,
+  cutIndex: number,
+  newPsdName: string,
+  defaultTime: number,
+): ProjectFile => {
+  const cut = project.cuts[cutIndex];
+  if (!cut || cut.rows.length < 2) return project;
+  const lastRow = cut.rows[cut.rows.length - 1];
+  const remaining: ProjectCut = { ...cut, rows: cut.rows.slice(0, -1) };
+  const newCut: ProjectCut = {
+    id: newId(),
+    psd: newPsdName,
+    time: defaultTime,
+    rows: [{ id: newId(), layer: '1', dialogue: '', canvas: { ...lastRow.canvas } }],
+  };
+  return {
+    ...project,
+    cuts: [...project.cuts.slice(0, cutIndex), remaining, newCut, ...project.cuts.slice(cutIndex + 1)],
+  };
+};
+
 /** カットのキャンバスを新サイズへ。全レイヤーを同値にし(不変条件)、cover カメラを自動付与する */
 export const resizeCutCanvas = (
   project: ProjectFile,

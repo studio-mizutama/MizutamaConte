@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { cutCanvas, sameCanvas, canMerge, deriveScenes } from '../scene';
-import { appendLayer, setSceneStart, setSceneTitle, appendSceneCut, resizeCutCanvas } from '../actions';
+import {
+  appendLayer,
+  setSceneStart,
+  setSceneTitle,
+  appendSceneCut,
+  resizeCutCanvas,
+  mergeCuts,
+  splitLastLayer,
+} from '../actions';
 import { emptyProject } from '../load';
 import { ProjectCut } from '../types';
 
@@ -119,5 +127,55 @@ describe('resizeCutCanvas', () => {
     const base = projectWith(cut({ w: 2400, h: 1350 }));
     resizeCutCanvas(base, 0, { width: 1000, height: 1000 }, frame);
     expect(base.cuts[0].rows[0].canvas).toEqual({ width: 2400, height: 1350 });
+  });
+});
+
+const layerCut = (psd: string, w: number, h: number, dialogue: string, time: number, layers = 1): ProjectCut => ({
+  id: psd,
+  psd,
+  time,
+  rows: Array.from({ length: layers }, (_, i) => ({
+    id: `${psd}-r${i}`,
+    layer: String(i + 1),
+    dialogue: i === 0 ? dialogue : '',
+    canvas: { width: w, height: h },
+  })),
+});
+
+describe('mergeCuts', () => {
+  it('下CUTのレイヤーを上CUTに連結し TIME を合算、DIALOGUE は上CUTを採用', () => {
+    const base = projectWith(
+      layerCut('c001.psd', 2400, 1350, 'A台詞', 100),
+      layerCut('c002.psd', 2400, 1350, 'B台詞', 60),
+      layerCut('c003.psd', 2400, 1350, 'C台詞', 30),
+    );
+    const next = mergeCuts(base, 0);
+    expect(next.cuts).toHaveLength(2);
+    expect(next.cuts[0].psd).toBe('c001.psd');
+    expect(next.cuts[0].time).toBe(160);
+    expect(next.cuts[0].rows).toHaveLength(2);
+    expect(next.cuts[0].rows[0].dialogue).toBe('A台詞');
+    expect(next.cuts[0].rows[1].dialogue).toBe('');
+    expect(next.cuts[1].psd).toBe('c003.psd');
+  });
+  it('末尾CUTでは何もしない', () => {
+    const base = projectWith(layerCut('c001.psd', 100, 50, 'x', 10));
+    expect(mergeCuts(base, 0)).toBe(base);
+  });
+});
+
+describe('splitLastLayer', () => {
+  it('複数レイヤーCUTの最終レイヤーを新規CUTとして直後に切り出す', () => {
+    const base = projectWith(layerCut('c001.psd', 2400, 1350, 'A台詞', 100, 2));
+    const next = splitLastLayer(base, 0, 'c009.psd', 72);
+    expect(next.cuts).toHaveLength(2);
+    expect(next.cuts[0].rows).toHaveLength(1);
+    expect(next.cuts[1].psd).toBe('c009.psd');
+    expect(next.cuts[1].time).toBe(72);
+    expect(next.cuts[1].rows[0].canvas).toEqual({ width: 2400, height: 1350 });
+  });
+  it('レイヤーが1枚なら何もしない', () => {
+    const base = projectWith(layerCut('c001.psd', 100, 50, 'x', 10, 1));
+    expect(splitLastLayer(base, 0, 'c009.psd', 72)).toBe(base);
   });
 });
