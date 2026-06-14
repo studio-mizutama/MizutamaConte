@@ -31,12 +31,17 @@ describe('applyShiftSnap', () => {
 });
 
 describe('cameraRanges', () => {
-  it('scaleMax は min(canvas/frame) 比、ratio は各軸比', () => {
+  it('scaleMax は min(canvas/frame) 比、ratio は各軸比、scaleMin は 1（ネイティブ床）', () => {
     const r = cameraRanges({ width: 2400, height: 1350 }, { width: 1920, height: 1080 });
     expect(r.ratioW).toBeCloseTo(1.25, 5);
     expect(r.ratioH).toBeCloseTo(1.25, 5);
     expect(r.scaleMax).toBeCloseTo(1.25, 5);
-    expect(r.scaleMin).toBeGreaterThan(0);
+    expect(r.scaleMin).toBe(1);
+  });
+  it('canvas==frame(ネイティブ)は scaleMin==scaleMax==1 で可動域ゼロ', () => {
+    const r = cameraRanges({ width: 1920, height: 1080 }, { width: 1920, height: 1080 });
+    expect(r.scaleMin).toBe(1);
+    expect(r.scaleMax).toBe(1);
   });
 });
 

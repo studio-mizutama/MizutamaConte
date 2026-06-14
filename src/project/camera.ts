@@ -33,7 +33,12 @@ export interface CameraRanges {
 export const cameraRanges = (canvas: FrameSize, frame: FrameSize): CameraRanges => {
   const ratioW = canvas.width / frame.width;
   const ratioH = canvas.height / frame.height;
-  return { ratioW, ratioH, scaleMin: 0.1, scaleMax: Math.min(ratioW, ratioH) };
+  const scaleMax = Math.min(ratioW, ratioH);
+  // 捕捉領域はネイティブフレーム(scale=1)より小さくできない。
+  // 絵コンテでは作画の無い領域を拡大表示しても意味がなく、クロップがネイティブ未満不可なのと同じ床。
+  // canvas==frame のときは scaleMin==scaleMax==1 となり可動域は消える（=カメラワーク無効の判定にも使える）。
+  const scaleMin = Math.min(1, scaleMax);
+  return { ratioW, ratioH, scaleMin, scaleMax };
 };
 
 /** あるスケールでの position 許容範囲（±この値まで。負は 0 にクランプ） */
