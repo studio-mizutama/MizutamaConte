@@ -16,6 +16,9 @@ export const Transition: React.FC = () => {
   // 'None' は「フェード無し」= undefined として保存する（表示判定が truthy のため）
   const update = (patch: Partial<Action>) => setAction(index, { ...action, ...patch });
 
+  // フェード尺はカット尺(time)を超えない
+  const maxDuration = cut?.time ?? 0;
+
   return (
     <Flex direction="row" gap="size-200" wrap>
       <LabelLL>Fade In</LabelLL>
@@ -40,10 +43,10 @@ export const Transition: React.FC = () => {
       </Picker>
       <Slider
         label="Duration"
-        maxValue={480}
+        maxValue={maxDuration}
         width="256px"
-        isDisabled={disabled}
-        value={action?.fadeInDuration ?? 0}
+        isDisabled={disabled || maxDuration === 0}
+        value={Math.min(action?.fadeInDuration ?? 0, maxDuration)}
         onChange={(v) => update({ fadeInDuration: v })}
       />
       <LabelLL>Fade Out</LabelLL>
@@ -68,10 +71,10 @@ export const Transition: React.FC = () => {
       </Picker>
       <Slider
         label="Duration"
-        maxValue={480}
+        maxValue={maxDuration}
         width="256px"
-        isDisabled={disabled}
-        value={action?.fadeOutDuration ?? 0}
+        isDisabled={disabled || maxDuration === 0}
+        value={Math.min(action?.fadeOutDuration ?? 0, maxDuration)}
         onChange={(v) => update({ fadeOutDuration: v })}
       />
     </Flex>
