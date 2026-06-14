@@ -21,11 +21,13 @@ import More from '@spectrum-icons/workflow/More';
 import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
 import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
 import Close from '@spectrum-icons/workflow/Close';
+import Link from '@spectrum-icons/workflow/Link';
+import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
-import { deriveScenes, SceneGroup, cutCanvas } from 'project/scene';
+import { deriveScenes, SceneGroup, cutCanvas, canMerge } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { FrameSize } from 'project/types';
 import { useTool } from 'hooks/useTool';
@@ -309,7 +311,13 @@ const Gutter = styled.div`
   }
 `;
 
-const RowInsert: React.FC<{ cutIndex: number; busy: boolean; onInsert: () => void }> = ({ cutIndex, busy, onInsert }) => (
+const RowInsert: React.FC<{
+  cutIndex: number;
+  busy: boolean;
+  onInsert: () => void;
+  canMergeNext: boolean;
+  onMerge: () => void;
+}> = ({ cutIndex, busy, onInsert, canMergeNext, onMerge }) => (
   <Gutter aria-label={`Insert layer into cut ${cutIndex + 1}`}>
     <TooltipTrigger delay={300}>
       <ActionButton isQuiet isDisabled={busy} onPress={onInsert} aria-label="Insert New Layer">
@@ -317,6 +325,14 @@ const RowInsert: React.FC<{ cutIndex: number; busy: boolean; onInsert: () => voi
       </ActionButton>
       <Tooltip>New Layer</Tooltip>
     </TooltipTrigger>
+    {canMergeNext && (
+      <TooltipTrigger delay={300}>
+        <ActionButton isQuiet isDisabled={busy} onPress={onMerge} aria-label={`Merge cut ${cutIndex + 1} with next`}>
+          <Link />
+        </ActionButton>
+        <Tooltip>上下のCUTを結合</Tooltip>
+      </TooltipTrigger>
+    )}
   </Gutter>
 );
 
@@ -324,7 +340,7 @@ const CutContainer: React.FC = () => {
   const cuts = usePsd();
   const isLoading = useGlobal('isLoading')[0];
   const { project, frame } = useProject();
-  const { addLayer } = useProjectActions();
+  const { addLayer, mergeCutWithNext, splitCutLastLayer } = useProjectActions();
   const tool = useTool();
   const scenes = deriveScenes(project.cuts);
   const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
@@ -342,6 +358,26 @@ const CutContainer: React.FC = () => {
     setInserting(true);
     try {
       await addLayer(cutIndex);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setInserting(false);
+    }
+  };
+  const mergeNext = async (cutIndex: number) => {
+    setInserting(true);
+    try {
+      await mergeCutWithNext(cutIndex);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setInserting(false);
+    }
+  };
+  const splitLast = async (cutIndex: number) => {
+    setInserting(true);
+    try {
+      await splitCutLastLayer(cutIndex);
     } catch (err) {
       alert(err);
     } finally {
@@ -392,8 +428,23 @@ const CutContainer: React.FC = () => {
                   marginBottom="size-25"
                 >
                   <View gridArea="cut" width="100%" height="auto">
-                    <Flex direction="column" alignItems="center">
+                    <Flex direction="column" alignItems="center" gap="size-50">
                       <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
+                      {project.cuts[index].rows.length > 1 ? (
+                        <TooltipTrigger delay={300}>
+                          <ActionButton
+                            isQuiet
+                            isDisabled={inserting}
+                            onPress={() => splitLast(index)}
+                            aria-label={`Split last layer of cut ${index + 1}`}
+                          >
+                            <RemoveCircle />
+                          </ActionButton>
+                          <Tooltip>最終レイヤーを別CUTに分離</Tooltip>
+                        </TooltipTrigger>
+                      ) : (
+                        <></>
+                      )}
                     </Flex>
                   </View>
                   <View gridArea="picture" width="100%" height="auto" UNSAFE_style={{ position: 'relative' }}>
@@ -506,7 +557,15 @@ const CutContainer: React.FC = () => {
               </div>
               </View>
               )}
-              {!isCollapsed && <RowInsert cutIndex={index} busy={inserting} onInsert={() => insertLayer(index)} />}
+              {!isCollapsed && (
+                <RowInsert
+                  cutIndex={index}
+                  busy={inserting}
+                  onInsert={() => insertLayer(index)}
+                  canMergeNext={index + 1 < project.cuts.length && canMerge(project.cuts[index], project.cuts[index + 1])}
+                  onMerge={() => mergeNext(index)}
+                />
+              )}
             </React.Fragment>
           );
         })}
