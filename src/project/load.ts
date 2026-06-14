@@ -1,6 +1,7 @@
 import { Psd } from 'ag-psd';
 import { CutV1, FrameSize, ProjectCut, ProjectFile, PsdCache } from './types';
 import { DEFAULT_SETTINGS, defaultCanvasSize } from './dimensions';
+import { normalizePsdLayers } from 'psd/normalize';
 
 export interface LoadedPsd {
   name: string;
@@ -70,7 +71,8 @@ export const buildProject = (
   const parsed: unknown = JSON.parse(jsonText);
   const cache: PsdCache = {};
   psds.forEach(({ name, psd }) => {
-    cache[name] = psd;
+    // トリミングされた描画レイヤーをドキュメント全面へ正規化（クロップ表示の防止）
+    cache[name] = normalizePsdLayers(psd);
   });
   const title = jsonFileName.replace(/\.json$/i, '');
 
