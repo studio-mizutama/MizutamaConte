@@ -13,10 +13,29 @@ export const coverCamera = (canvas: FrameSize, frame: FrameSize): CameraWork => 
   };
 };
 
-/** Shift スナップ: 押下時は絶対値の小さい方のデルタを 0 にして軸固定する */
-export const applyShiftSnap = (dw: number, dh: number, shift: boolean): { dw: number; dh: number } => {
+/**
+ * Shift スナップ: ドラッグ方向を「横のみ / 縦のみ / アスペクト比保持(斜め)」の
+ * いずれか最も近いものに吸着する。
+ * - aspect 未指定なら従来どおり横/縦の2方向（絶対値の小さい軸を 0 に）。
+ * - aspect 指定時は3候補（横・縦・アスペクト対角）への射影のうち最近傍を選ぶ。
+ *   aspect = width / height（キャンバスの現在比）。
+ */
+export const applyShiftSnap = (
+  dw: number,
+  dh: number,
+  shift: boolean,
+  aspect?: number,
+): { dw: number; dh: number } => {
   if (!shift) return { dw, dh };
-  return Math.abs(dw) >= Math.abs(dh) ? { dw, dh: 0 } : { dw: 0, dh };
+  if (aspect === undefined || !(aspect > 0)) {
+    return Math.abs(dw) >= Math.abs(dh) ? { dw, dh: 0 } : { dw: 0, dh };
+  }
+  // アスペクト対角線 (方向ベクトル (aspect, 1)) への射影
+  const t = (dw * aspect + dh) / (aspect * aspect + 1);
+  const diagonal = { dw: t * aspect, dh: t };
+  const candidates = [{ dw, dh: 0 }, { dw: 0, dh }, diagonal];
+  const dist2 = (c: { dw: number; dh: number }) => (c.dw - dw) ** 2 + (c.dh - dh) ** 2;
+  return candidates.reduce((best, c) => (dist2(c) < dist2(best) ? c : best), candidates[0]);
 };
 
 export interface CameraRanges {

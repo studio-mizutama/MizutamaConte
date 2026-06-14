@@ -24,9 +24,17 @@ describe('applyShiftSnap', () => {
   it('shift 無しは素通し', () => {
     expect(applyShiftSnap(30, -10, false)).toEqual({ dw: 30, dh: -10 });
   });
-  it('shift 有りは絶対値の小さい方を 0 にする', () => {
+  it('shift 有り(aspect 未指定)は絶対値の小さい方を 0 にする', () => {
     expect(applyShiftSnap(30, -10, true)).toEqual({ dw: 30, dh: 0 });
     expect(applyShiftSnap(-5, 40, true)).toEqual({ dw: 0, dh: 40 });
+  });
+  it('shift 有り(aspect 指定): 対角ドラッグはアスペクト比保持にスナップ', () => {
+    // aspect=2 の対角線 (dh=dw/2) ちょうどのドラッグはそのまま保持
+    expect(applyShiftSnap(100, 50, true, 2)).toEqual({ dw: 100, dh: 50 });
+  });
+  it('shift 有り(aspect 指定): ほぼ横なら横、ほぼ縦なら縦にスナップ', () => {
+    expect(applyShiftSnap(100, 5, true, 2)).toEqual({ dw: 100, dh: 0 });
+    expect(applyShiftSnap(5, 100, true, 2)).toEqual({ dw: 0, dh: 100 });
   });
 });
 

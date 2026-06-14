@@ -199,7 +199,8 @@ const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; frame: Frame
       // 右下ハンドル: 右へドラッグ(dx>0)で幅増、下へドラッグ(dy>0)で高さ増
       const rawDw = (ev.clientX - startX) / thumbScale;
       const rawDh = (ev.clientY - startY) / thumbScale;
-      const { dw, dh } = applyShiftSnap(rawDw, rawDh, ev.shiftKey);
+      // Shift: 横のみ / 縦のみ / アスペクト比保持(斜め) の最近傍にスナップ
+      const { dw, dh } = applyShiftSnap(rawDw, rawDh, ev.shiftKey, base.width / base.height);
       latest = {
         width: Math.max(frame.width, Math.round(base.width + dw)),
         height: Math.max(frame.height, Math.round(base.height + dh)),
