@@ -29,6 +29,7 @@ import { applyShiftSnap } from 'project/camera';
 import { FrameSize } from 'project/types';
 import { useTool } from 'hooks/useTool';
 import { frameToTimecode, parseTimecode } from 'project/time';
+import { canvasToDataURL } from 'psd/thumbnail';
 
 const Scroll = styled.div`
   height: calc(100vh - 82px);
@@ -452,7 +453,7 @@ const CutContainer: React.FC = () => {
                     {cut.picture?.children
                       ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                       .map((child: Layer) => {
-                        const src = child.canvas?.toDataURL('image/png', 0.4);
+                        const src = canvasToDataURL(child.canvas);
                         return (
                           <div
                             style={{

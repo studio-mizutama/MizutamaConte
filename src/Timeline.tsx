@@ -7,6 +7,7 @@ import { useProject } from 'hooks/useProject';
 import { useViewportSize } from 'hooks/useViewportSize';
 import { thumbnailScale } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
+import { canvasToDataURL } from 'psd/thumbnail';
 
 
 const CutNumber = styled.div`
@@ -99,7 +100,7 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
                 {cut.picture?.children
                   ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
                   .map((child: Layer) => {
-                    const src = child.canvas?.toDataURL('image/png', 0.4);
+                    const src = canvasToDataURL(child.canvas);
                     return (
                       <div
                         style={{
