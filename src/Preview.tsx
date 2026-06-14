@@ -15,6 +15,7 @@ import { useViewportSize } from 'hooks/useViewportSize';
 import { defaultCanvasSize } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 import { useGlobal } from 'reactn';
+import { useT } from 'i18n';
 
 const PreviewHeader = styled.div`
   display: flex;
@@ -37,6 +38,7 @@ const CountOut = styled.div`
 `;
 
 export const Preview: React.FC = React.memo(() => {
+  const t = useT();
   const cuts = usePsd();
   const isLoading = useGlobal('isLoading')[0];
   const { frame: projectFrame, fps } = useProject();
@@ -171,8 +173,8 @@ export const Preview: React.FC = React.memo(() => {
       <>
         {isLoading && (
           <Flex direction="column" alignItems="center" justifyContent="center" height={viewport.height - 42}>
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
+            <ProgressCircle aria-label={t('common.loading.ariaLabel')} isIndeterminate size="L" />
+            <Heading>{t('common.loading.heading')}</Heading>
           </Flex>
         )}
         {cuts.length > 0 &&

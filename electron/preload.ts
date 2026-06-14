@@ -19,6 +19,10 @@ contextBridge.exposeInMainWorld('api', {
   onNewProjectRequest: (listener: () => void) => ipcRenderer.on('menu:new-project', listener),
   removeNewProjectRequest: () => ipcRenderer.removeAllListeners('menu:new-project'),
 
+  // メニューの Preferences からの設定ダイアログ表示要求
+  onOpenSettingsRequest: (listener: () => void) => ipcRenderer.on('menu:open-settings', listener),
+  removeOpenSettingsRequest: () => ipcRenderer.removeAllListeners('menu:open-settings'),
+
   // 新規プロジェクトフォルダ作成・保存
   createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),
   writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
@@ -31,6 +35,9 @@ contextBridge.exposeInMainWorld('api', {
   saveSettings: (settings: AppSettings) => ipcRenderer.invoke('settings:save', settings),
   detectPaintApp: () => ipcRenderer.invoke('settings:detect-paint'),
   selectPaintAppPath: () => ipcRenderer.invoke('dialog:select-file'),
+  // 言語・テーマ変更を main に反映（ネイティブテーマ + メニュー再構築）
+  applyAppSettings: (language: 'ja' | 'ko' | 'en', theme: 'light' | 'dark' | 'system') =>
+    ipcRenderer.invoke('app:apply-settings', language, theme),
   onProjectFilesChanged: (listener: () => void) => ipcRenderer.on('project:files-changed', listener),
   removeProjectFilesChanged: () => ipcRenderer.removeAllListeners('project:files-changed'),
 

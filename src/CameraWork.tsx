@@ -5,6 +5,7 @@ import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { cutCanvas } from 'project/scene';
 import { cameraRanges, posBound, clampNum } from 'project/camera';
+import { useT } from 'i18n';
 
 interface Draft {
   posInX: number;
@@ -122,6 +123,7 @@ const centerCell: React.CSSProperties = { display: 'flex', justifyContent: 'cent
 /** 選択中カットのカメラワーク（IN/OUT の位置・スケール）を編集するパネル。
  *  スライダーの可動域をキャンバス内に制限するため、フレームが作画の外には出ない。 */
 export const CameraWork: React.FC = () => {
+  const t = useT();
   const index = useGlobal('selectedCutIndex')[0];
   const { project, frame } = useProject();
   const { setCameraWork } = useProjectActions();
@@ -198,7 +200,7 @@ export const CameraWork: React.FC = () => {
       />
       <div style={centerCell}>
         <SwapButton
-          label="Scale を In/Out 入替"
+          label={t('cameraWork.swapScale')}
           isDisabled={scaleDisabled || cur.scaleIn === cur.scaleOut}
           onPress={() => commit({ scaleIn: cur.scaleOut, scaleOut: cur.scaleIn })}
         />
@@ -237,7 +239,7 @@ export const CameraWork: React.FC = () => {
       {/* 縦スワップ行: X列 | (空) | Y列 */}
       <div style={centerCell}>
         <SwapButton
-          label="Pos X を In/Out 入替"
+          label={t('cameraWork.swapPosX')}
           vertical
           isDisabled={disabled || cur.posInX === cur.posOutX}
           onPress={() => commit({ posInX: cur.posOutX, posOutX: cur.posInX })}
@@ -246,7 +248,7 @@ export const CameraWork: React.FC = () => {
       <div />
       <div style={centerCell}>
         <SwapButton
-          label="Pos Y を In/Out 入替"
+          label={t('cameraWork.swapPosY')}
           vertical
           isDisabled={disabled || cur.posInY === cur.posOutY}
           onPress={() => commit({ posInY: cur.posOutY, posOutY: cur.posInY })}

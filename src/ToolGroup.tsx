@@ -6,6 +6,7 @@ import Crop from '@spectrum-icons/workflow/Crop';
 import Text from '@spectrum-icons/workflow/Text';
 import { Selection } from '@react-types/shared/src/selection';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useT } from 'i18n';
 
 const AlignCenter = styled.div`
   display: flex;
@@ -14,6 +15,7 @@ const AlignCenter = styled.div`
 `;
 
 export const ToolGroup: React.FC = () => {
+  const t = useT();
   const [selected, setSelected] = useGlobal('tool');
 
   const keyDown = () => {
@@ -50,19 +52,19 @@ export const ToolGroup: React.FC = () => {
           <Item key="Select">
             <Select />
           </Item>
-          <Tooltip>Select (V)</Tooltip>
+          <Tooltip>{t('toolGroup.select')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
           <Item key="Crop">
             <Crop />
           </Item>
-          <Tooltip>Crop (C)</Tooltip>
+          <Tooltip>{t('toolGroup.crop')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
           <Item key="Text">
             <Text />
           </Item>
-          <Tooltip>Text (T)</Tooltip>
+          <Tooltip>{t('toolGroup.text')}</Tooltip>
         </TooltipTrigger>
       </ActionGroup>
     </AlignCenter>

@@ -1,5 +1,6 @@
 import 'reactn';
 import { ProjectFile, PsdCache, AppSettings } from '../project/types';
+import { Locale, ColorScheme } from '../i18n/types';
 
 declare module 'reactn/default' {
   export interface State {
@@ -19,6 +20,10 @@ declare module 'reactn/default' {
     newProjectOpen: boolean;
     /** 設定ダイアログの開閉（Header の歯車から開く） */
     settingsOpen: boolean;
+    /** UI 言語（i18n）。設定ダイアログで切替・settings.json に永続化 */
+    locale: Locale;
+    /** テーマ。'system' は OS 設定に追従（react-spectrum Provider colorScheme を駆動） */
+    colorScheme: ColorScheme;
   }
 }
 
@@ -71,6 +76,8 @@ export interface Sandbox {
   removeOpenProjectRequest: () => void;
   onNewProjectRequest: (listener: () => void) => void;
   removeNewProjectRequest: () => void;
+  onOpenSettingsRequest: (listener: () => void) => void;
+  removeOpenSettingsRequest: () => void;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
@@ -79,6 +86,7 @@ export interface Sandbox {
   openInPaint: (psdName: string) => Promise<{ ok: boolean; app?: string; error?: string }>;
   loadSettings: () => Promise<AppSettings>;
   saveSettings: (settings: AppSettings) => Promise<void>;
+  applyAppSettings: (language: 'ja' | 'ko' | 'en', theme: 'light' | 'dark' | 'system') => Promise<void>;
   detectPaintApp: () => Promise<{ kind: 'mac-app' | 'exe'; path: string } | null>;
   selectPaintAppPath: () => Promise<string | null>;
   onProjectFilesChanged: (listener: () => void) => void;

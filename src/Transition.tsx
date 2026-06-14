@@ -3,9 +3,11 @@ import { Flex, Slider, Picker, Item, Text } from '@adobe/react-spectrum';
 import { LabelLL } from 'Label';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
+import { useT } from 'i18n';
 
 /** 選択中カットのトランジション（フェード種別・尺）を編集するパネル */
 export const Transition: React.FC = () => {
+  const t = useT();
   const index = useGlobal('selectedCutIndex')[0];
   const { project } = useProject();
   const { setAction } = useProjectActions();
@@ -21,7 +23,7 @@ export const Transition: React.FC = () => {
 
   return (
     <Flex direction="row" gap="size-200" wrap>
-      <LabelLL>Fade In</LabelLL>
+      <LabelLL>{t('transition.fadeIn')}</LabelLL>
       <Picker
         width="184px"
         isDisabled={disabled}
@@ -29,27 +31,27 @@ export const Transition: React.FC = () => {
         onSelectionChange={(k) => update({ fadeIn: k === 'None' ? undefined : (k as Action['fadeIn']) })}
       >
         <Item key="None">
-          <Text>None</Text>
+          <Text>{t('transition.fade.none')}</Text>
         </Item>
         <Item key="White In">
-          <Text>White In</Text>
+          <Text>{t('transition.fade.whiteIn')}</Text>
         </Item>
         <Item key="Black In">
-          <Text>Black In</Text>
+          <Text>{t('transition.fade.blackIn')}</Text>
         </Item>
         <Item key="Cross">
-          <Text>Cross</Text>
+          <Text>{t('transition.fade.cross')}</Text>
         </Item>
       </Picker>
       <Slider
-        label="Duration"
+        label={t('transition.duration')}
         maxValue={maxDuration}
         width="256px"
         isDisabled={disabled || maxDuration === 0}
         value={Math.min(action?.fadeInDuration ?? 0, maxDuration)}
         onChange={(v) => update({ fadeInDuration: v })}
       />
-      <LabelLL>Fade Out</LabelLL>
+      <LabelLL>{t('transition.fadeOut')}</LabelLL>
       <Picker
         width="184px"
         isDisabled={disabled}
@@ -57,20 +59,20 @@ export const Transition: React.FC = () => {
         onSelectionChange={(k) => update({ fadeOut: k === 'None' ? undefined : (k as Action['fadeOut']) })}
       >
         <Item key="None">
-          <Text>None</Text>
+          <Text>{t('transition.fade.none')}</Text>
         </Item>
         <Item key="White Out">
-          <Text>White Out</Text>
+          <Text>{t('transition.fade.whiteOut')}</Text>
         </Item>
         <Item key="Black Out">
-          <Text>Black Out</Text>
+          <Text>{t('transition.fade.blackOut')}</Text>
         </Item>
         <Item key="Cross">
-          <Text>Cross</Text>
+          <Text>{t('transition.fade.cross')}</Text>
         </Item>
       </Picker>
       <Slider
-        label="Duration"
+        label={t('transition.duration')}
         maxValue={maxDuration}
         width="256px"
         isDisabled={disabled || maxDuration === 0}

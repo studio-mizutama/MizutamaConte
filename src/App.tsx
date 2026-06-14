@@ -1,5 +1,6 @@
 import React, { useGlobal } from 'reactn';
 import { Grid, Provider, defaultTheme, View } from '@adobe/react-spectrum';
+import { localeTag } from 'i18n';
 import { GlobalStyle } from 'styles/Index';
 import styled from 'styled-components';
 import { ToolGroup } from 'ToolGroup';
@@ -24,9 +25,16 @@ const ToolArea = styled.div<{ gridArea: string }>`
   overflow: hidden;
 `;
 
-const GlobalGrid: React.FC = ({ children }) => (
-  <Provider theme={defaultTheme}>
-    <GlobalStyle />
+const GlobalGrid: React.FC = ({ children }) => {
+  const locale = useGlobal('locale')[0];
+  const colorScheme = useGlobal('colorScheme')[0];
+  return (
+    <Provider
+      theme={defaultTheme}
+      locale={localeTag(locale)}
+      colorScheme={colorScheme === 'system' ? undefined : colorScheme}
+    >
+      <GlobalStyle />
     <BackGround>
       <Grid
         areas={['header header header', 'toolbar content sidebar']}
@@ -38,8 +46,9 @@ const GlobalGrid: React.FC = ({ children }) => (
         {children}
       </Grid>
     </BackGround>
-  </Provider>
-);
+    </Provider>
+  );
+};
 
 const App: React.FC = () => {
   const mode = useGlobal('mode')[0];

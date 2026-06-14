@@ -9,6 +9,10 @@ export interface AppSettings {
     mode?: 'auto' | 'custom';
     customPath?: string;
   };
+  /** UI 言語。未設定時は 'ja'（日本語ファースト） */
+  language?: 'ja' | 'ko' | 'en';
+  /** テーマ。'system' は OS 設定に追従。未設定時は 'system' */
+  theme?: 'light' | 'dark' | 'system';
 }
 
 const settingsPath = (): string => path.join(app.getPath('userData'), 'settings.json');

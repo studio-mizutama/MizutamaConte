@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { createMenu } from './menu';
 import { openInPaintApp, findPaintApp } from './paint';
 import { loadSettings, saveSettings, AppSettings } from './settings';
+import { mt, resolveLocale, MenuLocale } from './i18n';
 
 interface Bounds {
   width: number;
@@ -94,9 +95,10 @@ const registerIpcHandlers = () => {
   ipcMain.handle('project:create', async (_event, name: string) => {
     if (!mainWindow) return null;
     // 名前はアプリ内ダイアログで決定済み。ネイティブでは保存先フォルダのみ選ぶ（名前の二重入力を避ける）
+    const locale = resolveLocale();
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: '保存先フォルダを選択',
-      buttonLabel: 'ここに作成',
+      title: mt(locale, 'dialog.create.title'),
+      buttonLabel: mt(locale, 'dialog.create.button'),
       properties: ['openDirectory', 'createDirectory'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
@@ -138,10 +140,16 @@ const registerIpcHandlers = () => {
 
   ipcMain.handle('settings:detect-paint', () => findPaintApp());
 
+  // 言語・テーマ変更を main に反映: ネイティブテーマ切替 + メニュー再構築（ライブ更新）
+  ipcMain.handle('app:apply-settings', (_event, language: MenuLocale, theme: 'light' | 'dark' | 'system') => {
+    nativeTheme.themeSource = theme;
+    if (mainWindow) createMenu(mainWindow, language);
+  });
+
   ipcMain.handle('dialog:select-file', async () => {
     if (!mainWindow) return null;
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: 'お絵描きアプリを選択',
+      title: mt(resolveLocale(), 'dialog.selectPaintApp.title'),
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
@@ -199,6 +207,9 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  // 永続テーマをネイティブにも反映（ウインドウchrome を起動時から一致させる）
+  const savedTheme = loadSettings().theme;
+  nativeTheme.themeSource = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'system';
   registerIpcHandlers();
   createWindow();
 

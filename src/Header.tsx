@@ -23,6 +23,7 @@ import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } 
 import { getStorage, StorageOpenResult } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
+import { useT } from 'i18n';
 
 const { api } = window;
 
@@ -121,6 +122,7 @@ const CloseButtonWrapper = styled.div`
 `;
 
 const Tab: React.FC = () => {
+  const t = useT();
   const [selected, setSelected] = useGlobal('mode');
 
   const keyDown = () => {
@@ -143,11 +145,11 @@ const Tab: React.FC = () => {
       <TabList maxHeight="size-500">
         <Item key="Edit">
           <TableEdit />
-          <Text>Edit</Text>
+          <Text>{t('header.tab.edit')}</Text>
         </Item>
         <Item key="Preview">
           <VideoFilled />
-          <Text>Preview</Text>
+          <Text>{t('header.tab.preview')}</Text>
         </Item>
       </TabList>
     </Tabs>
@@ -177,13 +179,20 @@ const FilePicker: React.FC = () => {
 };
 
 const SaveIndicator: React.FC = () => {
+  const t = useT();
   const saveState = useAutoSave();
   const fileName = useGlobal('globalFileName')[0];
   const storage = getStorage();
   if (!fileName) return null;
   const label = !storage.capabilities.write
-    ? '読み取り専用'
-    : { idle: '', dirty: '未保存', saving: '保存中…', saved: '保存済み', error: '⚠ 保存エラー' }[saveState];
+    ? t('header.save.readOnly')
+    : {
+        idle: '',
+        dirty: t('header.save.dirty'),
+        saving: t('header.save.saving'),
+        saved: t('header.save.saved'),
+        error: t('header.save.error'),
+      }[saveState];
   if (!label) return null;
   return (
     <span
@@ -201,6 +210,7 @@ const SaveIndicator: React.FC = () => {
 };
 
 export const Header: React.FC = () => {
+  const t = useT();
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
@@ -293,6 +303,16 @@ export const Header: React.FC = () => {
   const setNewProjectOpen = useGlobal('newProjectOpen')[1];
   const setSettingsOpen = useGlobal('settingsOpen')[1];
 
+  // Cmd/Ctrl+.（環境設定の慣用ショートカット）で設定ダイアログを開く
+  useHotkeys(
+    'command+.,ctrl+.',
+    (event) => {
+      event.preventDefault();
+      setSettingsOpen(true);
+    },
+    [setSettingsOpen],
+  );
+
   const openProject = async () => {
     if (storage.kind === 'web-readonly') {
       // File System Access API 非対応ブラウザは webkitdirectory で読み取り専用
@@ -310,6 +330,15 @@ export const Header: React.FC = () => {
     };
     api.onOpenProjectRequest(listener);
     return () => api.removeOpenProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの Preferences（Cmd/Ctrl+.）からの設定ダイアログ表示要求
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => setSettingsOpen(true);
+    api.onOpenSettingsRequest(listener);
+    return () => api.removeOpenSettingsRequest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -379,7 +408,7 @@ export const Header: React.FC = () => {
         {!api && (
           <NoDragArea>
             <MenuTrigger>
-              <ActionButton isQuiet aria-label="Menu">
+              <ActionButton isQuiet aria-label={t('header.menu.ariaLabel')}>
                 <ShowMenu />
               </ActionButton>
               <Menu
@@ -388,8 +417,8 @@ export const Header: React.FC = () => {
                   if (k === 'open') openProject();
                 }}
               >
-                <Item key="new">New</Item>
-                <Item key="open">Open</Item>
+                <Item key="new">{t('header.menu.new')}</Item>
+                <Item key="open">{t('header.menu.open')}</Item>
               </Menu>
             </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />

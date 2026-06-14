@@ -8,6 +8,7 @@ import { useViewportSize } from 'hooks/useViewportSize';
 import { thumbnailScale } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 import { canvasToDataURL } from 'psd/thumbnail';
+import { useT } from 'i18n';
 
 
 const CutNumber = styled.div`
@@ -46,6 +47,7 @@ const ScaleNumber = styled.div`
 `;
 
 const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) => {
+  const t = useT();
   const cuts = usePsd();
   const isLoading = useGlobal('isLoading')[0];
   const { frame, fps } = useProject();
@@ -83,8 +85,8 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
       <TimelineArea style={{ width: `${width}px` }}>
         {isLoading && (
           <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
+            <ProgressCircle aria-label={t('common.loading.ariaLabel')} isIndeterminate size="L" />
+            <Heading>{t('common.loading.heading')}</Heading>
           </Flex>
         )}
 

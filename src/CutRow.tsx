@@ -10,6 +10,7 @@ import { ToolName } from 'hooks/useTool';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
+import { useT } from 'i18n';
 
 const MyTextArea = styled.textarea`
   position: absolute;
@@ -184,6 +185,7 @@ const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; frame: Frame
   frame,
   thumbScale,
 }) => {
+  const t = useT();
   const { resizeCanvas } = useProjectActions();
   const [preview, setPreview] = useState<FrameSize | null>(null);
 
@@ -224,7 +226,7 @@ const ResizeHandle: React.FC<{ cutIndex: number; canvas: FrameSize; frame: Frame
       {preview && (
         <ResizeOutline style={{ width: `${preview.width * thumbScale}px`, height: `${preview.height * thumbScale}px` }} />
       )}
-      <Handle onMouseDown={onMouseDown} aria-label={`Resize cut ${cutIndex + 1}`} />
+      <Handle onMouseDown={onMouseDown} aria-label={t('cutRow.resizeAria', { n: cutIndex + 1 })} />
     </>
   );
 };
@@ -266,6 +268,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     setActionText,
     setTime,
   }) => {
+    const t = useT();
     return (
       <View backgroundColor="gray-100">
         <div
@@ -291,11 +294,11 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                       isQuiet
                       isDisabled={inserting}
                       onPress={() => onSplitLast(index)}
-                      aria-label={`Split last layer of cut ${index + 1}`}
+                      aria-label={t('cutRow.splitAria', { n: index + 1 })}
                     >
                       <RemoveCircle />
                     </ActionButton>
-                    <Tooltip>最終レイヤーを別CUTに分離</Tooltip>
+                    <Tooltip>{t('cutRow.splitTooltip')}</Tooltip>
                   </TooltipTrigger>
                 ) : (
                   <></>
@@ -320,18 +323,16 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                           cursor: tool === 'Crop' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
                         }}
                         key={`CC${index + 1}PP${child.name}`}
-                        title={cut.psdName ? `${cut.psdName} をダブルクリックでペイントアプリで開く` : undefined}
+                        title={cut.psdName ? t('cutRow.openHint', { name: cut.psdName }) : undefined}
                         onDoubleClick={(e) => {
                           e.stopPropagation();
                           if (!cut.psdName) return;
                           if (window.api) {
                             window.api.openInPaint(cut.psdName).then((result) => {
-                              if (!result.ok) alert(`ペイントアプリを起動できませんでした: ${result.error ?? ''}`);
+                              if (!result.ok) alert(t('cutRow.launchFailed', { error: result.error ?? '' }));
                             });
                           } else {
-                            alert(
-                              `${cut.psdName} をローカルのペイントアプリで編集してください。\n保存後にプロジェクトを開き直すと反映されます。`,
-                            );
+                            alert(t('cutRow.webEditHint', { name: cut.psdName }));
                           }
                         }}
                       >

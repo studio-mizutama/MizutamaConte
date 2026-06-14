@@ -4,9 +4,11 @@ import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { frameToTimecode, parseTimecode } from 'project/time';
+import { useT } from 'i18n';
 
 /** Preview 再生中カットの尺（duration）を表示・編集するパネル */
 export const Duration: React.FC = () => {
+  const t = useT();
   const cuts = usePsd();
   const index = useGlobal('currentCutIndex')[0];
   const { fps } = useProject();
@@ -29,8 +31,8 @@ export const Duration: React.FC = () => {
 
   return (
     <TextField
-      label={cut ? `Cut${('00' + (index + 1)).slice(-3)} duration · ${seconds}秒 @ ${fps}fps` : undefined}
-      aria-label="Duration"
+      label={cut ? t('duration.label', { cut: ('00' + (index + 1)).slice(-3), sec: seconds, fps }) : undefined}
+      aria-label={t('duration.ariaLabel')}
       width="100%"
       marginTop="size-100"
       value={draft ?? frameToTimecode(cut?.time ?? 0, fps)}

@@ -19,12 +19,14 @@ import { emptyProject } from 'project/load';
 import { serializeProject, setLastPersisted, setPendingV1Backup } from 'project/save';
 import { ASPECT_KEYS, RESOLUTION_KEYS, deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey } from 'project/types';
+import { useT } from 'i18n';
 
 const FPS_OPTIONS = ['12', '24', '30'];
 
 /** 新規プロジェクト作成ダイアログ。開閉は global newProjectOpen で制御し、
  *  メニュー(Electron) / ハンバーガー(Web) から開く。ボタンは内包しない。 */
 export const NewProjectDialog: React.FC = () => {
+  const t = useT();
   const { setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
@@ -80,14 +82,14 @@ export const NewProjectDialog: React.FC = () => {
     <DialogContainer onDismiss={() => setOpen(false)}>
       {open && (
         <Dialog size="S">
-          <Heading>新規プロジェクト</Heading>
+          <Heading>{t('newProject.title')}</Heading>
           <Divider />
           <Content>
             <Flex direction="column" gap="size-150">
-              <TextField label="タイトル" value={title} onChange={setTitle} autoFocus width="100%" />
+              <TextField label={t('newProject.titleLabel')} value={title} onChange={setTitle} autoFocus width="100%" />
               <Flex direction="row" gap="size-150">
                 <Picker
-                  label="解像度"
+                  label={t('newProject.resolutionLabel')}
                   selectedKey={resolution}
                   onSelectionChange={(key) => setResolution(key as ResolutionKey)}
                 >
@@ -95,7 +97,11 @@ export const NewProjectDialog: React.FC = () => {
                     <Item key={key}>{key}</Item>
                   ))}
                 </Picker>
-                <Picker label="アスペクト比" selectedKey={aspect} onSelectionChange={(key) => setAspect(key as AspectKey)}>
+                <Picker
+                  label={t('newProject.aspectLabel')}
+                  selectedKey={aspect}
+                  onSelectionChange={(key) => setAspect(key as AspectKey)}
+                >
                   {ASPECT_KEYS.map((key) => (
                     <Item key={key}>{key}</Item>
                   ))}
@@ -112,10 +118,10 @@ export const NewProjectDialog: React.FC = () => {
           </Content>
           <ButtonGroup>
             <Button variant="secondary" onPress={() => setOpen(false)}>
-              キャンセル
+              {t('common.cancel')}
             </Button>
             <Button variant="cta" onPress={create}>
-              作成
+              {t('newProject.create')}
             </Button>
           </ButtonGroup>
         </Dialog>

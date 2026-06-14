@@ -25,6 +25,7 @@ import { thumbnailScale } from 'project/dimensions';
 import { deriveScenes, SceneGroup, canMerge } from 'project/scene';
 import { useTool } from 'hooks/useTool';
 import { CutRow } from 'CutRow';
+import { useT } from 'i18n';
 
 const Scroll = styled.div`
   height: calc(100vh - 82px);
@@ -49,30 +50,31 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
   collapsed,
   onToggle,
 }) => {
+  const t = useT();
   const { setSceneTitleAt, removeSceneStart } = useProjectActions();
   const tool = useTool();
   const editable = tool === 'Text';
   return (
     <Band id={`Scene${scene.sceneNumber}`}>
-      <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? 'Expand scene' : 'Collapse scene'}>
+      <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? t('conte.scene.expand') : t('conte.scene.collapse')}>
         {collapsed ? <ChevronRight /> : <ChevronDown />}
       </ActionButton>
       <Heading level={4} margin={0}>{`SCENE ${scene.sceneNumber}`}</Heading>
       <TextField
-        aria-label={`Scene ${scene.sceneNumber} title`}
+        aria-label={t('conte.scene.titleAriaLabel', { n: scene.sceneNumber })}
         value={scene.title ?? ''}
         onChange={(v) => setSceneTitleAt(scene.startIndex, v)}
-        placeholder="（無題シーン）"
+        placeholder={t('conte.scene.untitledPlaceholder')}
         width="size-3000"
         isQuiet
         isReadOnly={!editable}
       />
       {scene.startIndex > 0 && (
         <TooltipTrigger delay={300}>
-          <ActionButton isQuiet onPress={() => removeSceneStart(scene.startIndex)} aria-label="Remove scene break">
+          <ActionButton isQuiet onPress={() => removeSceneStart(scene.startIndex)} aria-label={t('conte.scene.removeBreak')}>
             <Close />
           </ActionButton>
-          <Tooltip>シーン区切りを解除</Tooltip>
+          <Tooltip>{t('conte.scene.removeBreak')}</Tooltip>
         </TooltipTrigger>
       )}
     </Band>
@@ -100,26 +102,30 @@ const RowInsert: React.FC<{
   onInsert: () => void;
   canMergeNext: boolean;
   onMerge: () => void;
-}> = ({ cutIndex, busy, onInsert, canMergeNext, onMerge }) => (
-  <Gutter aria-label={`Insert layer into cut ${cutIndex + 1}`}>
-    <TooltipTrigger delay={300}>
-      <ActionButton isQuiet isDisabled={busy} onPress={onInsert} aria-label="Insert New Layer">
-        <Layers />
-      </ActionButton>
-      <Tooltip>New Layer</Tooltip>
-    </TooltipTrigger>
-    {canMergeNext && (
+}> = ({ cutIndex, busy, onInsert, canMergeNext, onMerge }) => {
+  const t = useT();
+  return (
+    <Gutter aria-label={t('conte.gutterAria', { n: cutIndex + 1 })}>
       <TooltipTrigger delay={300}>
-        <ActionButton isQuiet isDisabled={busy} onPress={onMerge} aria-label={`Merge cut ${cutIndex + 1} with next`}>
-          <Link />
+        <ActionButton isQuiet isDisabled={busy} onPress={onInsert} aria-label={t('conte.insertLayerAria')}>
+          <Layers />
         </ActionButton>
-        <Tooltip>上下のCUTを結合</Tooltip>
+        <Tooltip>{t('conte.newLayer')}</Tooltip>
       </TooltipTrigger>
-    )}
-  </Gutter>
-);
+      {canMergeNext && (
+        <TooltipTrigger delay={300}>
+          <ActionButton isQuiet isDisabled={busy} onPress={onMerge} aria-label={t('conte.mergeAria', { n: cutIndex + 1 })}>
+            <Link />
+          </ActionButton>
+          <Tooltip>{t('conte.merge')}</Tooltip>
+        </TooltipTrigger>
+      )}
+    </Gutter>
+  );
+};
 
 const CutContainer: React.FC = () => {
+  const t = useT();
   const cuts = usePsd();
   const isLoading = useGlobal('isLoading')[0];
   const { project, frame, fps } = useProject();
@@ -169,8 +175,8 @@ const CutContainer: React.FC = () => {
     <>
       {isLoading && (
         <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-          <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-          <Heading>Now Loading...</Heading>
+          <ProgressCircle aria-label={t('common.loading.ariaLabel')} isIndeterminate size="L" />
+          <Heading>{t('common.loading.heading')}</Heading>
         </Flex>
       )}
       {cuts.length > 0 &&
@@ -226,6 +232,7 @@ const CutContainer: React.FC = () => {
 
 /** CUT 列最終行の追加コントロール。New CUT / New Layer ボタン + New Scene メニュー */
 const AddCutRow: React.FC = () => {
+  const t = useT();
   const { addCut, addLayer, addSceneCut } = useProjectActions();
   const { project } = useProject();
   const fileName = useGlobal('globalFileName')[0];
@@ -246,27 +253,27 @@ const AddCutRow: React.FC = () => {
     <View backgroundColor="gray-100" paddingX="size-200" paddingY="size-100">
       <Flex direction="row" alignItems="center" gap="size-100">
         <TooltipTrigger delay={300}>
-          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addCut)} aria-label="New CUT">
+          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addCut)} aria-label={t('conte.newCut')}>
             <Add />
           </ActionButton>
-          <Tooltip>New CUT</Tooltip>
+          <Tooltip>{t('conte.newCut')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger delay={300}>
           <ActionButton
             isQuiet
             isDisabled={busy || lastCutIndex < 0}
             onPress={() => run(() => addLayer(lastCutIndex))}
-            aria-label="New Layer"
+            aria-label={t('conte.newLayer')}
           >
             <Layers />
           </ActionButton>
-          <Tooltip>New Layer</Tooltip>
+          <Tooltip>{t('conte.newLayer')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger delay={300}>
-          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addSceneCut)} aria-label="New Scene">
+          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addSceneCut)} aria-label={t('conte.newScene')}>
             <FolderAdd />
           </ActionButton>
-          <Tooltip>New Scene</Tooltip>
+          <Tooltip>{t('conte.newScene')}</Tooltip>
         </TooltipTrigger>
       </Flex>
     </View>
