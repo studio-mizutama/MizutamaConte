@@ -19,6 +19,12 @@ export const createMenu = (win: BrowserWindow) => {
       label: 'File',
       submenu: [
         {
+          label: 'New',
+          accelerator: 'CmdOrCtrl+N',
+          // 新規プロジェクトダイアログをレンダラ側で開く
+          click: () => win.webContents.send('menu:new-project'),
+        },
+        {
           label: 'Open..',
           accelerator: 'CmdOrCtrl+O',
           // フォルダ選択と読み込みはレンダラ起点（project:open）で行う

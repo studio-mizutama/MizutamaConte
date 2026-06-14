@@ -90,18 +90,20 @@ const registerIpcHandlers = () => {
 
   ipcMain.handle('project:read', (_event, dirPath: string) => readProjectDir(dirPath));
 
-  ipcMain.handle('project:create', async (_event, defaultName: string) => {
+  ipcMain.handle('project:create', async (_event, name: string) => {
     if (!mainWindow) return null;
-    const result = await dialog.showSaveDialog(mainWindow, {
-      title: 'New Project',
-      defaultPath: defaultName,
-      buttonLabel: 'Create',
-      properties: ['createDirectory'],
+    // 名前はアプリ内ダイアログで決定済み。ネイティブでは保存先フォルダのみ選ぶ（名前の二重入力を避ける）
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '保存先フォルダを選択',
+      buttonLabel: 'ここに作成',
+      properties: ['openDirectory', 'createDirectory'],
     });
-    if (result.canceled || !result.filePath) return null;
-    fs.mkdirSync(result.filePath, { recursive: true });
-    currentProjectDir = result.filePath;
-    return { name: path.basename(result.filePath) };
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const safeName = name.replace(/[/\\:*?"<>|]/g, '_').trim() || 'NewConte';
+    const projectDir = path.join(result.filePaths[0], safeName);
+    fs.mkdirSync(projectDir, { recursive: true });
+    currentProjectDir = projectDir;
+    return { name: safeName };
   });
 
   // atomic write (tmp + rename)。書き込み先は現在のプロジェクトフォルダ内に限定する

@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの File > Open からの読み込み要求
   onOpenProjectRequest: (listener: () => void) => ipcRenderer.on('menu:open-project', listener),
   removeOpenProjectRequest: () => ipcRenderer.removeAllListeners('menu:open-project'),
+  // メニューの File > New からの新規作成要求
+  onNewProjectRequest: (listener: () => void) => ipcRenderer.on('menu:new-project', listener),
+  removeNewProjectRequest: () => ipcRenderer.removeAllListeners('menu:new-project'),
 
   // 新規プロジェクトフォルダ作成・保存
   createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),

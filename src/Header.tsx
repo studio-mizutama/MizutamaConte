@@ -1,7 +1,7 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
 import { Key } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup } from '@adobe/react-spectrum';
+import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup, MenuTrigger, Menu } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
 import TableEdit from '@spectrum-icons/workflow/TableEdit';
@@ -10,7 +10,6 @@ import Share from '@spectrum-icons/workflow/Share';
 import Branch2 from '@spectrum-icons/workflow/Branch2';
 import Settings from '@spectrum-icons/workflow/Settings';
 import DocumentOutline from '@spectrum-icons/workflow/DocumentOutline';
-import FolderOpenOutline from '@spectrum-icons/workflow/FolderOpenOutline';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 import { readPsd } from 'ag-psd';
 import { useTitle } from 'hooks/useTitle';
@@ -290,6 +289,7 @@ export const Header: React.FC = () => {
   };
 
   const storage = getStorage();
+  const setNewProjectOpen = useGlobal('newProjectOpen')[1];
 
   const openProject = async () => {
     if (storage.kind === 'web-readonly') {
@@ -375,10 +375,23 @@ export const Header: React.FC = () => {
     <DragArea>
       <HeaderLeft>
         {!api && (
-          <ActionButton isQuiet onPress={openProject}>
-            <FolderOpenOutline />
+          <NoDragArea>
+            <MenuTrigger>
+              <ActionButton isQuiet aria-label="Menu">
+                <ShowMenu />
+              </ActionButton>
+              <Menu
+                onAction={(k) => {
+                  if (k === 'new') setNewProjectOpen(true);
+                  if (k === 'open') openProject();
+                }}
+              >
+                <Item key="new">New</Item>
+                <Item key="open">Open</Item>
+              </Menu>
+            </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
-          </ActionButton>
+          </NoDragArea>
         )}
         <NoDragArea>
           <NewProjectDialog />

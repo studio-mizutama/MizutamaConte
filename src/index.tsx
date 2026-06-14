@@ -14,6 +14,7 @@ setGlobal({
   saveState: 'idle',
   currentCutIndex: 0,
   selectedCutIndex: 0,
+  newProjectOpen: false,
 });
 
 ReactDOM.render(

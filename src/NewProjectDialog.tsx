@@ -1,11 +1,10 @@
-import React, { useState, useGlobal } from 'reactn';
+import React, { useState, useGlobal, useEffect } from 'reactn';
 import {
-  ActionButton,
   Button,
   ButtonGroup,
   Content,
   Dialog,
-  DialogTrigger,
+  DialogContainer,
   Divider,
   Flex,
   Heading,
@@ -14,7 +13,6 @@ import {
   Text,
   TextField,
 } from '@adobe/react-spectrum';
-import NewItem from '@spectrum-icons/workflow/NewItem';
 import { useProject } from 'hooks/useProject';
 import { getStorage } from 'storage';
 import { emptyProject } from 'project/load';
@@ -24,12 +22,14 @@ import { AspectKey, ResolutionKey } from 'project/types';
 
 const FPS_OPTIONS = ['12', '24', '30'];
 
-/** 新規プロジェクト作成ダイアログ（タイトル・アスペクト比・解像度・fps） */
+/** 新規プロジェクト作成ダイアログ。開閉は global newProjectOpen で制御し、
+ *  メニュー(Electron) / ハンバーガー(Web) から開く。ボタンは内包しない。 */
 export const NewProjectDialog: React.FC = () => {
   const { setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
   const setSaveState = useGlobal('saveState')[1];
+  const [open, setOpen] = useGlobal('newProjectOpen');
   const storage = getStorage();
 
   const [title, setTitle] = useState('NewConte');
@@ -37,9 +37,18 @@ export const NewProjectDialog: React.FC = () => {
   const [aspect, setAspect] = useState<AspectKey>('16:9');
   const [fps, setFps] = useState('24');
 
-  if (!storage.capabilities.write) return null;
+  // Electron: メニュー File > New からダイアログを開く
+  useEffect(() => {
+    const api = window.api;
+    if (!api) return;
+    const listener = () => setOpen(true);
+    api.onNewProjectRequest(listener);
+    return () => api.removeNewProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const create = async (close: () => void) => {
+  const create = async () => {
+    // 名前はここで決定。保存先フォルダのみネイティブ/FSA で選ぶ（名前の二重入力なし）
     const created = await storage.createProject(title.trim() || 'NewConte');
     if (!created) return;
     const project = emptyProject(created.name);
@@ -59,18 +68,17 @@ export const NewProjectDialog: React.FC = () => {
       setPsdCache({});
       setFileName(jsonFileName);
       setSaveState('saved');
-      close();
+      setOpen(false);
     } catch (err) {
       alert(err);
     }
   };
 
+  if (!storage.capabilities.write) return null;
+
   return (
-    <DialogTrigger>
-      <ActionButton isQuiet aria-label="New Project">
-        <NewItem />
-      </ActionButton>
-      {(close) => (
+    <DialogContainer onDismiss={() => setOpen(false)}>
+      {open && (
         <Dialog size="S">
           <Heading>新規プロジェクト</Heading>
           <Divider />
@@ -87,11 +95,7 @@ export const NewProjectDialog: React.FC = () => {
                     <Item key={key}>{key}</Item>
                   ))}
                 </Picker>
-                <Picker
-                  label="アスペクト比"
-                  selectedKey={aspect}
-                  onSelectionChange={(key) => setAspect(key as AspectKey)}
-                >
+                <Picker label="アスペクト比" selectedKey={aspect} onSelectionChange={(key) => setAspect(key as AspectKey)}>
                   {ASPECT_KEYS.map((key) => (
                     <Item key={key}>{key}</Item>
                   ))}
@@ -113,15 +117,15 @@ export const NewProjectDialog: React.FC = () => {
             </Flex>
           </Content>
           <ButtonGroup>
-            <Button variant="secondary" onPress={close}>
+            <Button variant="secondary" onPress={() => setOpen(false)}>
               キャンセル
             </Button>
-            <Button variant="cta" onPress={() => create(close)}>
+            <Button variant="cta" onPress={create}>
               作成
             </Button>
           </ButtonGroup>
         </Dialog>
       )}
-    </DialogTrigger>
+    </DialogContainer>
   );
 };

@@ -15,6 +15,8 @@ declare module 'reactn/default' {
     currentCutIndex: number;
     /** Edit で選択中のカット index（Transition/CameraWork パネルが参照・編集） */
     selectedCutIndex: number;
+    /** 新規プロジェクトダイアログの開閉（メニュー/ハンバーガーから開く） */
+    newProjectOpen: boolean;
   }
 }
 
@@ -65,6 +67,8 @@ export interface Sandbox {
   readProject: (dirPath: string) => Promise<ProjectPayload | null>;
   onOpenProjectRequest: (listener: () => void) => void;
   removeOpenProjectRequest: () => void;
+  onNewProjectRequest: (listener: () => void) => void;
+  removeNewProjectRequest: () => void;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
