@@ -221,7 +221,7 @@ const TextContainer: React.FC<{
           ))}
         {action?.fadeIn && (
           <TransitionLabel style={{ top: '2px' }}>
-            {`${t(fadeLabelKey(action.fadeIn))} ${frameToTimecode(action.fadeInDuration ?? 0, fps)}`}
+            {`${t(fadeLabelKey(action.fadeIn))} ${Math.round(action.fadeInDuration ?? 0)}`}
           </TransitionLabel>
         )}
         {/* OUT 側トランジション: Cross は蝶ネクタイ型、White/Black Out は従来の下向き三角 */}
@@ -237,7 +237,7 @@ const TextContainer: React.FC<{
           ))}
         {action?.fadeOut && (
           <TransitionLabel style={{ bottom: '2px' }}>
-            {`${t(fadeLabelKey(action.fadeOut))} ${frameToTimecode(action.fadeOutDuration ?? 0, fps)}`}
+            {`${t(fadeLabelKey(action.fadeOut))} ${Math.round(action.fadeOutDuration ?? 0)}`}
           </TransitionLabel>
         )}
       </View>
