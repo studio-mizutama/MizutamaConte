@@ -21,6 +21,8 @@ export const ko: Record<TranslationKey, string> = {
   'header.menu.open': '열기',
   'header.share.ariaLabel': '공유',
   'header.settings.ariaLabel': '설정',
+  'header.share.pdf': 'PDF 내보내기',
+  'header.share.video': '동영상 내보내기',
 
   // 콘티 본문
   'conte.scene.expand': '씬 펼치기',
@@ -134,4 +136,12 @@ export const ko: Record<TranslationKey, string> = {
   'git.init.start': 'git 관리 시작',
   'git.init.starting': '초기화 중…',
   'git.init.notRepo': '이 프로젝트는 아직 버전 관리되지 않습니다.',
+  // 동영상 내보내기
+  'videoExport.title': '동영상 내보내기',
+  'videoExport.quality.label': '품질',
+  'videoExport.quality.high': '고',
+  'videoExport.quality.medium': '중',
+  'videoExport.start': '내보내기',
+  'videoExport.encoding': '동영상 내보내는 중…',
+  'videoExport.frameCount': '프레임 {frame} / {total}',
 };

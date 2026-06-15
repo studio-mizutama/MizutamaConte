@@ -22,6 +22,8 @@ export const en = {
   'header.menu.open': 'Open',
   'header.share.ariaLabel': 'Share',
   'header.settings.ariaLabel': 'Settings',
+  'header.share.pdf': 'Export PDF',
+  'header.share.video': 'Export Video',
 
   // 絵コンテ本体（シーン帯・行挿入・行追加）
   'conte.scene.expand': 'Expand scene',
@@ -136,6 +138,14 @@ export const en = {
   'git.init.start': 'Start version control',
   'git.init.starting': 'Initializing…',
   'git.init.notRepo': 'This project is not under version control yet.',
+  // 動画書き出し
+  'videoExport.title': 'Export Video',
+  'videoExport.quality.label': 'Quality',
+  'videoExport.quality.high': 'High',
+  'videoExport.quality.medium': 'Medium',
+  'videoExport.start': 'Export',
+  'videoExport.encoding': 'Exporting video…',
+  'videoExport.frameCount': '{frame} / {total} frames',
 } as const;
 
 export type TranslationKey = keyof typeof en;

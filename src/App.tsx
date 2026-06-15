@@ -9,6 +9,7 @@ import { Panels } from 'Panels';
 import { Conte } from 'Conte';
 import { Preview } from 'Preview';
 import { PrintHost } from 'PrintHost';
+import { VideoExportHost } from 'VideoExportHost';
 import { PrintStyle } from 'styles/PrintStyle';
 
 const BackGround = styled.div`
@@ -77,6 +78,7 @@ const App: React.FC = () => {
         </View>
       </GlobalGrid>
       <PrintHost />
+      <VideoExportHost />
     </>
   );
 };

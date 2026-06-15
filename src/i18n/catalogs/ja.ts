@@ -21,6 +21,8 @@ export const ja: Record<TranslationKey, string> = {
   'header.menu.open': '開く',
   'header.share.ariaLabel': '共有',
   'header.settings.ariaLabel': '設定',
+  'header.share.pdf': 'PDF エクスポート',
+  'header.share.video': '動画エクスポート',
 
   // 絵コンテ本体
   'conte.scene.expand': 'シーンを展開',
@@ -134,4 +136,12 @@ export const ja: Record<TranslationKey, string> = {
   'git.init.start': 'git 管理を開始',
   'git.init.starting': '初期化中…',
   'git.init.notRepo': 'このプロジェクトはまだバージョン管理されていません。',
+  // 動画書き出し
+  'videoExport.title': '動画を書き出す',
+  'videoExport.quality.label': '品質',
+  'videoExport.quality.high': '高',
+  'videoExport.quality.medium': '中',
+  'videoExport.start': '書き出し',
+  'videoExport.encoding': '動画を書き出し中…',
+  'videoExport.frameCount': 'フレーム {frame} / {total}',
 };
