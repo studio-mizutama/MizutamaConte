@@ -48,17 +48,16 @@ const FadeOutTriangle: React.FC = () => (
   </svg>
 );
 
-/** 1 CUT 行。data-cut-index は PrintHost の高さ実測に使う（シーン見出しも含めて計測）。 */
+/** 1 CUT 行。data-cut-index は PrintHost の高さ実測に使う。 */
 const PrintCutRow: React.FC<{
   index: number;
   cut: Cut;
   frame: FrameSize;
   fps: number;
   timeSum: number;
-  scene?: SceneGroup;
   /** ページ最下段のカットか（booktabs の bottomrule＝太線を引くため）。 */
   lastOnPage?: boolean;
-}> = ({ index, cut, frame, fps, timeSum, scene, lastOnPage }) => {
+}> = ({ index, cut, frame, fps, timeSum, lastOnPage }) => {
   const t = useT();
   const thumbScale = thumbnailScale(frame);
   const frameW = frame.width * thumbScale;
@@ -69,9 +68,6 @@ const PrintCutRow: React.FC<{
   const layers = children.filter((_child, i) => i !== 0);
   return (
     <div className={`print-block${lastOnPage ? ' print-block-last' : ''}`} data-cut-index={index}>
-      {scene && (
-        <div className="print-scene">{`SCENE ${scene.sceneNumber}`}{scene.title ? ` ${scene.title}` : ''}</div>
-      )}
       <div className="print-cut">
         <div className="print-col-cut">{index + 1}</div>
         <div className="print-col-picture">
@@ -128,9 +124,16 @@ const PrintCutRow: React.FC<{
   );
 };
 
-const PrintHeader: React.FC<{ title: string }> = ({ title }) => (
+/** 各ページ先頭の繰り返し見出し。上段＝プロジェクト名 / SCENE N タイトル / ページ番号、下段＝列見出し。 */
+const PrintHeader: React.FC<{ title: string; scene?: SceneGroup; pageLabel?: string }> = ({ title, scene, pageLabel }) => (
   <div className="print-header">
-    <div className="print-title">{title}</div>
+    <div className="print-pagehead">
+      <span className="ph-title">{title}</span>
+      <span className="ph-scene">
+        {scene ? `SCENE ${scene.sceneNumber}${scene.title ? ` ${scene.title}` : ''}` : ''}
+      </span>
+      <span className="ph-page">{pageLabel ?? ''}</span>
+    </div>
     <div className="print-colhead">
       <div className="print-col-cut">CUT</div>
       <div className="print-col-picture">PICTURE</div>
@@ -157,15 +160,19 @@ export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, scenes, frame
     let acc = 0;
     return cuts.map((c) => (acc += c.time ?? 0));
   }, [cuts]);
-  // シーン先頭 index → SceneGroup
-  const sceneByStart = useMemo(() => new Map(scenes.map((s) => [s.startIndex, s])), [scenes]);
+  // 各 CUT index → 所属シーン（ページ見出しに出す SCENE N の判定）
+  const sceneByCut = useMemo(() => {
+    const m = new Map<number, SceneGroup>();
+    scenes.forEach((s) => s.cutIndices.forEach((ci) => m.set(ci, s)));
+    return m;
+  }, [scenes]);
 
   if (!pages) {
     return (
       <div className="print-doc">
         <PrintHeader title={title} />
         {cuts.map((cut, i) => (
-          <PrintCutRow key={i} index={i} cut={cut} frame={frame} fps={fps} timeSum={timeSums[i]} scene={sceneByStart.get(i)} />
+          <PrintCutRow key={i} index={i} cut={cut} frame={frame} fps={fps} timeSum={timeSums[i]} />
         ))}
       </div>
     );
@@ -175,7 +182,11 @@ export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, scenes, frame
     <div className="print-doc">
       {pages.map((page) => (
         <div className="print-page" key={page.pageNumber}>
-          <PrintHeader title={title} />
+          <PrintHeader
+            title={title}
+            scene={sceneByCut.get(page.cutIndices[0])}
+            pageLabel={`${page.pageNumber} / ${pages.length}`}
+          />
           {page.cutIndices.map((i, j) => (
             <PrintCutRow
               key={i}
@@ -184,11 +195,9 @@ export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, scenes, frame
               frame={frame}
               fps={fps}
               timeSum={timeSums[i]}
-              scene={sceneByStart.get(i)}
               lastOnPage={j === page.cutIndices.length - 1}
             />
           ))}
-          <div className="print-footer">{`${page.pageNumber} / ${pages.length}`}</div>
         </div>
       ))}
     </div>

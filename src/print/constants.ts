@@ -8,12 +8,9 @@ export const PAGE_MARGIN_PX = 45; // ≒12mm
 export const PAGE_CONTENT_WIDTH = A4_WIDTH_PX - PAGE_MARGIN_PX * 2; // 704
 /** 印刷フラグメンテーションの丸め誤差で次シートへ溢れる/余分な空白頁が出るのを防ぐ安全マージン。 */
 export const PAGE_SAFETY_PX = 48;
-/** .print-page の border-box 高さ（ほぼ1シート分。A4 高より少し小さく保ち溢れさせない）。 */
-export const PAGE_BOX_HEIGHT = A4_HEIGHT_PX - PAGE_SAFETY_PX; // 1075
-/** padding を除いた本文の高さ。 */
-export const PAGE_CONTENT_HEIGHT = PAGE_BOX_HEIGHT - PAGE_MARGIN_PX * 2; // 985
-/** 各ページ先頭の見出し（タイトル＋列見出し）と末尾のページ番号の概算高さ。 */
+/** padding と安全マージンを除いた本文の高さ。 */
+export const PAGE_CONTENT_HEIGHT = A4_HEIGHT_PX - PAGE_SAFETY_PX - PAGE_MARGIN_PX * 2; // 985
+/** ページ上段見出し（プロジェクト名/シーン/ページ行 ＋ 列見出し）の概算高さ。 */
 export const PRINT_HEADER_HEIGHT = 64;
-export const PRINT_FOOTER_HEIGHT = 24;
-/** 1ページに収容できる CUT 群の高さ（本文高 − 見出し − フッター）。paginate に渡す。 */
-export const PAGE_CUT_CAPACITY = PAGE_CONTENT_HEIGHT - PRINT_HEADER_HEIGHT - PRINT_FOOTER_HEIGHT; // 897
+/** 1ページに収容できる CUT 群の高さ（本文高 − 見出し）。paginate に渡す。 */
+export const PAGE_CUT_CAPACITY = PAGE_CONTENT_HEIGHT - PRINT_HEADER_HEIGHT; // 921

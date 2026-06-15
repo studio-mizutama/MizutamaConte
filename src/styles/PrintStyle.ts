@@ -1,5 +1,5 @@
 import { createGlobalStyle } from 'styled-components';
-import { PAGE_CONTENT_WIDTH, PAGE_BOX_HEIGHT, PAGE_MARGIN_PX } from 'print/constants';
+import { PAGE_CONTENT_WIDTH, PAGE_MARGIN_PX } from 'print/constants';
 
 /**
  * 印刷専用スタイル。.print-root は画面では画面外(left:-10000px)に置いて計測可能にし、
@@ -32,7 +32,17 @@ export const PrintStyle = createGlobalStyle`
     }
   }
 
-  .print-title { font-size: 16px; font-weight: bold; padding: 4px 0; }
+  /* ページ上段の見出し: プロジェクト名（左）/ SCENE N タイトル（中）/ ページ番号（右）。表の外。 */
+  .print-pagehead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 0 0 4px;
+  }
+  .ph-title { font-size: 16px; font-weight: bold; }
+  .ph-scene { font-size: 13px; font-weight: bold; }
+  .ph-page { font-size: 11px; opacity: 0.7; white-space: nowrap; }
 
   .print-colhead,
   .print-cut {
@@ -49,20 +59,15 @@ export const PrintStyle = createGlobalStyle`
   .print-block { break-inside: avoid; border-bottom: 1px solid #000; }
   .print-block-last { border-bottom: 2px solid #000; }
 
-  .print-scene { font-weight: bold; font-size: 13px; padding: 6px 0 2px; }
-
   .print-page {
     box-sizing: border-box;
-    min-height: ${PAGE_BOX_HEIGHT}px;
-    /* @page margin:0 の代わりに視覚マージンを padding で内側に作る */
+    /* @page margin:0 の代わりに視覚マージンを padding で内側に作る。
+       フッターを廃したので min-height は不要（break-after だけで1ページ1シート）。 */
     padding: ${PAGE_MARGIN_PX}px;
-    display: flex;
-    flex-direction: column;
     break-after: page;
   }
   .print-page:last-child { break-after: auto; }
 
-  .print-footer { margin-top: auto; text-align: right; font-size: 11px; padding-top: 6px; }
   .print-time-sum { opacity: 0.6; }
 
   .print-col-action { display: flex; flex-direction: column; gap: 2px; }
