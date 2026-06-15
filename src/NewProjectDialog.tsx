@@ -78,6 +78,7 @@ export const NewProjectDialog: React.FC = () => {
       setFileName(jsonFileName);
       setSaveState('saved');
       clearHistory();
+      getStorage().purgeTrash().catch(() => undefined);
       // バージョン管理 ON かつ Electron かつ git 検出済みのときだけ init（.gitignore/.gitattributes/LFS/初期コミットは electron/git.ts が実施）
       if (gitEnabled && gitIsReady && window.api?.git) {
         try {

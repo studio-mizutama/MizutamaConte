@@ -258,6 +258,7 @@ export const Header: React.FC = () => {
     setFileName(jsonFileName);
     // プロジェクト差し替え（Open/外部リロード）で履歴は無効化する
     clearHistory();
+    getStorage().purgeTrash().catch(() => undefined);
   };
 
   // Web: <input webkitdirectory> からの読み込み
