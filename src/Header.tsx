@@ -1,7 +1,7 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
 import { Key } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup, MenuTrigger, Menu } from '@adobe/react-spectrum';
+import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup, MenuTrigger, Menu, DialogTrigger, Dialog } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
 import TableEdit from '@spectrum-icons/workflow/TableEdit';
@@ -23,6 +23,8 @@ import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } 
 import { getStorage, StorageOpenResult } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
+import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
+import { GitDetect } from 'git/types';
 import { useT } from 'i18n';
 
 const { api } = window;
@@ -206,6 +208,23 @@ const SaveIndicator: React.FC = () => {
     >
       {label}
     </span>
+  );
+};
+
+const GitBranchButton: React.FC = () => {
+  const t = useT();
+  const gitDetect = useGlobal('gitDetect')[0] as GitDetect | undefined;
+  // Web（api 不在で detect 未実行）では gitDetect undefined → VC 無効でアイコンを出さない
+  if (!gitDetect) return null;
+  return (
+    <DialogTrigger type="popover">
+      <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
+        <Branch2 />
+      </ActionButton>
+      <Dialog size="S">
+        <GitSnapshotPopover gitDetect={gitDetect} />
+      </Dialog>
+    </DialogTrigger>
   );
 };
 
@@ -449,6 +468,7 @@ export const Header: React.FC = () => {
       </NoDragArea>
 
       <HeaderRight>
+        <GitBranchButton />
         <ActionGroup
           isQuiet
           onAction={(key) => {
@@ -457,9 +477,6 @@ export const Header: React.FC = () => {
         >
           <Item key="Share">
             <Share />
-          </Item>
-          <Item key="Branch2">
-            <Branch2 />
           </Item>
           <Item key="Settings">
             <Settings />
