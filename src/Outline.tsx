@@ -42,7 +42,7 @@ export const Outline: React.FC = () => {
     const from = dragIndex;
     endDrag();
     if (from === null || from === to) return;
-    // rename 失敗は useReorder 内で通知済み。この .catch は同期 throw（不正 index 等）のみを拾う防御ネット
+    // 防御ネット。現状どの経路も reject しない（moveItem はガード済で throw せず、applyReorderWith は失敗時に内部で notifyError 済）が、将来の rejection への安価な保険として残す
     reorderCutAt(from, to).catch((err) => alert(err));
   };
 
@@ -53,7 +53,7 @@ export const Outline: React.FC = () => {
     const fromScene = sceneOrderOfStart.get(fromStart);
     const toScene = sceneOrderOfStart.get(toStart);
     if (fromScene === undefined || toScene === undefined || fromScene === toScene) return;
-    // rename 失敗は useReorder 内で通知済み。この .catch は同期 throw（不正 index 等）のみを拾う防御ネット
+    // 防御ネット。現状どの経路も reject しない（moveItem はガード済で throw せず、applyReorderWith は失敗時に内部で notifyError 済）が、将来の rejection への安価な保険として残す
     reorderSceneAt(fromScene, toScene).catch((err) => alert(err));
   };
 
