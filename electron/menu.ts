@@ -40,6 +40,13 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
           // フォルダ選択と読み込みはレンダラ起点（project:open）で行う
           click: () => win.webContents.send('menu:open-project'),
         },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.print'),
+          accelerator: 'CmdOrCtrl+P',
+          // 印刷はレンダラの window.print()（CSS組版）で行う
+          click: () => win.webContents.send('menu:print'),
+        },
       ],
     },
     {

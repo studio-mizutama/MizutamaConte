@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの Preferences からの設定ダイアログ表示要求
   onOpenSettingsRequest: (listener: () => void) => ipcRenderer.on('menu:open-settings', listener),
   removeOpenSettingsRequest: () => ipcRenderer.removeAllListeners('menu:open-settings'),
+  // メニューの File > Print からの印刷要求
+  onPrintRequest: (listener: () => void) => ipcRenderer.on('menu:print', listener),
+  removePrintRequest: () => ipcRenderer.removeAllListeners('menu:print'),
 
   // 新規プロジェクトフォルダ作成・保存
   createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),

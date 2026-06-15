@@ -13,6 +13,7 @@ type MenuStrings = {
   'menu.open': string;
   'menu.view': string;
   'menu.reload': string;
+  'menu.print': string;
   'dialog.create.title': string;
   'dialog.create.button': string;
   'dialog.selectPaintApp.title': string;
@@ -28,6 +29,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.open': '開く…',
     'menu.view': '表示',
     'menu.reload': '再読み込み',
+    'menu.print': 'PDF書き出し…',
     'dialog.create.title': '保存先フォルダを選択',
     'dialog.create.button': 'ここに作成',
     'dialog.selectPaintApp.title': 'お絵描きアプリを選択',
@@ -41,6 +43,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.open': '열기…',
     'menu.view': '보기',
     'menu.reload': '새로고침',
+    'menu.print': 'PDF로 내보내기…',
     'dialog.create.title': '저장할 폴더 선택',
     'dialog.create.button': '여기에 만들기',
     'dialog.selectPaintApp.title': '페인트 앱 선택',
@@ -54,6 +57,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.open': 'Open…',
     'menu.view': 'View',
     'menu.reload': 'Reload',
+    'menu.print': 'Export PDF…',
     'dialog.create.title': 'Select destination folder',
     'dialog.create.button': 'Create here',
     'dialog.selectPaintApp.title': 'Select paint app',

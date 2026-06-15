@@ -25,6 +25,7 @@ import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
 import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
 import { useT } from 'i18n';
+import { usePrint } from 'print/usePrint';
 
 const { api } = window;
 
@@ -232,6 +233,7 @@ const GitBranchButton: React.FC = () => {
 
 export const Header: React.FC = () => {
   const t = useT();
+  const print = usePrint();
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
@@ -354,6 +356,15 @@ export const Header: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // メニューの File > Print からの印刷要求（Electron のみ）
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => print();
+    api.onPrintRequest(listener);
+    return () => api.removePrintRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // メニューの Preferences（Cmd/Ctrl+.）からの設定ダイアログ表示要求
   useEffect(() => {
     if (!api) return;
@@ -472,7 +483,7 @@ export const Header: React.FC = () => {
       <HeaderRight>
         {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
         <Flex alignItems="center" gap="size-100">
-          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')}>
+          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} onPress={print}>
             <Share />
           </ActionButton>
           <GitBranchButton />
