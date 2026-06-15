@@ -5,7 +5,7 @@ import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLa
 import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 import { record, clearHistory } from 'history/undoManager';
-import { FileSwap, makeOverwriteSwap, makeDeleteSwap, composeSwaps } from 'history/fileSwap';
+import { FileSwap, makeOverwriteSwap, makeDeleteSwap, makeCreateSwap, composeSwaps } from 'history/fileSwap';
 import { makeCreatePsdRevert, makeCreatePsdReapply } from 'history/effects';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
@@ -77,13 +77,30 @@ export const useProjectActions = () => {
     if (!cut?.psd) return;
     const psd = psdCache[cut.psd];
     if (!psd) return;
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const { psd: nextPsd, buffer } = appendLayerToPsd(psd, String(cut.rows.length + 1));
+    const swaps: FileSwap[] = [];
     if (storage.capabilities.write) {
+      const preToken = await storage.trashFile(cut.psd);
       await storage.writeFile(cut.psd, buffer);
+      swaps.push(makeOverwriteSwap(cut.psd, preToken));
     }
     await setPsdCache({ ...psdCache, [cut.psd]: nextPsd });
-    await setProject(appendLayer(project, cutIndex));
-    clearHistory();
+    const next = appendLayer(project, cutIndex);
+    await setProject(next);
+    if (!storage.capabilities.write) {
+      clearHistory();
+      return;
+    }
+    record({
+      label: 'addLayer',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      ...composeSwaps(swaps),
+    });
   };
 
   /** Crop: カットのキャンバスをリサイズ（PSD 再書き込み + 全レイヤー canvas。拡大時のみ cover カメラ付与 / native・縮小時は cameraWork を消す） */
@@ -92,13 +109,30 @@ export const useProjectActions = () => {
     if (!cut?.psd) return;
     const psd = psdCache[cut.psd];
     if (!psd) return;
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const { psd: nextPsd, buffer } = resizeDocPsd(psd, size.width, size.height);
+    const swaps: FileSwap[] = [];
     if (storage.capabilities.write) {
+      const preToken = await storage.trashFile(cut.psd);
       await storage.writeFile(cut.psd, buffer);
+      swaps.push(makeOverwriteSwap(cut.psd, preToken));
     }
     await setPsdCache({ ...psdCache, [cut.psd]: nextPsd });
-    await setProject(resizeCutCanvas(project, cutIndex, size, frame));
-    clearHistory();
+    const next = resizeCutCanvas(project, cutIndex, size, frame);
+    await setProject(next);
+    if (!storage.capabilities.write) {
+      clearHistory();
+      return;
+    }
+    record({
+      label: 'resizeCanvas',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      ...composeSwaps(swaps),
+    });
   };
 
   /** New Scene: ネイティブ解像度で新カットを生成し、新シーン開始としてマークする */
@@ -278,15 +312,33 @@ export const useProjectActions = () => {
     if (!cut?.psd || cut.rows.length < 2) return;
     const psd = psdCache[cut.psd];
     if (!psd) return;
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const { base, layer } = splitTopLayerPsd(psd);
     const newPsdName = nextPsdName(project);
+    const swaps: FileSwap[] = [];
     if (storage.capabilities.write) {
+      const preBaseToken = await storage.trashFile(cut.psd);
       await storage.writeFile(cut.psd, base.buffer);
       await storage.writeFile(newPsdName, layer.buffer);
+      swaps.push(makeOverwriteSwap(cut.psd, preBaseToken));
+      swaps.push(makeCreateSwap(newPsdName));
     }
     await setPsdCache({ ...psdCache, [cut.psd]: base.psd, [newPsdName]: layer.psd });
-    await setProject(splitLastLayer(project, cutIndex, newPsdName, fps * 3));
-    clearHistory();
+    const next = splitLastLayer(project, cutIndex, newPsdName, fps * 3);
+    await setProject(next);
+    if (!storage.capabilities.write) {
+      clearHistory();
+      return;
+    }
+    record({
+      label: 'splitCutLastLayer',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      ...composeSwaps(swaps),
+    });
   };
 
   const setSceneTitleAt = (cutIndex: number, title: string) =>
