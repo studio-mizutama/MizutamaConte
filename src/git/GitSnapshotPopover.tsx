@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'reactn';
 import { Button, Content, Divider, Flex, Heading, Text, TextField } from '@adobe/react-spectrum';
-import { GitDetect, GitLogEntry } from 'git/types';
+import { GitDetect, GitLogEntry, gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
 import { useT } from 'i18n';
 
@@ -16,7 +16,7 @@ const snapshotTimestamp = (d: Date = new Date()): string => {
  */
 export const GitSnapshotPopover: React.FC<{ gitDetect: GitDetect }> = ({ gitDetect }) => {
   const t = useT();
-  const gitReady = gitDetect.hasGit && gitDetect.hasLfs;
+  const ready = gitReady(gitDetect);
   const [isRepo, setIsRepo] = useState<boolean | null>(null);
   const [dirty, setDirty] = useState(false);
   const [latest, setLatest] = useState<GitLogEntry | null>(null);
@@ -26,7 +26,7 @@ export const GitSnapshotPopover: React.FC<{ gitDetect: GitDetect }> = ({ gitDete
 
   const loadState = async () => {
     const git = window.api?.git;
-    if (!git || !gitReady) return;
+    if (!git || !ready) return;
     const repo = await git.isRepo();
     setIsRepo(repo);
     if (repo) {
@@ -75,7 +75,7 @@ export const GitSnapshotPopover: React.FC<{ gitDetect: GitDetect }> = ({ gitDete
   };
 
   // 未インストール
-  if (!gitReady) {
+  if (!ready) {
     return (
       <>
         <Heading>{t('git.snapshot.heading')}</Heading>
@@ -116,7 +116,7 @@ export const GitSnapshotPopover: React.FC<{ gitDetect: GitDetect }> = ({ gitDete
       <Content>
         <Flex direction="column" gap="size-150">
           <Text UNSAFE_style={{ fontSize: '12px', opacity: 0.7 }}>
-            {latest ? t('git.snapshot.lastSnapshot', { time: latest.date }) : t('git.snapshot.never')}
+            {latest ? t('git.snapshot.lastSnapshot', { time: snapshotTimestamp(new Date(latest.date)) }) : t('git.snapshot.never')}
             {' · '}
             {dirty ? t('git.snapshot.dirty') : t('git.snapshot.clean')}
           </Text>

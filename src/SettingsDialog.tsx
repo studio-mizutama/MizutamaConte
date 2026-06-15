@@ -17,7 +17,7 @@ import { useProject } from 'hooks/useProject';
 import { AppSettings } from 'project/types';
 import { saveAppSettings } from 'settings/appSettings';
 import { useT, LOCALES, LANGUAGE_LABELS, Locale, ColorScheme } from 'i18n';
-import { GitDetect } from 'git/types';
+import { gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
 
 const api = window.api;
@@ -35,7 +35,7 @@ export const SettingsDialog: React.FC = () => {
   const [mode, setMode] = useState<'auto' | 'custom'>('auto');
   const [customPath, setCustomPath] = useState('');
   const [detected, setDetected] = useState<string | null>(null);
-  const gitDetect = useGlobal('gitDetect')[0] as GitDetect | undefined;
+  const gitDetect = useGlobal('gitDetect')[0];
   const [gitIsRepo, setGitIsRepo] = useState<boolean | null>(null);
   const [gitBusy, setGitBusy] = useState(false);
 
@@ -51,7 +51,7 @@ export const SettingsDialog: React.FC = () => {
       });
     }
     setDetected(null);
-    if (api?.git && gitDetect?.hasGit && gitDetect?.hasLfs) {
+    if (api?.git && gitReady(gitDetect)) {
       api.git.isRepo().then(setGitIsRepo);
     } else {
       setGitIsRepo(null);
@@ -193,7 +193,7 @@ export const SettingsDialog: React.FC = () => {
                   <Heading level={4} margin={0}>
                     {t('git.snapshot.heading')}
                   </Heading>
-                  {!(gitDetect.hasGit && gitDetect.hasLfs) ? (
+                  {!gitReady(gitDetect) ? (
                     <Flex direction="row" gap="size-100" alignItems="center">
                       <Text>{t('git.help.uninstalled.heading')}</Text>
                       <GitHelpPopover platform={gitDetect.platform} />

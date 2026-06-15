@@ -124,5 +124,4 @@ export const ja: Record<TranslationKey, string> = {
   'git.init.start': 'git 管理を開始',
   'git.init.starting': '初期化中…',
   'git.init.notRepo': 'このプロジェクトはまだバージョン管理されていません。',
-  'git.webDisabled': 'バージョン管理はデスクトップアプリでのみ利用できます。',
 };

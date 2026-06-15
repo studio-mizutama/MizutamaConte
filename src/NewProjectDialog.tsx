@@ -21,7 +21,7 @@ import { serializeProject, setLastPersisted, setPendingV1Backup } from 'project/
 import { ASPECT_KEYS, RESOLUTION_KEYS, deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey } from 'project/types';
 import { useT } from 'i18n';
-import { GitDetect } from 'git/types';
+import { gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
 
 const FPS_OPTIONS = ['12', '24', '30'];
@@ -42,8 +42,8 @@ export const NewProjectDialog: React.FC = () => {
   const [aspect, setAspect] = useState<AspectKey>('16:9');
   const [fps, setFps] = useState('24');
   const [gitEnabled, setGitEnabled] = useState(false);
-  const gitDetect = useGlobal('gitDetect')[0] as GitDetect | undefined;
-  const gitReady = !!gitDetect?.hasGit && !!gitDetect?.hasLfs;
+  const gitDetect = useGlobal('gitDetect')[0];
+  const gitIsReady = gitReady(gitDetect);
 
   // Electron: メニュー File > New からダイアログを開く
   useEffect(() => {
@@ -77,7 +77,7 @@ export const NewProjectDialog: React.FC = () => {
       setFileName(jsonFileName);
       setSaveState('saved');
       // バージョン管理 ON かつ Electron かつ git 検出済みのときだけ init（.gitignore/.gitattributes/LFS/初期コミットは electron/git.ts が実施）
-      if (gitEnabled && gitReady && window.api?.git) {
+      if (gitEnabled && gitIsReady && window.api?.git) {
         try {
           await window.api.git.init();
         } catch (gitErr) {
@@ -130,10 +130,10 @@ export const NewProjectDialog: React.FC = () => {
               </Flex>
               {gitDetect ? (
                 <Flex direction="row" gap="size-100" alignItems="center">
-                  <Checkbox isSelected={gitEnabled} isDisabled={!gitReady} onChange={setGitEnabled}>
+                  <Checkbox isSelected={gitEnabled} isDisabled={!gitIsReady} onChange={setGitEnabled}>
                     {t('git.enableLabel')}
                   </Checkbox>
-                  {!gitReady ? <GitHelpPopover platform={gitDetect.platform} /> : <></>}
+                  {!gitIsReady ? <GitHelpPopover platform={gitDetect.platform} /> : <></>}
                 </Flex>
               ) : (
                 <></>

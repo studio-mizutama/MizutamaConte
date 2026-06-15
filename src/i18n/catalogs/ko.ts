@@ -124,5 +124,4 @@ export const ko: Record<TranslationKey, string> = {
   'git.init.start': 'git 관리 시작',
   'git.init.starting': '초기화 중…',
   'git.init.notRepo': '이 프로젝트는 아직 버전 관리되지 않습니다.',
-  'git.webDisabled': '버전 관리는 데스크톱 앱에서만 사용할 수 있습니다.',
 };

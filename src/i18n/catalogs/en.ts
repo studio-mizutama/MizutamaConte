@@ -125,7 +125,6 @@ export const en = {
   'git.init.start': 'Start version control',
   'git.init.starting': 'Initializing…',
   'git.init.notRepo': 'This project is not under version control yet.',
-  'git.webDisabled': 'Version control is available in the desktop app only.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

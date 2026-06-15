@@ -16,3 +16,6 @@ export interface GitLogEntry {
   date: string;
   subject: string;
 }
+
+/** VC が利用可能か（git と git-lfs の両方が導入済み）。表記揺れ防止のため判定はここに集約する。 */
+export const gitReady = (d?: GitDetect): boolean => !!d?.hasGit && !!d?.hasLfs;

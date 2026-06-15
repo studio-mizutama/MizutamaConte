@@ -24,7 +24,6 @@ import { getStorage, StorageOpenResult } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
 import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
-import { GitDetect } from 'git/types';
 import { useT } from 'i18n';
 
 const { api } = window;
@@ -213,7 +212,7 @@ const SaveIndicator: React.FC = () => {
 
 const GitBranchButton: React.FC = () => {
   const t = useT();
-  const gitDetect = useGlobal('gitDetect')[0] as GitDetect | undefined;
+  const gitDetect = useGlobal('gitDetect')[0];
   // Web（api 不在で detect 未実行）では gitDetect undefined → VC 無効でアイコンを出さない
   if (!gitDetect) return null;
   return (
