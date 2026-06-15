@@ -1,5 +1,5 @@
 import { createGlobalStyle } from 'styled-components';
-import { PAGE_CONTENT_WIDTH, PAGE_BOX_HEIGHT } from 'print/constants';
+import { PAGE_CONTENT_WIDTH, PAGE_BOX_HEIGHT, PAGE_MARGIN_PX } from 'print/constants';
 
 /**
  * 印刷専用スタイル。.print-root は画面では画面外(left:-10000px)に置いて計測可能にし、
@@ -17,7 +17,9 @@ export const PrintStyle = createGlobalStyle`
   }
 
   @media print {
-    @page { size: A4 portrait; margin: 12mm; }
+    /* margin:0 でブラウザの「ヘッダーとフッター」（URL/日付/ページ番号）を抑止する。
+       視覚マージンは .print-page の padding で内側に作る。 */
+    @page { size: A4 portrait; margin: 0; }
     /* アプリは html/body/#root に overflow:hidden+height:100% を敷いており、これが効くと
        印刷が1ページ目でクリップされる。印刷時のみ解除して全ページ流す。 */
     html, body { overflow: visible !important; height: auto !important; }
@@ -52,6 +54,8 @@ export const PrintStyle = createGlobalStyle`
   .print-page {
     box-sizing: border-box;
     min-height: ${PAGE_BOX_HEIGHT}px;
+    /* @page margin:0 の代わりに視覚マージンを padding で内側に作る */
+    padding: ${PAGE_MARGIN_PX}px;
     display: flex;
     flex-direction: column;
     break-after: page;
