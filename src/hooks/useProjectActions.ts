@@ -4,7 +4,7 @@ import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, me
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd, isBlankPsd } from 'psd/template';
 import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
-import { record } from 'history/undoManager';
+import { record, clearHistory } from 'history/undoManager';
 import { makeCreatePsdRevert, makeCreatePsdReapply } from 'history/effects';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
@@ -82,6 +82,7 @@ export const useProjectActions = () => {
     }
     await setPsdCache({ ...psdCache, [cut.psd]: nextPsd });
     await setProject(appendLayer(project, cutIndex));
+    clearHistory();
   };
 
   /** Crop: カットのキャンバスをリサイズ（PSD 再書き込み + 全レイヤー canvas。拡大時のみ cover カメラ付与 / native・縮小時は cameraWork を消す） */
@@ -96,6 +97,7 @@ export const useProjectActions = () => {
     }
     await setPsdCache({ ...psdCache, [cut.psd]: nextPsd });
     await setProject(resizeCutCanvas(project, cutIndex, size, frame));
+    clearHistory();
   };
 
   /** New Scene: ネイティブ解像度で新カットを生成し、新シーン開始としてマークする */
@@ -152,6 +154,7 @@ export const useProjectActions = () => {
       await setPsdCache(nextCache);
       // レイヤー数と rows が一致した状態でデータ結合（空レイヤーが出ない）
       await setProject(mergeCuts(project, index));
+      clearHistory();
       return;
     }
 
@@ -170,6 +173,7 @@ export const useProjectActions = () => {
       }
     }
     await setProject(next);
+    clearHistory();
   };
 
   /** 任意位置への CUT 挿入: index の直後にネイティブ解像度の単層CUTを挿入する（addCut の位置指定版） */
@@ -215,6 +219,7 @@ export const useProjectActions = () => {
       }
     }
     await setProject(next);
+    clearHistory();
   };
 
   /** シーン区切りを「追加」する（CUT 間ガター用）。既に sceneStart があれば何もしない。
@@ -239,6 +244,7 @@ export const useProjectActions = () => {
     }
     await setPsdCache({ ...psdCache, [cut.psd]: base.psd, [newPsdName]: layer.psd });
     await setProject(splitLastLayer(project, cutIndex, newPsdName, fps * 3));
+    clearHistory();
   };
 
   const setSceneTitleAt = (cutIndex: number, title: string) =>
