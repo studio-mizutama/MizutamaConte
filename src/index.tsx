@@ -40,6 +40,7 @@ const boot = async (): Promise<void> => {
     settingsOpen: false,
     locale,
     colorScheme,
+    gitDetect: undefined,
   });
 
   ReactDOM.render(
@@ -48,6 +49,15 @@ const boot = async (): Promise<void> => {
     </React.StrictMode>,
     document.getElementById('root'),
   );
+
+  // git 導入状況を起動時 1 回だけ検出してグローバルへ。初回ペイントはブロックしない。
+  // Web（api 不在）では発火せず gitDetect は undefined のまま。
+  window.api?.git
+    ?.detect()
+    .then((result) => setGlobal({ gitDetect: result }))
+    .catch(() => {
+      // 検出失敗時は undefined のまま（git 機能は無効表示にフォールバック）
+    });
 };
 
 boot();
