@@ -8,6 +8,8 @@ import { Header } from 'Header';
 import { Panels } from 'Panels';
 import { Conte } from 'Conte';
 import { Preview } from 'Preview';
+import { PrintHost } from 'PrintHost';
+import { PrintStyle } from 'styles/PrintStyle';
 
 const BackGround = styled.div`
   width: 100%;
@@ -53,25 +55,29 @@ const GlobalGrid: React.FC = ({ children }) => {
 const App: React.FC = () => {
   const mode = useGlobal('mode')[0];
   return (
-    <GlobalGrid>
-      <ToolArea gridArea="header">
-        <Header />
-      </ToolArea>
-      <ToolArea gridArea="toolbar">
-        <ToolGroup />
-      </ToolArea>
-      <ToolArea gridArea="sidebar">
-        <Panels />
-      </ToolArea>
-      <View gridArea="content">
-        <div style={{ display: `${mode === 'Edit' ? 'block' : 'none'}` }}>
-          <Conte />
-        </div>
-        <div style={{ display: `${mode === 'Preview' ? 'block' : 'none'}`, height: '100%' }}>
-          <Preview />
-        </div>
-      </View>
-    </GlobalGrid>
+    <>
+      <PrintStyle />
+      <GlobalGrid>
+        <ToolArea gridArea="header">
+          <Header />
+        </ToolArea>
+        <ToolArea gridArea="toolbar">
+          <ToolGroup />
+        </ToolArea>
+        <ToolArea gridArea="sidebar">
+          <Panels />
+        </ToolArea>
+        <View gridArea="content">
+          <div style={{ display: `${mode === 'Edit' ? 'block' : 'none'}` }}>
+            <Conte />
+          </div>
+          <div style={{ display: `${mode === 'Preview' ? 'block' : 'none'}`, height: '100%' }}>
+            <Preview />
+          </div>
+        </View>
+      </GlobalGrid>
+      <PrintHost />
+    </>
   );
 };
 

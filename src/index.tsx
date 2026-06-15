@@ -41,6 +41,7 @@ const boot = async (): Promise<void> => {
     locale,
     colorScheme,
     gitDetect: undefined,
+    printRequested: false,
   });
 
   ReactDOM.render(

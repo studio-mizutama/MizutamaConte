@@ -29,6 +29,8 @@ declare module 'reactn/default' {
     colorScheme: ColorScheme;
     /** 起動時 1 回検出した git/git-lfs 導入状況。Web（api 不在）では undefined のまま */
     gitDetect: GitDetect | undefined;
+    /** 印刷要求フラグ。usePrint で立て、PrintHost が計測→ページ割り→window.print() を駆動 */
+    printRequested: boolean;
   }
 }
 
@@ -84,6 +86,8 @@ export interface Sandbox {
   removeNewProjectRequest: () => void;
   onOpenSettingsRequest: (listener: () => void) => void;
   removeOpenSettingsRequest: () => void;
+  onPrintRequest: (listener: () => void) => void;
+  removePrintRequest: () => void;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
