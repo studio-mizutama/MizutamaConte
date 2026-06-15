@@ -88,18 +88,27 @@ export const Outline: React.FC = () => {
   return (
     <>
       {scenes.map((scene) => (
+        // 外側ラッパは draggable にしない（draggable にするとシーンブロック全体がドラッグ面となり
+        // アウトラインのスクロールを奪う）。ドロップ受け(onDragOver/onDrop)と位置決め(position:relative)
+        // のみ担い、シーンのドラッグ開始は Accordion 見出し(headerProps)に限定する。
         <DraggableRow
           key={scene.startIndex}
+          $cursor="default"
           $dragging={isDraggingScene && dragIndex === scene.startIndex}
           $dropTarget={isDraggingScene && dropIndex === scene.startIndex}
           {...makeDragHandlers({
-            onStart: isReorder ? () => startDrag('scene', scene.startIndex) : undefined,
             onOver: isDraggingScene ? () => setDropIndex(scene.startIndex) : undefined,
             onDrop: isDraggingScene ? () => onSceneDrop(scene.startIndex) : undefined,
-            onEnd: isReorder ? endDrag : undefined,
           })}
         >
-          <Accordion labelName={`Scene${scene.sceneNumber}${scene.title ? ` ${scene.title}` : ''}`}>
+          <Accordion
+            labelName={`Scene${scene.sceneNumber}${scene.title ? ` ${scene.title}` : ''}`}
+            // シーン並べ替えのドラッグ取っ手は見出しだけに付ける（余白・CUT 列はスクロール可能のまま）
+            headerProps={makeDragHandlers({
+              onStart: isReorder ? () => startDrag('scene', scene.startIndex) : undefined,
+              onEnd: isReorder ? endDrag : undefined,
+            })}
+          >
             {scene.cutIndices.map((index) => (
               <List
                 onClick={() => {

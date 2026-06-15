@@ -101,8 +101,10 @@ const SceneBand: React.FC<{
         placeholder={t('conte.scene.untitledPlaceholder')}
         width="size-3000"
         isQuiet
-        // 編集モード以外では誤爆防止のため読み取り専用
+        // 編集モード以外では誤爆防止のため読み取り専用。
+        // さらに pointer-events を切り、resize/reorder 中のホバー/クリック反応も抑える。
         isReadOnly={!editable}
+        UNSAFE_style={{ pointerEvents: editable ? 'auto' : 'none' }}
       />
       {scene.startIndex > 0 && (
         <TooltipTrigger delay={300}>

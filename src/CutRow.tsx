@@ -12,7 +12,7 @@ import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
 import { useT } from 'i18n';
 
-const MyTextArea = styled.textarea`
+const MyTextArea = styled.textarea<{ $editable: boolean }>`
   position: absolute;
   top: 2px;
   height: calc(100% - 4px);
@@ -22,6 +22,10 @@ const MyTextArea = styled.textarea`
   margin: 0;
   padding: 0;
   border: none;
+  /* 非編集モード（resize/reorder）では完全に不活性化し、ホバー/クリック/フォーカスの
+     誤爆（青枠 outline）を防ぐ。クリックは背後の行へ抜ける。 */
+  pointer-events: ${(p) => (p.$editable ? 'auto' : 'none')};
+  cursor: ${(p) => (p.$editable ? 'text' : 'default')};
 
   :focus {
     outline: 2px solid var(--spectrum-alias-border-color-focus);
@@ -122,6 +126,8 @@ const TextContainer: React.FC<{
       <View gridArea="action" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          $editable={editable}
+          tabIndex={editable ? undefined : -1}
           readOnly={!editable}
           onKeyDown={escKeyDown}
           value={action?.text ?? ''}
@@ -141,6 +147,8 @@ const TextContainer: React.FC<{
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          $editable={editable}
+          tabIndex={editable ? undefined : -1}
           readOnly={!editable}
           onKeyDown={escKeyDown}
           value={dialogue ?? ''}
@@ -150,6 +158,8 @@ const TextContainer: React.FC<{
       <View gridArea="time" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          $editable={editable}
+          tabIndex={editable ? undefined : -1}
           readOnly={!editable}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {

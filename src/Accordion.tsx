@@ -23,19 +23,28 @@ const Ul = styled.ul`
   margin: 0;
 `;
 
-const Label: React.FC<{ labelFor: string }> = ({ labelFor, children }) => (
-  <LabelHover>
+/** 見出し(LabelHover)に spread する DOM props。並べ替え用の draggable / drag ハンドラを渡す入口。 */
+type HeaderProps = React.HTMLAttributes<HTMLDivElement> & { draggable?: boolean };
+
+const Label: React.FC<{ labelFor: string; headerProps?: HeaderProps }> = ({ labelFor, headerProps, children }) => (
+  <LabelHover {...headerProps}>
     <label htmlFor={labelFor}>{children}</label>
   </LabelHover>
 );
 
-export const Accordion: React.FC<{ labelName: string }> = ({ labelName, children }) => {
+export const Accordion: React.FC<{ labelName: string; headerProps?: HeaderProps }> = ({
+  labelName,
+  headerProps,
+  children,
+}) => {
   const [toggle, setToggle] = useState(false);
   return (
     <>
       <Toggle type="checkbox" id={labelName} checked={toggle} onChange={() => setToggle(!toggle)} />
 
-      <Label labelFor={labelName}>
+      {/* 見出しだけをシーン並べ替えのドラッグ取っ手にする（headerProps を spread）。
+          開閉は内側 <label> のクリックで行うため、見出し draggable と共存できる。 */}
+      <Label labelFor={labelName} headerProps={headerProps}>
         <Flex direction="row" gap="size-100" alignItems="center">
           {toggle ? <ChevronDown size="S" /> : <ChevronRight size="S" />}
           <Text>{labelName}</Text>

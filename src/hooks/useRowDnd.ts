@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'reactn';
 /** ドラッグ行に spread する DOM ハンドラ群。未使用のものは undefined（属性ごと外れる） */
 export interface RowDragHandlers {
   draggable: boolean;
-  onDragStart?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
@@ -22,19 +22,29 @@ export interface DragHandlerSpec {
  * 定型配線を 1 箇所に集約する。各 JSX はモード判定済みのコールバック（or undefined）を渡すだけでよい。
  * - onStart が渡されたときのみ draggable=true
  * - over/drop は preventDefault を内包（HTML5 DnD のドロップ許可に必須）
+ * - 全ハンドラで stopPropagation する。入れ子の draggable（Outline の CUT リンクが
+ *   SCENE ラッパ内にある）でイベントがバブリングし、外側の onStart 等が二重発火して
+ *   種別(dragKind)を上書きするのを防ぐ。Conte 側は SCENE/CUT が兄弟で入れ子でないため影響なし。
  */
 export const makeDragHandlers = (spec: DragHandlerSpec): RowDragHandlers => ({
   draggable: !!spec.onStart,
-  onDragStart: spec.onStart,
+  onDragStart: spec.onStart
+    ? (e: React.DragEvent) => {
+        e.stopPropagation();
+        spec.onStart?.();
+      }
+    : undefined,
   onDragOver: spec.onOver
     ? (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         spec.onOver?.();
       }
     : undefined,
   onDrop: spec.onDrop
     ? (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         spec.onDrop?.();
       }
     : undefined,
