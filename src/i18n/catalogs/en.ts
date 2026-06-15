@@ -55,11 +55,11 @@ export const en = {
   'panels.duration': 'Duration',
   'panels.dialogue': 'Dialogue',
 
-  // ツール（モードトグル。ショートカット S/C/R/G。CUT/SCENE は英語固定）
-  'toolGroup.edit': 'Edit (S)',
+  // ツール（モードトグル。ショートカット S/C/R。CUT/SCENE は英語固定）
+  // 'toolGroup.edit' はタブの "Edit" と被らないよう表示ラベルは "Select" にする
+  'toolGroup.edit': 'Select (S)',
   'toolGroup.resize': 'Resize (C)',
-  'toolGroup.reorderCut': 'Reorder CUT (R)',
-  'toolGroup.reorderScene': 'Reorder SCENE (G)',
+  'toolGroup.reorder': 'Reorder (R)',
 
   // トランジション（Picker の key='None'|'White In'... は保存データなので英語固定。表示のみ翻訳）
   'transition.fadeIn': 'Fade In',

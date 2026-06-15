@@ -85,7 +85,8 @@ const ResizeOutline = styled.div`
   z-index: 6;
 `;
 
-/** TIME/ACTION/DIALOGUE のテキスト編集列。project を購読せず props のハンドラで更新する（memo 化のため）。 */
+/** TIME/ACTION/DIALOGUE のテキスト編集列。project を購読せず props のハンドラで更新する（memo 化のため）。
+ *  editable が false（resize/reorder モード）のときは読み取り専用にして誤爆を防ぐ。 */
 const TextContainer: React.FC<{
   cutIndex: number;
   action?: Action;
@@ -93,10 +94,11 @@ const TextContainer: React.FC<{
   time?: number;
   timeSum?: number;
   fps: number;
+  editable: boolean;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
-}> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, setDialogue, setActionText, setTime }) => {
+}> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, editable, setDialogue, setActionText, setTime }) => {
   // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
   const [timeDraft, setTimeDraft] = useState<string | null>(null);
   const timeCancelRef = useRef(false);
@@ -120,6 +122,7 @@ const TextContainer: React.FC<{
       <View gridArea="action" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          readOnly={!editable}
           onKeyDown={escKeyDown}
           value={action?.text ?? ''}
           onChange={(e) => setActionText(cutIndex, e.target.value)}
@@ -138,6 +141,7 @@ const TextContainer: React.FC<{
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          readOnly={!editable}
           onKeyDown={escKeyDown}
           value={dialogue ?? ''}
           onChange={(e) => setDialogue(cutIndex, e.target.value)}
@@ -146,6 +150,7 @@ const TextContainer: React.FC<{
       <View gridArea="time" width="100%" position="relative" height="auto">
         <MyTextArea
           className="hover"
+          readOnly={!editable}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -403,6 +408,8 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               time={cut?.time}
               timeSum={timeSum}
               fps={fps}
+              // 編集モードのときだけテキスト編集可（resize/reorder では誤爆防止のため読み取り専用）
+              editable={editorMode === 'edit'}
               setDialogue={setDialogue}
               setActionText={setActionText}
               setTime={setTime}

@@ -54,11 +54,10 @@ export const ko: Record<TranslationKey, string> = {
   'panels.duration': '길이',
   'panels.dialogue': '대사',
 
-  // 도구
-  'toolGroup.edit': '편집 (S)',
+  // 도구（탭의 「편집」과 겹치지 않도록 기본 도구 라벨은 「선택」으로 함）
+  'toolGroup.edit': '선택 (S)',
   'toolGroup.resize': '크기 조정 (C)',
-  'toolGroup.reorderCut': 'CUT 재정렬 (R)',
-  'toolGroup.reorderScene': 'SCENE 재정렬 (G)',
+  'toolGroup.reorder': '재정렬 (R)',
 
   // 트랜지션
   'transition.fadeIn': '페이드 인',

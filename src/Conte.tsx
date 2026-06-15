@@ -52,7 +52,10 @@ const SceneBand: React.FC<{
   scene: SceneGroup;
   collapsed: boolean;
   onToggle: () => void;
+  /** SCENE 帯をドラッグ可能にするか（reorder モードのとき true） */
   reorderScene?: boolean;
+  /** テキスト編集（タイトル入力）可否。編集モード(edit)のときのみ true */
+  editable?: boolean;
   dragging?: boolean;
   dropTarget?: boolean;
   onDragStartScene?: () => void;
@@ -64,6 +67,7 @@ const SceneBand: React.FC<{
   collapsed,
   onToggle,
   reorderScene = false,
+  editable = false,
   dragging = false,
   dropTarget = false,
   onDragStartScene,
@@ -97,7 +101,8 @@ const SceneBand: React.FC<{
         placeholder={t('conte.scene.untitledPlaceholder')}
         width="size-3000"
         isQuiet
-        isReadOnly={false}
+        // 編集モード以外では誤爆防止のため読み取り専用
+        isReadOnly={!editable}
       />
       {scene.startIndex > 0 && (
         <TooltipTrigger delay={300}>
@@ -171,10 +176,13 @@ const CutContainer: React.FC = () => {
   scenes.forEach((s) => s.cutIndices.forEach((i) => sceneOfIndex.set(i, s.startIndex)));
 
   const { reorderCutAt, reorderSceneAt } = useReorder();
-  const { dragIndex, dropIndex, setDragIndex, setDropIndex, endDrag } = useRowDnd();
+  const { dragIndex, dropIndex, dragKind, startDrag, setDropIndex, endDrag } = useRowDnd();
 
-  const isReorderCut = editorMode === 'reorderCut';
-  const isReorderScene = editorMode === 'reorderScene';
+  // 並べ替えモードでは CUT 行・SCENE 帯の両方を draggable にし、
+  // ドラッグ種別(dragKind)でドロップ可能域と並べ替え対象を切り替える。
+  const isReorder = editorMode === 'reorder';
+  const isDraggingCut = dragKind === 'cut';
+  const isDraggingScene = dragKind === 'scene';
 
   // CUT 並べ替え: cut index 単位で from→to を確定して reorderCutAt
   const onCutDrop = useCallback(
@@ -262,10 +270,12 @@ const CutContainer: React.FC = () => {
                   scene={band}
                   collapsed={collapsed.has(band.startIndex)}
                   onToggle={() => toggleScene(band.startIndex)}
-                  reorderScene={isReorderScene}
-                  dragging={isReorderScene && dragIndex === band.startIndex}
-                  dropTarget={isReorderScene && dropIndex === band.startIndex}
-                  onDragStartScene={() => setDragIndex(band.startIndex)}
+                  reorderScene={isReorder}
+                  editable={editorMode === 'edit'}
+                  dragging={isDraggingScene && dragIndex === band.startIndex}
+                  // SCENE 帯のドロップ指示子は SCENE ドラッグ中のみ
+                  dropTarget={isDraggingScene && dropIndex === band.startIndex}
+                  onDragStartScene={() => startDrag('scene', band.startIndex)}
                   onDragOverScene={() => setDropIndex(band.startIndex)}
                   onDropScene={() => onSceneDrop(band.startIndex)}
                   onDragEndScene={endDrag}
@@ -273,18 +283,19 @@ const CutContainer: React.FC = () => {
               )}
               {!isCollapsed && (
                 <DraggableRow
-                  $dragging={isReorderCut && dragIndex === index}
-                  $dropTarget={(isReorderCut || isReorderScene) && dropIndex === index}
+                  $dragging={isDraggingCut && dragIndex === index}
+                  // CUT ドラッグ中は CUT 行に、SCENE ドラッグ中も CUT 行をドロップ先にできる
+                  $dropTarget={(isDraggingCut || isDraggingScene) && dropIndex === index}
                   {...makeDragHandlers({
-                    onStart: isReorderCut ? () => setDragIndex(index) : undefined,
-                    // CUT 行は CUT/SCENE どちらのモードでもドロップ先になれる
-                    onOver: isReorderCut || isReorderScene ? () => setDropIndex(index) : undefined,
-                    onDrop: isReorderCut
+                    onStart: isReorder ? () => startDrag('cut', index) : undefined,
+                    // CUT 行は CUT/SCENE どちらのドラッグでもドロップ先になれる
+                    onOver: isDraggingCut || isDraggingScene ? () => setDropIndex(index) : undefined,
+                    onDrop: isDraggingCut
                       ? () => onCutDrop(index)
-                      : isReorderScene
+                      : isDraggingScene
                       ? () => onSceneDrop(index)
                       : undefined,
-                    onEnd: isReorderCut ? endDrag : undefined,
+                    onEnd: isReorder ? endDrag : undefined,
                   })}
                 >
                   <CutRow

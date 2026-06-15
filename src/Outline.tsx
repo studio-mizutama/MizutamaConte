@@ -10,12 +10,38 @@ import { useReorder } from 'hooks/useReorder';
 import { useRowDnd, makeDragHandlers } from 'hooks/useRowDnd';
 import { DraggableRow } from 'styles/DraggableRow';
 
-const A = styled.a`
+/**
+ * アウトラインの CUT リンク。
+ * 並べ替え用のドラッグ配線とドロップ指示子をこの要素に直接付ける（ラッパ div を挟まない）。
+ * ラッパ div を足すと inline-block の <a> の外に block 行が増え、行の寸法が
+ * 元(DnD導入前)より大きくなる退行が出るため、styled.a 自体を draggable 行にする。
+ * - inline-block / width:100% は元の <A> と同一（寸法を退行させない）
+ * - ドロップ指示子は DraggableRow と同方式（上辺に挿入線）を ::before で描く
+ */
+const DragLink = styled.a<{ $dragging: boolean; $dropTarget: boolean; $reorder: boolean }>`
+  position: relative;
   text-decoration: none;
   display: inline-block;
   width: 100%;
   margin: 0;
   padding: 0;
+  opacity: ${(p) => (p.$dragging ? 0.4 : 1)};
+  cursor: ${(p) => (p.$reorder ? (p.$dragging ? 'grabbing' : 'grab') : 'pointer')};
+
+  /* ドロップ先境界の挿入線（CUT と CUT の間に入ることを示す 3px ライン） */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -2px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--spectrum-semantic-informative-color-border, #2680eb);
+    opacity: ${(p) => (p.$dropTarget ? 1 : 0)};
+    pointer-events: none;
+    z-index: 5;
+  }
 `;
 
 export const Outline: React.FC = () => {
@@ -27,10 +53,12 @@ export const Outline: React.FC = () => {
   const { reorderCutAt, reorderSceneAt } = useReorder();
   const scenes = deriveScenes(project.cuts);
 
-  const isReorderCut = editorMode === 'reorderCut';
-  const isReorderScene = editorMode === 'reorderScene';
-
-  const { dragIndex, dropIndex, setDragIndex, setDropIndex, endDrag } = useRowDnd();
+  // 並べ替えモードでは CUT リンク・SCENE 帯の両方を draggable にし、
+  // ドラッグ種別(dragKind)でドロップ可能域と並べ替え対象を切り替える。
+  const isReorder = editorMode === 'reorder';
+  const { dragIndex, dropIndex, dragKind, startDrag, setDropIndex, endDrag } = useRowDnd();
+  const isDraggingCut = dragKind === 'cut';
+  const isDraggingScene = dragKind === 'scene';
 
   const sceneOrderOfStart = useMemo(() => {
     const m = new Map<number, number>();
@@ -62,13 +90,13 @@ export const Outline: React.FC = () => {
       {scenes.map((scene) => (
         <DraggableRow
           key={scene.startIndex}
-          $dragging={isReorderScene && dragIndex === scene.startIndex}
-          $dropTarget={isReorderScene && dropIndex === scene.startIndex}
+          $dragging={isDraggingScene && dragIndex === scene.startIndex}
+          $dropTarget={isDraggingScene && dropIndex === scene.startIndex}
           {...makeDragHandlers({
-            onStart: isReorderScene ? () => setDragIndex(scene.startIndex) : undefined,
-            onOver: isReorderScene ? () => setDropIndex(scene.startIndex) : undefined,
-            onDrop: isReorderScene ? () => onSceneDrop(scene.startIndex) : undefined,
-            onEnd: isReorderScene ? endDrag : undefined,
+            onStart: isReorder ? () => startDrag('scene', scene.startIndex) : undefined,
+            onOver: isDraggingScene ? () => setDropIndex(scene.startIndex) : undefined,
+            onDrop: isDraggingScene ? () => onSceneDrop(scene.startIndex) : undefined,
+            onEnd: isReorder ? endDrag : undefined,
           })}
         >
           <Accordion labelName={`Scene${scene.sceneNumber}${scene.title ? ` ${scene.title}` : ''}`}>
@@ -83,18 +111,20 @@ export const Outline: React.FC = () => {
                 onMouseEnter={() => document.getElementById(`Cut${index + 1}`)?.classList.add('isHover')}
                 onMouseLeave={() => document.getElementById(`Cut${index + 1}`)?.classList.remove('isHover')}
               >
-                <DraggableRow
-                  $dragging={isReorderCut && dragIndex === index}
-                  $dropTarget={isReorderCut && dropIndex === index}
+                <DragLink
+                  href={`#Cut${index + 1}`}
+                  $reorder={isReorder}
+                  $dragging={isDraggingCut && dragIndex === index}
+                  $dropTarget={isDraggingCut && dropIndex === index}
                   {...makeDragHandlers({
-                    onStart: isReorderCut ? () => setDragIndex(index) : undefined,
-                    onOver: isReorderCut ? () => setDropIndex(index) : undefined,
-                    onDrop: isReorderCut ? () => onCutDrop(index) : undefined,
-                    onEnd: isReorderCut ? endDrag : undefined,
+                    onStart: isReorder ? () => startDrag('cut', index) : undefined,
+                    onOver: isDraggingCut ? () => setDropIndex(index) : undefined,
+                    onDrop: isDraggingCut ? () => onCutDrop(index) : undefined,
+                    onEnd: isReorder ? endDrag : undefined,
                   })}
                 >
-                  <A href={`#Cut${index + 1}`}>Cut{index + 1}</A>
-                </DraggableRow>
+                  Cut{index + 1}
+                </DragLink>
               </List>
             ))}
           </Accordion>

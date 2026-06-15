@@ -54,11 +54,10 @@ export const ja: Record<TranslationKey, string> = {
   'panels.duration': '尺',
   'panels.dialogue': '台詞',
 
-  // ツール
-  'toolGroup.edit': '編集 (S)',
+  // ツール（タブの「編集」と被らないよう既定ツールのラベルは「選択」にする）
+  'toolGroup.edit': '選択 (S)',
   'toolGroup.resize': 'リサイズ (C)',
-  'toolGroup.reorderCut': 'CUT 並べ替え (R)',
-  'toolGroup.reorderScene': 'SCENE 並べ替え (G)',
+  'toolGroup.reorder': '並べ替え (R)',
 
   // トランジション
   'transition.fadeIn': 'フェードイン',

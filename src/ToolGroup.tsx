@@ -1,10 +1,9 @@
 import React from 'reactn';
 import { ActionGroup, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import Edit from '@spectrum-icons/workflow/Edit';
+import Select from '@spectrum-icons/workflow/Select';
 import Crop from '@spectrum-icons/workflow/Crop';
 import Reorder from '@spectrum-icons/workflow/Reorder';
-import ViewList from '@spectrum-icons/workflow/ViewList';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { EditorMode, useEditorMode } from 'hooks/editorMode';
 import { useT } from 'i18n';
@@ -24,6 +23,7 @@ export const ToolGroup: React.FC = () => {
     activeElement.blur();
   };
 
+  // ショートカット: s=選択(既定) / c=resize / r=reorder
   useHotkeys('s', () => {
     setMode('edit');
     keyDown();
@@ -35,12 +35,7 @@ export const ToolGroup: React.FC = () => {
   });
 
   useHotkeys('r', () => {
-    setMode('reorderCut');
-    keyDown();
-  });
-
-  useHotkeys('g', () => {
-    setMode('reorderScene');
+    setMode('reorder');
     keyDown();
   });
 
@@ -59,7 +54,7 @@ export const ToolGroup: React.FC = () => {
       >
         <TooltipTrigger placement="end">
           <Item key="edit">
-            <Edit />
+            <Select />
           </Item>
           <Tooltip>{t('toolGroup.edit')}</Tooltip>
         </TooltipTrigger>
@@ -70,16 +65,10 @@ export const ToolGroup: React.FC = () => {
           <Tooltip>{t('toolGroup.resize')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
-          <Item key="reorderCut">
+          <Item key="reorder">
             <Reorder />
           </Item>
-          <Tooltip>{t('toolGroup.reorderCut')}</Tooltip>
-        </TooltipTrigger>
-        <TooltipTrigger placement="end">
-          <Item key="reorderScene">
-            <ViewList />
-          </Item>
-          <Tooltip>{t('toolGroup.reorderScene')}</Tooltip>
+          <Tooltip>{t('toolGroup.reorder')}</Tooltip>
         </TooltipTrigger>
       </ActionGroup>
     </AlignCenter>

@@ -41,24 +41,36 @@ export const makeDragHandlers = (spec: DragHandlerSpec): RowDragHandlers => ({
   onDragEnd: spec.onEnd,
 });
 
+/** 並べ替え対象の種別。reorder モードで CUT 行と SCENE 帯を区別する */
+export type DragKind = 'cut' | 'scene';
+
 export interface RowDndState {
   /** ドラッグ発生元 index（CUT= cut index / SCENE= シーン先頭 index）。未ドラッグは null */
   dragIndex: number | null;
   /** ドロップ先候補 index（視覚フィードバック用）。未ホバーは null */
   dropIndex: number | null;
-  setDragIndex: (i: number | null) => void;
+  /** ドラッグ中の種別（CUT 行 or SCENE 帯）。未ドラッグは null */
+  dragKind: DragKind | null;
+  /** 種別を指定してドラッグ開始（dragIndex と dragKind を同時に確定） */
+  startDrag: (kind: DragKind, i: number) => void;
   setDropIndex: (i: number | null) => void;
-  /** ドラッグ終了時に両 index をリセット */
+  /** ドラッグ終了時に全状態をリセット */
   endDrag: () => void;
 }
 
-/** 並べ替えドラッグの共有状態（dragIndex/dropIndex/endDrag）。Conte と Outline で共通 */
+/** 並べ替えドラッグの共有状態（dragIndex/dropIndex/dragKind/endDrag）。Conte と Outline で共通 */
 export const useRowDnd = (): RowDndState => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [dragKind, setDragKind] = useState<DragKind | null>(null);
+  const startDrag = useCallback((kind: DragKind, i: number) => {
+    setDragKind(kind);
+    setDragIndex(i);
+  }, []);
   const endDrag = useCallback(() => {
     setDragIndex(null);
     setDropIndex(null);
+    setDragKind(null);
   }, []);
-  return { dragIndex, dropIndex, setDragIndex, setDropIndex, endDrag };
+  return { dragIndex, dropIndex, dragKind, startDrag, setDropIndex, endDrag };
 };
