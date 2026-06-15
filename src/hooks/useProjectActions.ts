@@ -5,6 +5,7 @@ import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLa
 import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 import { record, clearHistory } from 'history/undoManager';
+import { FileSwap, makeOverwriteSwap, makeDeleteSwap, composeSwaps } from 'history/fileSwap';
 import { makeCreatePsdRevert, makeCreatePsdReapply } from 'history/effects';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
@@ -131,8 +132,9 @@ export const useProjectActions = () => {
   const mergeCutWithNext = async (index: number) => {
     const a = project.cuts[index];
     const b = project.cuts[index + 1];
-    // 範囲外（隣接 CUT が存在しない）ときのみ早期 return
     if (!a || !b) return;
+    const prev = project;
+    const prevIdx = selectedCutIndex;
 
     const pa = a.psd ? psdCache[a.psd] : undefined;
     const pb = b.psd ? psdCache[b.psd] : undefined;
@@ -143,37 +145,61 @@ export const useProjectActions = () => {
     if (canComposite && !bBlank) {
       // 中身のある B を A の flipbook へ積む（従来経路）
       const { psd: mergedPsd, buffer } = mergePsd(pa!, pb!);
-      await storage.writeFile(a.psd!, buffer);
-      // 連結で孤立する下CUTの PSD は掃除（内容は A へコピー済みなので削除安全）
+      const swaps: FileSwap[] = [];
+      const preAToken = await storage.trashFile(a.psd!); // A の旧バイトを trash 退避
+      await storage.writeFile(a.psd!, buffer); // A を合成結果で上書き
+      swaps.push(makeOverwriteSwap(a.psd!, preAToken));
       const orphan = orphanedPsdAfterMerge(project, index);
       const nextCache = { ...psdCache, [a.psd!]: mergedPsd };
       if (orphan) {
-        await storage.deleteFile(orphan).catch(() => undefined);
+        const orphanToken = await storage.trashFile(orphan);
         delete nextCache[orphan];
+        swaps.push(makeDeleteSwap(orphan, orphanToken));
       }
       await setPsdCache(nextCache);
-      // レイヤー数と rows が一致した状態でデータ結合（空レイヤーが出ない）
-      await setProject(mergeCuts(project, index));
-      clearHistory();
+      const next = mergeCuts(project, index);
+      await setProject(next);
+      record({
+        label: 'mergeCutWithNext',
+        prevProject: prev,
+        nextProject: next,
+        prevSelectedCutIndex: prevIdx,
+        nextSelectedCutIndex: prevIdx,
+        ...composeSwaps(swaps),
+      });
       return;
     }
 
     // 白紙 B または composite 不能: rows もレイヤーも増やさず B を綺麗に除去する。
     // deleteCutAt はシーンマーカーの再正規化込みの純粋関数。
     const next = deleteCutAt(project, index + 1);
-    // 下CUTの PSD が結果のどの cut からも参照されなくなったら掃除（大小無視で保守的に判定）
+    const swaps: FileSwap[] = [];
     if (b.psd) {
       const target = b.psd.toLowerCase();
       const stillReferenced = next.cuts.some((cut) => cut.psd?.toLowerCase() === target);
       if (!stillReferenced) {
-        if (storage.capabilities.write) await storage.deleteFile(b.psd).catch(() => undefined);
+        if (storage.capabilities.write) {
+          const token = await storage.trashFile(b.psd);
+          swaps.push(makeDeleteSwap(b.psd, token));
+        }
         const nextCache = { ...psdCache };
         delete nextCache[b.psd];
         await setPsdCache(nextCache);
       }
     }
     await setProject(next);
-    clearHistory();
+    if (!storage.capabilities.write) {
+      clearHistory();
+      return;
+    }
+    record({
+      label: 'mergeCutWithNext',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      ...composeSwaps(swaps),
+    });
   };
 
   /** 任意位置への CUT 挿入: index の直後にネイティブ解像度の単層CUTを挿入する（addCut の位置指定版） */
@@ -204,22 +230,38 @@ export const useProjectActions = () => {
   const deleteCut = async (index: number) => {
     const removed = project.cuts[index];
     if (!removed) return;
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const next = deleteCutAt(project, index);
-    // length<=1 などで削除されなかった（同一参照）なら何もしない
-    if (next === project) return;
-    // 削除 CUT の psd が結果のどの cut からも参照されなくなったら掃除（大小無視で保守的に判定）
+    if (next === project) return; // 最後の1CUT等で削除されなかった
+    const swaps: FileSwap[] = [];
     if (removed.psd) {
       const target = removed.psd.toLowerCase();
       const stillReferenced = next.cuts.some((cut) => cut.psd?.toLowerCase() === target);
       if (!stillReferenced) {
-        if (storage.capabilities.write) await storage.deleteFile(removed.psd).catch(() => undefined);
+        if (storage.capabilities.write) {
+          const token = await storage.trashFile(removed.psd);
+          swaps.push(makeDeleteSwap(removed.psd, token));
+        }
         const nextCache = { ...psdCache };
         delete nextCache[removed.psd];
         await setPsdCache(nextCache);
       }
     }
+    const nextIdx = Math.min(prevIdx, Math.max(0, next.cuts.length - 1));
     await setProject(next);
-    clearHistory();
+    if (!storage.capabilities.write) {
+      clearHistory();
+      return;
+    }
+    record({
+      label: 'deleteCut',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: nextIdx,
+      ...composeSwaps(swaps),
+    });
   };
 
   /** シーン区切りを「追加」する（CUT 間ガター用）。既に sceneStart があれば何もしない。
