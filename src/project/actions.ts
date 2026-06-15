@@ -1,7 +1,8 @@
 import { FrameSize, ProjectCut, ProjectFile } from './types';
 import { newId } from './load';
-import { cutCanvas } from './scene';
+import { cutCanvas, deriveScenes } from './scene';
 import { defaultCameraForResize } from './camera';
+import { normalizeSceneMarkers } from './reorder';
 
 /** index 位置のカットへ patch を適用した新しいプロジェクトを返す */
 export const updateCutAt = (project: ProjectFile, index: number, patch: Partial<ProjectCut>): ProjectFile => ({
@@ -141,11 +142,67 @@ export const splitLastLayer = (
     id: newId(),
     psd: newPsdName,
     time: defaultTime,
+    // 新CUTは元CUTと同じ canvas（lastRow.canvas）なので cameraWork も引き継ぐ。
+    // 引き継がないと拡大 canvas なのにカメラ無し＝IN/OUT 非表示・Preview で静止してしまう。
+    cameraWork: cut.cameraWork,
     rows: [{ id: newId(), layer: '1', dialogue: '', canvas: { ...lastRow.canvas } }],
   };
   return {
     ...project,
     cuts: [...project.cuts.slice(0, cutIndex), remaining, newCut, ...project.cuts.slice(cutIndex + 1)],
+  };
+};
+
+/** index の直後に新規CUT（1行・単層）をスプライス挿入する。
+ *  sceneStart は付けない＝挿入位置のシーンに合流する。不変。 */
+export const insertCutAfter = (
+  project: ProjectFile,
+  index: number,
+  psdName: string,
+  size: FrameSize,
+  time: number,
+): ProjectFile => {
+  const newCut: ProjectCut = {
+    id: newId(),
+    psd: psdName,
+    time,
+    rows: [{ id: newId(), layer: '1', dialogue: '', canvas: { ...size } }],
+  };
+  return {
+    ...project,
+    cuts: [...project.cuts.slice(0, index + 1), newCut, ...project.cuts.slice(index + 1)],
+  };
+};
+
+/** index のCUTを削除し、sceneStart マーカーを再正規化する（deriveScenes が round-trip する）。
+ *  cuts.length<=1 のときは削除不可（最後の1CUTは残す）。不変。
+ *
+ *  正規化方針（reorder.ts と共有）: 削除前に各 cut の所属シーン ID を deriveScenes で求め、
+ *  対象を除いた残存列の実効シーン ID を作り、normalizeSceneMarkers で境界マーカーを再付与する。
+ *  これにより「シーン先頭CUTを消すと次CUTがタイトルを継承」「index0 は暗黙化」が成立する。 */
+export const deleteCutAt = (project: ProjectFile, index: number): ProjectFile => {
+  const cuts = project.cuts;
+  if (cuts.length <= 1 || index < 0 || index >= cuts.length) return project;
+  // 削除前の各 cut index → 所属シーン ID、シーン ID → タイトルを作る
+  const scenes = deriveScenes(cuts);
+  const sceneIdByIndex: number[] = new Array(cuts.length);
+  const titleBySceneId: (string | undefined)[] = scenes.map((scene) => scene.title);
+  scenes.forEach((scene, sceneId) => {
+    scene.cutIndices.forEach((idx) => {
+      sceneIdByIndex[idx] = sceneId;
+    });
+  });
+  // 対象を除いた残存列と、その実効シーン ID 列を作る
+  const remainingCuts: ProjectCut[] = [];
+  const effectiveSceneIds: number[] = [];
+  cuts.forEach((cut, i) => {
+    if (i === index) return;
+    remainingCuts.push(cut);
+    effectiveSceneIds.push(sceneIdByIndex[i]);
+  });
+  return {
+    ...project,
+    cuts: normalizeSceneMarkers(remainingCuts, effectiveSceneIds, titleBySceneId),
   };
 };
 

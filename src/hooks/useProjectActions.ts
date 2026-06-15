@@ -1,6 +1,6 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
-import { appendCut, appendLayer, appendSceneCut, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
+import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd } from 'psd/template';
 import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
@@ -77,26 +77,78 @@ export const useProjectActions = () => {
     await setProject(appendSceneCut(project, psdName, size, fps * 3));
   };
 
-  /** 🔗 結合: 隣接する index と index+1 のカットを統合（PSD 連結 + TIME 合算） */
+  /** 🔗 結合: 隣接する index と index+1 のカットを統合（PSD 連結 + TIME 合算）。
+   *  データ結合(mergeCuts)は psd/キャッシュの有無に関わらず必ず実行する＝空行が残るバグの根治。
+   *  PSD 合成(mergePsd)＋孤立PSD掃除は素材が揃うときだけの best-effort。 */
   const mergeCutWithNext = async (index: number) => {
     const a = project.cuts[index];
     const b = project.cuts[index + 1];
-    if (!a?.psd || !b?.psd) return;
-    const pa = psdCache[a.psd];
-    const pb = psdCache[b.psd];
-    if (!pa || !pb) return;
+    // 範囲外（隣接 CUT が存在しない）ときのみ早期 return
+    if (!a || !b) return;
+
+    const pa = a.psd ? psdCache[a.psd] : undefined;
+    const pb = b.psd ? psdCache[b.psd] : undefined;
     // mergePsd で下CUTの内容は上CUTへコピーされるため、結合後に孤立する下CUTの PSD は掃除対象
     const orphan = orphanedPsdAfterMerge(project, index);
-    const { psd: mergedPsd, buffer } = mergePsd(pa, pb);
-    if (storage.capabilities.write) {
-      await storage.writeFile(a.psd, buffer);
-      // 掃除はベストエフォート（失敗してもマージ自体は成功扱い）
-      if (orphan) await storage.deleteFile(orphan).catch(() => undefined);
+
+    // PSD 合成が可能なケース（両 PSD・両キャッシュ・書込可）だけ実際に合成して上CUTへ書き戻す
+    const canMergePsd = !!(a.psd && b.psd && pa && pb && storage.capabilities.write);
+    const nextCache = { ...psdCache };
+    if (canMergePsd) {
+      const { psd: mergedPsd, buffer } = mergePsd(pa!, pb!);
+      await storage.writeFile(a.psd!, buffer);
+      nextCache[a.psd!] = mergedPsd;
     }
-    const nextCache = { ...psdCache, [a.psd]: mergedPsd };
-    if (orphan) delete nextCache[orphan];
+    // 孤立しうる下CUT PSD の掃除は素材が揃わなくても best-effort で行う
+    if (orphan) {
+      if (storage.capabilities.write) await storage.deleteFile(orphan).catch(() => undefined);
+      delete nextCache[orphan];
+    }
     await setPsdCache(nextCache);
+
+    // データ結合は必ず到達させる（下CUTを除去＝番号が繰り上がり、空行が消える）
     await setProject(mergeCuts(project, index));
+  };
+
+  /** 任意位置への CUT 挿入: index の直後にネイティブ解像度の単層CUTを挿入する（addCut の位置指定版） */
+  const insertCut = async (index: number) => {
+    const size = { ...frame };
+    const { psd, buffer } = createTemplatePsd(size.width, size.height);
+    const psdName = nextPsdName(project);
+    if (storage.capabilities.write) {
+      await storage.writeFile(psdName, buffer);
+    }
+    await setPsdCache({ ...psdCache, [psdName]: psd });
+    await setProject(insertCutAfter(project, index, psdName, size, fps * 3));
+  };
+
+  /** CUT 削除: 対象 CUT を除去（最後の1CUTは残す）。孤立した PSD はディスク+キャッシュから掃除する */
+  const deleteCut = async (index: number) => {
+    const removed = project.cuts[index];
+    if (!removed) return;
+    const next = deleteCutAt(project, index);
+    // length<=1 などで削除されなかった（同一参照）なら何もしない
+    if (next === project) return;
+    // 削除 CUT の psd が結果のどの cut からも参照されなくなったら掃除（大小無視で保守的に判定）
+    if (removed.psd) {
+      const target = removed.psd.toLowerCase();
+      const stillReferenced = next.cuts.some((cut) => cut.psd?.toLowerCase() === target);
+      if (!stillReferenced) {
+        if (storage.capabilities.write) await storage.deleteFile(removed.psd).catch(() => undefined);
+        const nextCache = { ...psdCache };
+        delete nextCache[removed.psd];
+        await setPsdCache(nextCache);
+      }
+    }
+    await setProject(next);
+  };
+
+  /** シーン区切りトグル: sceneStart があれば解除、無ければ空マーカー（無題境界）を付与。
+   *  index0 は常に暗黙シーンなのでトグル不可（no-op）。 */
+  const toggleSceneBreak = (index: number) => {
+    if (index <= 0) return;
+    const has = !!project.cuts[index]?.sceneStart;
+    setProject(setSceneStart(project, index, has ? undefined : {}));
   };
 
   /** 分離: 複数レイヤーCUTの最終レイヤーを新規CUTへ切り出す（New Layer の逆） */
@@ -132,5 +184,8 @@ export const useProjectActions = () => {
     resizeCanvas,
     mergeCutWithNext,
     splitCutLastLayer,
+    insertCut,
+    deleteCut,
+    toggleSceneBreak,
   };
 };

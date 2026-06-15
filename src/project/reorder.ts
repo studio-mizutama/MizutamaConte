@@ -19,10 +19,33 @@ const moveItem = <T>(items: readonly T[], from: number, to: number): T[] => {
 };
 
 /** cut から sceneStart キーを除去した新オブジェクトを返す（不変・キーごと削除） */
-const stripSceneStart = (cut: ProjectCut): ProjectCut => {
+export const stripSceneStart = (cut: ProjectCut): ProjectCut => {
   const { sceneStart: _omit, ...rest } = cut;
   return rest;
 };
+
+/**
+ * 「並び順は確定済みの cuts」と「各位置の実効シーン ID」「シーン ID→タイトル」から
+ * sceneStart マーカーを再正規化する（純粋・不変）。reorderCut / deleteCutAt で共有。
+ *
+ * 規則:
+ * - index0 は常に暗黙の Scene 1（マーカー除去）。
+ * - 直前 cut と実効シーン ID が変わる位置のみ境界マーカー sceneStart:{title} を付与
+ *   （title が undefined でも境界マーカーとして機能する）。
+ * - 同一シーン内の cut（境界でない位置）からはマーカーを除去（重複境界を作らない）。
+ */
+export const normalizeSceneMarkers = (
+  cuts: readonly ProjectCut[],
+  effectiveSceneIds: readonly number[],
+  titleBySceneId: readonly (string | undefined)[],
+): ProjectCut[] =>
+  cuts.map((cut, p) => {
+    if (p === 0) return stripSceneStart(cut); // 暗黙の Scene 1
+    if (effectiveSceneIds[p] !== effectiveSceneIds[p - 1]) {
+      return { ...stripSceneStart(cut), sceneStart: { title: titleBySceneId[effectiveSceneIds[p]] } };
+    }
+    return stripSceneStart(cut);
+  });
 
 /**
  * 個別 CUT を from→to へ移動し、sceneStart マーカーを再正規化する（純粋・不変）。
@@ -65,17 +88,9 @@ export const reorderCut = (project: ProjectFile, from: number, to: number): Proj
       eff[p] = order.length > 1 ? sceneIdByIndex[order[1]] : sceneIdByIndex[from];
     }
   });
-  // 結果 cuts を組み立て、境界にのみマーカーを付与
-  const nextCuts = order.map((origIndex, p) => {
-    const cut = cuts[origIndex];
-    if (p === 0) return stripSceneStart(cut); // 暗黙の Scene 1
-    if (eff[p] !== eff[p - 1]) {
-      // 境界。title が undefined でも { title: undefined } で境界マーカーになる
-      return { ...stripSceneStart(cut), sceneStart: { title: titleBySceneId[eff[p]] } };
-    }
-    return stripSceneStart(cut);
-  });
-  return { ...project, cuts: nextCuts };
+  // 結果 cuts を組み立て、境界にのみマーカーを付与（共有ヘルパに委譲）
+  const orderedCuts = order.map((origIndex) => cuts[origIndex]);
+  return { ...project, cuts: normalizeSceneMarkers(orderedCuts, eff, titleBySceneId) };
 };
 
 /**
