@@ -53,6 +53,132 @@ describe('reorderCut', () => {
     reorderCut(p, 2, 0);
     expect(p.cuts.map((c) => c.id)).toEqual(['a', 'b', 'c']);
   });
+
+  /** deriveScenes 結果を「期待ブロック順」と突き合わせる検証ヘルパー（reorderCut 用）。
+   *  expected は各シーンの { title, ids } をブロック順に並べたもの。 */
+  const expectCutScenes = (
+    cuts: ProjectCut[],
+    expected: { title?: string; ids: string[] }[],
+  ): void => {
+    const scenes = deriveScenes(cuts);
+    expect(scenes.length).toBe(expected.length);
+    scenes.forEach((scene, i) => {
+      expect(scene.title).toBe(expected[i].title);
+      expect(scene.cutIndices.map((idx) => cuts[idx].id)).toEqual(expected[i].ids);
+    });
+  };
+
+  describe('deriveScenes round-trip（sceneStart マーカー正規化 / ドロップ先シーンに合流）', () => {
+    // 検証トレースの基準構成: S1=[a] | S2=[b,c] | S3=[d]
+    const traceProject = (): ProjectFile =>
+      project([
+        cut('a'),
+        cut('b', undefined, { title: 'S2' }),
+        cut('c'),
+        cut('d', undefined, { title: 'S3' }),
+      ]);
+
+    it('CUT を末尾へ移すとドロップ先シーンに合流し、元シーンは残存 CUT が見出しを継承する', () => {
+      // b(S2 先頭) を d の後＝末尾へ。期待: S1:[a] | S2:[c] | S3:[d,b]
+      const next = reorderCut(traceProject(), 1, 3);
+      expect(next.cuts.map((c) => c.id)).toEqual(['a', 'c', 'd', 'b']);
+      expectCutScenes(next.cuts, [
+        { title: undefined, ids: ['a'] },
+        { title: 'S2', ids: ['c'] },
+        { title: 'S3', ids: ['d', 'b'] },
+      ]);
+    });
+
+    it('CUT を index0 へ移すと暗黙 Scene 1 に合流する', () => {
+      // b を先頭へ。期待: S1:[b,a] | S2:[c] | S3:[d]
+      const next = reorderCut(traceProject(), 1, 0);
+      expect(next.cuts.map((c) => c.id)).toEqual(['b', 'a', 'c', 'd']);
+      // index0 は常に暗黙（マーカー無し）
+      expect(next.cuts[0].sceneStart).toBeUndefined();
+      expectCutScenes(next.cuts, [
+        { title: undefined, ids: ['b', 'a'] },
+        { title: 'S2', ids: ['c'] },
+        { title: 'S3', ids: ['d'] },
+      ]);
+    });
+
+    it('シーン内の移動（前後を同シーン CUT に挟まれる）ではシーン構造が変わらない', () => {
+      // S1=[a] | S2=[b,c,d] | S3=[e]。S2 内で d を c の前へ（index3 → index2）
+      const p = project([
+        cut('a'),
+        cut('b', undefined, { title: 'S2' }),
+        cut('c'),
+        cut('d'),
+        cut('e', undefined, { title: 'S3' }),
+      ]);
+      const next = reorderCut(p, 3, 2);
+      expect(next.cuts.map((c) => c.id)).toEqual(['a', 'b', 'd', 'c', 'e']);
+      // d は前後とも S2 の CUT に挟まれるため S2 に留まる。シーン構造不変
+      expectCutScenes(next.cuts, [
+        { title: undefined, ids: ['a'] },
+        { title: 'S2', ids: ['b', 'd', 'c'] },
+        { title: 'S3', ids: ['e'] },
+      ]);
+    });
+
+    it('CUT を別シーンの先頭直後へ落とすとそのシーンに合流する（ドロップ先合流）', () => {
+      // S1=[a] | S2=[b,c] | S3=[d]。c(S2) を a の直後（index1）へ落とす → c は S1 に合流
+      const next = reorderCut(traceProject(), 2, 1);
+      expect(next.cuts.map((c) => c.id)).toEqual(['a', 'c', 'b', 'd']);
+      // c は落とした位置のシーン（S1）に合流。元 S2 は b が見出しを継承
+      expectCutScenes(next.cuts, [
+        { title: undefined, ids: ['a', 'c'] },
+        { title: 'S2', ids: ['b'] },
+        { title: 'S3', ids: ['d'] },
+      ]);
+    });
+
+    it('境界をまたぐ移動でもシーン数が保たれる', () => {
+      const next = reorderCut(traceProject(), 1, 3);
+      expect(deriveScenes(next.cuts).length).toBe(3);
+    });
+
+    it('移動した CUT のシーンタイトルが残存 CUT に継承される（c が S2 見出しを継承）', () => {
+      const next = reorderCut(traceProject(), 1, 3);
+      const scenes = deriveScenes(next.cuts);
+      const s2 = scenes.find((s) => s.title === 'S2');
+      expect(s2?.cutIndices.map((idx) => next.cuts[idx].id)).toEqual(['c']);
+    });
+
+    it('index0 へ来た CUT には sceneStart マーカーが付かない（暗黙化）', () => {
+      // タイトル付きシーンの先頭 d を index0 へ移動しても暗黙化する
+      const next = reorderCut(traceProject(), 3, 0);
+      expect(next.cuts[0].id).toBe('d');
+      expect(next.cuts[0].sceneStart).toBeUndefined();
+    });
+
+    it('from === to なら完全に不変（マーカーも保持）', () => {
+      const next = reorderCut(traceProject(), 1, 1);
+      expect(next.cuts.map((c) => c.id)).toEqual(['a', 'b', 'c', 'd']);
+      expect(next.cuts[1].sceneStart).toEqual({ title: 'S2' });
+      expect(next.cuts[3].sceneStart).toEqual({ title: 'S3' });
+      expectCutScenes(next.cuts, [
+        { title: undefined, ids: ['a'] },
+        { title: 'S2', ids: ['b', 'c'] },
+        { title: 'S3', ids: ['d'] },
+      ]);
+    });
+
+    it('内部 cut に余計な sceneStart マーカーを残さない', () => {
+      const next = reorderCut(traceProject(), 1, 3);
+      // S3 の内部 cut（b）にはマーカーが無く、d だけが境界を担う
+      const b = next.cuts.find((c) => c.id === 'b');
+      expect(b?.sceneStart).toBeUndefined();
+    });
+
+    it('元 project を破壊しない（マーカー正規化後もイミュータブル）', () => {
+      const p = traceProject();
+      reorderCut(p, 1, 3);
+      expect(p.cuts.map((c) => c.id)).toEqual(['a', 'b', 'c', 'd']);
+      expect(p.cuts[1].sceneStart).toEqual({ title: 'S2' });
+      expect(p.cuts[3].sceneStart).toEqual({ title: 'S3' });
+    });
+  });
 });
 
 describe('reorderScene', () => {

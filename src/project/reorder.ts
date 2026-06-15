@@ -18,16 +18,64 @@ const moveItem = <T>(items: readonly T[], from: number, to: number): T[] => {
   return next;
 };
 
-/** cuts 配列を from→to へ移動（純粋・不変） */
-export const reorderCut = (project: ProjectFile, from: number, to: number): ProjectFile => ({
-  ...project,
-  cuts: moveItem(project.cuts, from, to),
-});
-
 /** cut から sceneStart キーを除去した新オブジェクトを返す（不変・キーごと削除） */
 const stripSceneStart = (cut: ProjectCut): ProjectCut => {
   const { sceneStart: _omit, ...rest } = cut;
   return rest;
+};
+
+/**
+ * 個別 CUT を from→to へ移動し、sceneStart マーカーを再正規化する（純粋・不変）。
+ *
+ * セマンティクス＝「ドロップ先シーンに合流」: 移動した CUT は落とした位置のシーンの一員になる。
+ * 元シーンは先頭 CUT が抜けても次 CUT が見出しを引き継ぎ消えない。index0 は常に暗黙の Scene 1。
+ * 結果は必ず deriveScenes で round-trip する（各シーンの連続ブロックを正しく表すマーカー配置）。
+ *
+ * cut オブジェクトではなく「元インデックス」を動かし、各新位置の実効シーンを決めてから
+ * 境界（シーンが切り替わる位置）にだけ sceneStart マーカーを付与する。
+ */
+export const reorderCut = (project: ProjectFile, from: number, to: number): ProjectFile => {
+  const cuts = project.cuts;
+  if (from === to || from < 0 || from >= cuts.length || to < 0 || to >= cuts.length) {
+    // 範囲外/同値はマーカー不変でコピーのみ
+    return { ...project, cuts: [...cuts] };
+  }
+  // 元の各 cut index → 所属シーンの order、および scene order → title を作る
+  const scenes = deriveScenes(cuts);
+  const sceneIdByIndex: number[] = new Array(cuts.length);
+  const titleBySceneId: (string | undefined)[] = scenes.map((scene) => scene.title);
+  scenes.forEach((scene, sceneId) => {
+    scene.cutIndices.forEach((idx) => {
+      sceneIdByIndex[idx] = sceneId;
+    });
+  });
+  // 「新しい表示順での元インデックス配列」を得る（cut オブジェクトでなくインデックスを動かす）
+  const order = moveItem([...cuts.keys()], from, to);
+  // 各新位置 p の実効シーン ID を決める
+  const eff: number[] = new Array(order.length);
+  order.forEach((origIndex, p) => {
+    if (origIndex !== from) {
+      // 動かしていない cut は元のシーンを維持
+      eff[p] = sceneIdByIndex[origIndex];
+    } else if (p > 0) {
+      // 動かした cut は直前 cut のシーンに合流
+      eff[p] = eff[p - 1];
+    } else {
+      // 先頭に置いたら後続（新 Scene 1）に合流。要素 1 個なら自身の元シーン
+      eff[p] = order.length > 1 ? sceneIdByIndex[order[1]] : sceneIdByIndex[from];
+    }
+  });
+  // 結果 cuts を組み立て、境界にのみマーカーを付与
+  const nextCuts = order.map((origIndex, p) => {
+    const cut = cuts[origIndex];
+    if (p === 0) return stripSceneStart(cut); // 暗黙の Scene 1
+    if (eff[p] !== eff[p - 1]) {
+      // 境界。title が undefined でも { title: undefined } で境界マーカーになる
+      return { ...stripSceneStart(cut), sceneStart: { title: titleBySceneId[eff[p]] } };
+    }
+    return stripSceneStart(cut);
+  });
+  return { ...project, cuts: nextCuts };
 };
 
 /**
