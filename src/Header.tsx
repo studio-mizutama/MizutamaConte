@@ -27,6 +27,7 @@ import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
 import { useT } from 'i18n';
 import { usePrint } from 'print/usePrint';
 import { useVideoExport } from 'hooks/useVideoExport';
+import { clearHistory } from 'history/undoManager';
 
 const { api } = window;
 
@@ -255,6 +256,8 @@ export const Header: React.FC = () => {
     setProject(loaded);
     setPsdCache(cache);
     setFileName(jsonFileName);
+    // プロジェクト差し替え（Open/外部リロード）で履歴は無効化する
+    clearHistory();
   };
 
   // Web: <input webkitdirectory> からの読み込み

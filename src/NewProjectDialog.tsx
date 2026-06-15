@@ -23,6 +23,7 @@ import { AspectKey, ResolutionKey } from 'project/types';
 import { useT } from 'i18n';
 import { gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
+import { clearHistory } from 'history/undoManager';
 
 const FPS_OPTIONS = ['12', '24', '30'];
 
@@ -76,6 +77,7 @@ export const NewProjectDialog: React.FC = () => {
       setPsdCache({});
       setFileName(jsonFileName);
       setSaveState('saved');
+      clearHistory();
       // バージョン管理 ON かつ Electron かつ git 検出済みのときだけ init（.gitignore/.gitattributes/LFS/初期コミットは electron/git.ts が実施）
       if (gitEnabled && gitIsReady && window.api?.git) {
         try {
