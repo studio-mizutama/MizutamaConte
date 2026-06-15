@@ -42,6 +42,7 @@ const boot = async (): Promise<void> => {
     colorScheme,
     gitDetect: undefined,
     printRequested: false,
+    videoExportRequested: false,
   });
 
   ReactDOM.render(

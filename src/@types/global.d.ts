@@ -31,6 +31,8 @@ declare module 'reactn/default' {
     gitDetect: GitDetect | undefined;
     /** 印刷要求フラグ。usePrint で立て、PrintHost が計測→ページ割り→window.print() を駆動 */
     printRequested: boolean;
+    /** 動画書き出し要求フラグ。useVideoExport で立て、VideoExportHost が品質選択→エンコードを駆動 */
+    videoExportRequested: boolean;
   }
 }
 
@@ -88,6 +90,9 @@ export interface Sandbox {
   removeOpenSettingsRequest: () => void;
   onPrintRequest: (listener: () => void) => void;
   removePrintRequest: () => void;
+  onExportVideoRequest: (listener: () => void) => void;
+  removeExportVideoRequest: () => void;
+  saveVideo: (fileName: string, data: Uint8Array) => Promise<boolean>;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
