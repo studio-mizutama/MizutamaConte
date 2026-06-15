@@ -37,7 +37,7 @@ describe('isRepo / initRepo', () => {
     await initRepo(dir);
     const gitignore = fs.readFileSync(path.join(dir, '.gitignore'), 'utf8');
     const gitattributes = fs.readFileSync(path.join(dir, '.gitattributes'), 'utf8');
-    expect(gitignore).toBe('.DS_Store\n*.pdf\n*.mp4\n*.mov\nnode_modules/\n');
+    expect(gitignore).toBe('.DS_Store\n*.pdf\n*.mp4\n*.mov\n');
     expect(gitattributes).toBe('*.psd filter=lfs diff=lfs merge=lfs -text\n');
   });
 

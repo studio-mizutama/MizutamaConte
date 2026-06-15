@@ -32,7 +32,7 @@ const IDENTITY = [
   'user.email=conte@studio-mizutama.invalid',
 ];
 
-const GITIGNORE = '.DS_Store\n*.pdf\n*.mp4\n*.mov\nnode_modules/\n';
+const GITIGNORE = '.DS_Store\n*.pdf\n*.mp4\n*.mov\n';
 const GITATTRIBUTES = '*.psd filter=lfs diff=lfs merge=lfs -text\n';
 
 /** git 本体の存在を成否で判定（dir 不要） */

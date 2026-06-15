@@ -30,6 +30,8 @@ export const SettingsDialog: React.FC = () => {
   const [locale, setLocale] = useGlobal('locale');
   const [colorScheme, setColorScheme] = useGlobal('colorScheme');
   const { settings } = useProject();
+  // プロジェクト作成/オープン時に set される。未オープン時は空文字（falsy）
+  const globalFileName = useGlobal('globalFileName')[0];
   const [langDraft, setLangDraft] = useState<Locale>(locale);
   const [themeDraft, setThemeDraft] = useState<ColorScheme>(colorScheme);
   const [mode, setMode] = useState<'auto' | 'custom'>('auto');
@@ -188,7 +190,7 @@ export const SettingsDialog: React.FC = () => {
                   </Flex>
                 </Flex>
               )}
-              {api && gitDetect ? (
+              {api && gitDetect && globalFileName ? (
                 <Flex direction="column" gap="size-150">
                   <Heading level={4} margin={0}>
                     {t('git.snapshot.heading')}
