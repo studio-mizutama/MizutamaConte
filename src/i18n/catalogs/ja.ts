@@ -70,16 +70,16 @@ export const ja: Record<TranslationKey, string> = {
   'toolGroup.resize': 'リサイズ (C)',
   'toolGroup.reorder': '並べ替え (R)',
 
-  // トランジション
-  'transition.fadeIn': 'フェードイン',
-  'transition.fadeOut': 'フェードアウト',
-  'transition.duration': '尺',
-  'transition.fade.none': 'なし',
-  'transition.fade.whiteIn': 'ホワイトイン',
-  'transition.fade.blackIn': 'ブラックイン',
-  'transition.fade.whiteOut': 'ホワイトアウト',
-  'transition.fade.blackOut': 'ブラックアウト',
-  'transition.fade.cross': 'クロス',
+  // トランジション（全ロケール英語固定。パネル見出しは別キー panels.* で日本語のまま）
+  'transition.fadeIn': 'Fade In',
+  'transition.fadeOut': 'Fade Out',
+  'transition.duration': 'Duration',
+  'transition.fade.none': 'None',
+  'transition.fade.whiteIn': 'White In',
+  'transition.fade.blackIn': 'Black In',
+  'transition.fade.whiteOut': 'White Out',
+  'transition.fade.blackOut': 'Black Out',
+  'transition.fade.cross': 'Cross',
 
   // Duration パネル
   'duration.label': 'Cut{cut} 尺 · {sec}秒 @ {fps}fps',

@@ -70,16 +70,16 @@ export const ko: Record<TranslationKey, string> = {
   'toolGroup.resize': '크기 조정 (C)',
   'toolGroup.reorder': '재정렬 (R)',
 
-  // 트랜지션
-  'transition.fadeIn': '페이드 인',
-  'transition.fadeOut': '페이드 아웃',
-  'transition.duration': '길이',
-  'transition.fade.none': '없음',
-  'transition.fade.whiteIn': '화이트 인',
-  'transition.fade.blackIn': '블랙 인',
-  'transition.fade.whiteOut': '화이트 아웃',
-  'transition.fade.blackOut': '블랙 아웃',
-  'transition.fade.cross': '크로스',
+  // 트랜지션（全ロケール英語固定）
+  'transition.fadeIn': 'Fade In',
+  'transition.fadeOut': 'Fade Out',
+  'transition.duration': 'Duration',
+  'transition.fade.none': 'None',
+  'transition.fade.whiteIn': 'White In',
+  'transition.fade.blackIn': 'Black In',
+  'transition.fade.whiteOut': 'White Out',
+  'transition.fade.blackOut': 'Black Out',
+  'transition.fade.cross': 'Cross',
 
   // Duration 패널
   'duration.label': 'Cut{cut} 길이 · {sec}초 @ {fps}fps',
