@@ -12,12 +12,9 @@ import {
 } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Add from '@spectrum-icons/workflow/Add';
-import Layers from '@spectrum-icons/workflow/Layers';
-import FolderAdd from '@spectrum-icons/workflow/FolderAdd';
 import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
 import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
 import Close from '@spectrum-icons/workflow/Close';
-import Link from '@spectrum-icons/workflow/Link';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
@@ -118,49 +115,6 @@ const SceneBand: React.FC<{
   );
 };
 
-const Gutter = styled.div`
-  position: relative;
-  height: 10px;
-  margin: -5px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.12s ease;
-  z-index: 4;
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const RowInsert: React.FC<{
-  cutIndex: number;
-  busy: boolean;
-  onInsert: () => void;
-  canMergeNext: boolean;
-  onMerge: () => void;
-}> = ({ cutIndex, busy, onInsert, canMergeNext, onMerge }) => {
-  const t = useT();
-  return (
-    <Gutter aria-label={t('conte.gutterAria', { n: cutIndex + 1 })}>
-      <TooltipTrigger delay={300}>
-        <ActionButton isQuiet isDisabled={busy} onPress={onInsert} aria-label={t('conte.insertLayerAria')}>
-          <Layers />
-        </ActionButton>
-        <Tooltip>{t('conte.newLayer')}</Tooltip>
-      </TooltipTrigger>
-      {canMergeNext && (
-        <TooltipTrigger delay={300}>
-          <ActionButton isQuiet isDisabled={busy} onPress={onMerge} aria-label={t('conte.mergeAria', { n: cutIndex + 1 })}>
-            <Link />
-          </ActionButton>
-          <Tooltip>{t('conte.merge')}</Tooltip>
-        </TooltipTrigger>
-      )}
-    </Gutter>
-  );
-};
-
 const CutContainer: React.FC = () => {
   const t = useT();
   const cuts = usePsd();
@@ -243,9 +197,17 @@ const CutContainer: React.FC = () => {
   const setDialogue = useCallback((i: number, v: string) => actionsRef.current.setDialogue(i, v), []);
   const setActionText = useCallback((i: number, v: string) => actionsRef.current.setActionText(i, v), []);
   const setTime = useCallback((i: number, v: number) => actionsRef.current.setTime(i, v), []);
+  // per-cut クラスタのコールバック。actionsRef 経由で参照を安定させ CutRow の memo を維持する
   const splitLast = useCallback((i: number) => runBusy(() => actionsRef.current.splitCutLastLayer(i)), [runBusy]);
-  const insertLayer = useCallback((i: number) => runBusy(() => actionsRef.current.addLayer(i)), [runBusy]);
+  const addLayerCb = useCallback((i: number) => runBusy(() => actionsRef.current.addLayer(i)), [runBusy]);
   const mergeNext = useCallback((i: number) => runBusy(() => actionsRef.current.mergeCutWithNext(i)), [runBusy]);
+  const insertCutCb = useCallback((i: number) => runBusy(() => actionsRef.current.insertCut(i)), [runBusy]);
+  const deleteCutCb = useCallback((i: number) => runBusy(() => actionsRef.current.deleteCut(i)), [runBusy]);
+  // toggleSceneBreak は同期処理（Promise を返さない）ので Promise.resolve でラップして runBusy に通す
+  const toggleSceneBreakCb = useCallback(
+    (i: number) => runBusy(async () => actionsRef.current.toggleSceneBreak(i)),
+    [runBusy],
+  );
 
   const thumbScale = thumbnailScale(frame);
   const frameThumbWidth = frame.width * thumbScale;
@@ -312,17 +274,19 @@ const CutContainer: React.FC = () => {
                     inserting={inserting}
                     timeSum={timeSum}
                     fps={fps}
+                    canMergeNext={
+                      index + 1 < project.cuts.length && canMerge(project.cuts[index], project.cuts[index + 1])
+                    }
+                    canDelete={project.cuts.length > 1}
                     onSplitLast={splitLast}
+                    onInsertCut={insertCutCb}
+                    onAddLayer={addLayerCb}
+                    onDeleteCut={deleteCutCb}
+                    onMergeNext={mergeNext}
+                    onToggleSceneBreak={toggleSceneBreakCb}
                     setDialogue={setDialogue}
                     setActionText={setActionText}
                     setTime={setTime}
-                  />
-                  <RowInsert
-                    cutIndex={index}
-                    busy={inserting}
-                    onInsert={() => insertLayer(index)}
-                    canMergeNext={index + 1 < project.cuts.length && canMerge(project.cuts[index], project.cuts[index + 1])}
-                    onMerge={() => mergeNext(index)}
                   />
                 </DraggableRow>
               )}
@@ -334,15 +298,17 @@ const CutContainer: React.FC = () => {
   );
 };
 
-/** CUT 列最終行の追加コントロール。New CUT / New Layer ボタン + New Scene メニュー */
+/** 空プロジェクトの起点ボタン。CUT が 0 個のときだけ「最初の CUT を追加」を出す。
+ *  CUT が 1 個以上あるときは per-cut クラスタで挿入/レイヤー/シーンを操作するため非表示。 */
 const AddCutRow: React.FC = () => {
   const t = useT();
-  const { addCut, addLayer, addSceneCut } = useProjectActions();
+  const { addCut } = useProjectActions();
   const { project } = useProject();
   const fileName = useGlobal('globalFileName')[0];
   const [busy, setBusy] = useState(false);
   if (!fileName) return null;
-  const lastCutIndex = project.cuts.length - 1;
+  // CUT が 1 個でもあれば per-cut クラスタに任せるのでグローバルボタンは出さない
+  if (project.cuts.length > 0) return null;
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     try {
@@ -361,23 +327,6 @@ const AddCutRow: React.FC = () => {
             <Add />
           </ActionButton>
           <Tooltip>{t('conte.newCut')}</Tooltip>
-        </TooltipTrigger>
-        <TooltipTrigger delay={300}>
-          <ActionButton
-            isQuiet
-            isDisabled={busy || lastCutIndex < 0}
-            onPress={() => run(() => addLayer(lastCutIndex))}
-            aria-label={t('conte.newLayer')}
-          >
-            <Layers />
-          </ActionButton>
-          <Tooltip>{t('conte.newLayer')}</Tooltip>
-        </TooltipTrigger>
-        <TooltipTrigger delay={300}>
-          <ActionButton isQuiet isDisabled={busy} onPress={() => run(addSceneCut)} aria-label={t('conte.newScene')}>
-            <FolderAdd />
-          </ActionButton>
-          <Tooltip>{t('conte.newScene')}</Tooltip>
         </TooltipTrigger>
       </Flex>
     </View>

@@ -3,6 +3,11 @@ import { ActionButton, Grid, Heading, View, Flex, TooltipTrigger, Tooltip } from
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
+import Add from '@spectrum-icons/workflow/Add';
+import Layers from '@spectrum-icons/workflow/Layers';
+import Delete from '@spectrum-icons/workflow/Delete';
+import Link from '@spectrum-icons/workflow/Link';
+import FolderAdd from '@spectrum-icons/workflow/FolderAdd';
 import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
@@ -10,7 +15,7 @@ import { EditorMode } from 'hooks/editorMode';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
-import { useT } from 'i18n';
+import { useT, TranslationKey } from 'i18n';
 
 const MyTextArea = styled.textarea<{ $editable: boolean }>`
   position: absolute;
@@ -58,6 +63,61 @@ const Fade = styled.svg`
   left: calc((100% - 96px) / 2);
 `;
 
+/** Cross（クロスフェード）用の記号。上向き三角と下向き三角が頂点で合わさる蝶ネクタイ型。
+ *  White/Black の In/Out は従来の三角(Fade)を維持し、Cross のときだけこれを使う。 */
+const Cross = styled.svg`
+  padding: 0;
+  margin: 0;
+  stroke: none;
+  fill: var(--spectrum-alias-text-color);
+  position: absolute;
+  left: calc((100% - 96px) / 2);
+`;
+
+/** CUT 列下部の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列で折り返す。
+ *  通常はうっすら表示し、CUT 行(.hover)ホバー時に不透明にして誤クリックを防ぐ。 */
+const CutActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  max-width: 72px;
+  opacity: 0.25;
+  transition: opacity 0.12s ease;
+  /* CUT 行（祖先の div.hover）をホバーしたときに表示 */
+  .hover:hover & {
+    opacity: 1;
+  }
+`;
+
+/** トランジションのインライン表示（効果名＋duration）。PICTURE と ACTION の間に小さく置く。 */
+const TransitionLabel = styled.div`
+  position: absolute;
+  left: calc((100% - 96px) / 2 + 100px);
+  font-size: 11px;
+  opacity: 0.7;
+  pointer-events: none;
+  white-space: nowrap;
+`;
+
+/** フェード種別（保存値）→ i18n キーの対応。表示名のみ翻訳し、保存値は英語固定。 */
+const fadeLabelKey = (fade: NonNullable<Action['fadeIn']> | NonNullable<Action['fadeOut']>): TranslationKey => {
+  switch (fade) {
+    case 'White In':
+      return 'transition.fade.whiteIn';
+    case 'Black In':
+      return 'transition.fade.blackIn';
+    case 'White Out':
+      return 'transition.fade.whiteOut';
+    case 'Black Out':
+      return 'transition.fade.blackOut';
+    case 'Cross':
+      return 'transition.fade.cross';
+    default:
+      return 'transition.fade.none';
+  }
+};
+
 const TimeSum = styled.div`
   position: absolute;
   bottom: 4px;
@@ -103,6 +163,7 @@ const TextContainer: React.FC<{
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
 }> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, editable, setDialogue, setActionText, setTime }) => {
+  const t = useT();
   // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
   const [timeDraft, setTimeDraft] = useState<string | null>(null);
   const timeCancelRef = useRef(false);
@@ -133,15 +194,37 @@ const TextContainer: React.FC<{
           value={action?.text ?? ''}
           onChange={(e) => setActionText(cutIndex, e.target.value)}
         />
+        {/* IN 側トランジション: Cross は蝶ネクタイ型、White/Black In は従来の上向き三角 */}
+        {action?.fadeIn &&
+          (action.fadeIn === 'Cross' ? (
+            <Cross viewBox="0 0 96 48" width="96px">
+              <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
+            </Cross>
+          ) : (
+            <Fade viewBox="0 0 96 48" width="96px">
+              <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
+            </Fade>
+          ))}
         {action?.fadeIn && (
-          <Fade viewBox="0 0 96 48" width="96px">
-            <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
-          </Fade>
+          <TransitionLabel style={{ top: '2px' }}>
+            {`${t(fadeLabelKey(action.fadeIn))} ${frameToTimecode(action.fadeInDuration ?? 0, fps)}`}
+          </TransitionLabel>
         )}
+        {/* OUT 側トランジション: Cross は蝶ネクタイ型、White/Black Out は従来の下向き三角 */}
+        {action?.fadeOut &&
+          (action.fadeOut === 'Cross' ? (
+            <Cross viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
+              <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
+            </Cross>
+          ) : (
+            <Fade viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
+              <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
+            </Fade>
+          ))}
         {action?.fadeOut && (
-          <Fade viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
-            <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
-          </Fade>
+          <TransitionLabel style={{ bottom: '2px' }}>
+            {`${t(fadeLabelKey(action.fadeOut))} ${frameToTimecode(action.fadeOutDuration ?? 0, fps)}`}
+          </TransitionLabel>
         )}
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
@@ -250,7 +333,21 @@ export interface CutRowProps {
   inserting: boolean;
   timeSum?: number;
   fps: number;
+  /** この CUT の下に次の CUT を結合できるか（隣接 CUT が存在し canMerge を満たすとき真） */
+  canMergeNext: boolean;
+  /** この CUT を削除できるか（CUT が複数あるとき真。最後の1CUTは残す） */
+  canDelete: boolean;
   onSplitLast: (index: number) => void;
+  /** この CUT の下に新規 CUT を挿入 */
+  onInsertCut: (index: number) => void;
+  /** この CUT にレイヤーを追加 */
+  onAddLayer: (index: number) => void;
+  /** この CUT を削除 */
+  onDeleteCut: (index: number) => void;
+  /** この CUT を下の CUT と結合 */
+  onMergeNext: (index: number) => void;
+  /** この CUT のシーン区切りをトグル（index0 では呼ばれない） */
+  onToggleSceneBreak: (index: number) => void;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
@@ -270,7 +367,14 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     inserting,
     timeSum,
     fps,
+    canMergeNext,
+    canDelete,
     onSplitLast,
+    onInsertCut,
+    onAddLayer,
+    onDeleteCut,
+    onMergeNext,
+    onToggleSceneBreak,
     setDialogue,
     setActionText,
     setTime,
@@ -295,21 +399,89 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
             <View gridArea="cut" width="100%" height="auto">
               <Flex direction="column" alignItems="center" gap="size-50">
                 <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
-                {projectCut.rows.length > 1 ? (
+                {/* per-cut 操作クラスタ。72px に収めるため小アイコンを 2 列で折り返す */}
+                <CutActions>
+                  {/* この下に CUT 挿入 */}
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
                       isDisabled={inserting}
-                      onPress={() => onSplitLast(index)}
-                      aria-label={t('cutRow.splitAria', { n: index + 1 })}
+                      onPress={() => onInsertCut(index)}
+                      aria-label={t('cutRow.insertAria', { n: index + 1 })}
                     >
-                      <RemoveCircle />
+                      <Add />
                     </ActionButton>
-                    <Tooltip>{t('cutRow.splitTooltip')}</Tooltip>
+                    <Tooltip>{t('cutRow.insertTooltip')}</Tooltip>
                   </TooltipTrigger>
-                ) : (
-                  <></>
-                )}
+                  {/* レイヤー追加 */}
+                  <TooltipTrigger delay={300}>
+                    <ActionButton
+                      isQuiet
+                      isDisabled={inserting}
+                      onPress={() => onAddLayer(index)}
+                      aria-label={t('cutRow.addLayerAria', { n: index + 1 })}
+                    >
+                      <Layers />
+                    </ActionButton>
+                    <Tooltip>{t('cutRow.addLayerTooltip')}</Tooltip>
+                  </TooltipTrigger>
+                  {/* CUT 削除（最後の1CUTは残すため canDelete のときだけ有効） */}
+                  {canDelete && (
+                    <TooltipTrigger delay={300}>
+                      <ActionButton
+                        isQuiet
+                        isDisabled={inserting}
+                        onPress={() => onDeleteCut(index)}
+                        aria-label={t('cutRow.deleteAria', { n: index + 1 })}
+                      >
+                        <Delete />
+                      </ActionButton>
+                      <Tooltip>{t('cutRow.deleteTooltip')}</Tooltip>
+                    </TooltipTrigger>
+                  )}
+                  {/* 下と結合（隣接 CUT が結合可能なときだけ表示） */}
+                  {canMergeNext && (
+                    <TooltipTrigger delay={300}>
+                      <ActionButton
+                        isQuiet
+                        isDisabled={inserting}
+                        onPress={() => onMergeNext(index)}
+                        aria-label={t('cutRow.mergeAria', { n: index + 1 })}
+                      >
+                        <Link />
+                      </ActionButton>
+                      <Tooltip>{t('cutRow.mergeTooltip')}</Tooltip>
+                    </TooltipTrigger>
+                  )}
+                  {/* シーン区切りトグル（index0 は暗黙 Scene1 なので出さない） */}
+                  {index > 0 && (
+                    <TooltipTrigger delay={300}>
+                      <ActionButton
+                        isQuiet
+                        isDisabled={inserting}
+                        onPress={() => onToggleSceneBreak(index)}
+                        aria-label={t('cutRow.sceneBreakAria', { n: index + 1 })}
+                      >
+                        <FolderAdd />
+                      </ActionButton>
+                      <Tooltip>{t('cutRow.sceneBreakTooltip')}</Tooltip>
+                    </TooltipTrigger>
+                  )}
+                  {/* 分離（複数レイヤーのとき最終レイヤーを別 CUT に切り出す） */}
+                  {projectCut.rows.length > 1 && (
+                    <TooltipTrigger delay={300}>
+                      <ActionButton
+                        isQuiet
+                        isDisabled={inserting}
+                        onPress={() => onSplitLast(index)}
+                        aria-label={t('cutRow.splitAria', { n: index + 1 })}
+                      >
+                        <RemoveCircle />
+                      </ActionButton>
+                      <Tooltip>{t('cutRow.splitTooltip')}</Tooltip>
+                    </TooltipTrigger>
+                  )}
+                </CutActions>
               </Flex>
             </View>
             <View gridArea="picture" width="100%" height="auto">

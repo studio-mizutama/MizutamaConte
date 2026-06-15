@@ -29,13 +29,7 @@ export const en = {
   'conte.scene.titleAriaLabel': 'Scene {n} title',
   'conte.scene.untitledPlaceholder': '(Untitled scene)',
   'conte.scene.removeBreak': 'Remove scene break',
-  'conte.gutterAria': 'Insert layer into cut {n}',
-  'conte.insertLayerAria': 'Insert new layer',
-  'conte.newLayer': 'New Layer',
   'conte.newCut': 'New CUT',
-  'conte.newScene': 'New Scene',
-  'conte.merge': 'Merge adjacent CUTs',
-  'conte.mergeAria': 'Merge cut {n} with next',
 
   // カット行
   'cutRow.resizeAria': 'Resize cut {n}',
@@ -44,6 +38,17 @@ export const en = {
   'cutRow.openHint': 'Double-click {name} to open in paint app',
   'cutRow.launchFailed': 'Could not launch paint app: {error}',
   'cutRow.webEditHint': 'Edit {name} in your local paint app.\nReopen the project after saving to apply changes.',
+  // CUT 列下部のアイコンクラスタ（per-cut 操作）
+  'cutRow.insertTooltip': 'Insert CUT below',
+  'cutRow.insertAria': 'Insert a CUT below cut {n}',
+  'cutRow.addLayerTooltip': 'New Layer',
+  'cutRow.addLayerAria': 'Add a layer to cut {n}',
+  'cutRow.deleteTooltip': 'Delete CUT',
+  'cutRow.deleteAria': 'Delete cut {n}',
+  'cutRow.mergeTooltip': 'Merge with CUT below',
+  'cutRow.mergeAria': 'Merge cut {n} with next',
+  'cutRow.sceneBreakTooltip': 'Toggle scene break',
+  'cutRow.sceneBreakAria': 'Toggle scene break at cut {n}',
 
   // カメラワーク（Scale/Pos/In/Out トークンは英語固定。スワップ動作の語のみ翻訳）
   'cameraWork.swapScale': 'Swap Scale In/Out',

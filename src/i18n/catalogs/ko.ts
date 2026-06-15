@@ -28,13 +28,7 @@ export const ko: Record<TranslationKey, string> = {
   'conte.scene.titleAriaLabel': '씬 {n} 제목',
   'conte.scene.untitledPlaceholder': '(제목 없는 씬)',
   'conte.scene.removeBreak': '씬 구분 해제',
-  'conte.gutterAria': 'CUT {n}에 레이어 삽입',
-  'conte.insertLayerAria': '새 레이어 삽입',
-  'conte.newLayer': '새 레이어',
   'conte.newCut': 'CUT 추가',
-  'conte.newScene': '새 씬',
-  'conte.merge': '위아래 CUT 병합',
-  'conte.mergeAria': 'CUT {n}을 다음과 병합',
 
   // 컷 행
   'cutRow.resizeAria': 'CUT {n} 크기 조정',
@@ -43,6 +37,17 @@ export const ko: Record<TranslationKey, string> = {
   'cutRow.openHint': '{name}을 더블클릭하여 페인트 앱에서 열기',
   'cutRow.launchFailed': '페인트 앱을 실행할 수 없습니다: {error}',
   'cutRow.webEditHint': '{name}을 로컬 페인트 앱에서 편집하세요.\n저장 후 프로젝트를 다시 열면 반영됩니다.',
+  // CUT 열 하단 아이콘 클러스터(per-cut 조작)
+  'cutRow.insertTooltip': '아래에 CUT 삽입',
+  'cutRow.insertAria': 'CUT {n} 아래에 CUT 삽입',
+  'cutRow.addLayerTooltip': '새 레이어',
+  'cutRow.addLayerAria': 'CUT {n}에 레이어 추가',
+  'cutRow.deleteTooltip': 'CUT 삭제',
+  'cutRow.deleteAria': 'CUT {n} 삭제',
+  'cutRow.mergeTooltip': '아래 CUT과 병합',
+  'cutRow.mergeAria': 'CUT {n}을 다음과 병합',
+  'cutRow.sceneBreakTooltip': '씬 구분 전환',
+  'cutRow.sceneBreakAria': 'CUT {n}의 씬 구분 전환',
 
   // 카메라 워크
   'cameraWork.swapScale': 'Scale In/Out 교체',

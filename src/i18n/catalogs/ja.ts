@@ -28,13 +28,7 @@ export const ja: Record<TranslationKey, string> = {
   'conte.scene.titleAriaLabel': 'シーン{n} のタイトル',
   'conte.scene.untitledPlaceholder': '（無題シーン）',
   'conte.scene.removeBreak': 'シーン区切りを解除',
-  'conte.gutterAria': 'CUT {n} にレイヤーを挿入',
-  'conte.insertLayerAria': '新規レイヤーを挿入',
-  'conte.newLayer': '新規レイヤー',
   'conte.newCut': 'CUT を追加',
-  'conte.newScene': '新規シーン',
-  'conte.merge': '上下の CUT を結合',
-  'conte.mergeAria': 'CUT {n} を下と結合',
 
   // カット行
   'cutRow.resizeAria': 'CUT {n} をリサイズ',
@@ -43,6 +37,17 @@ export const ja: Record<TranslationKey, string> = {
   'cutRow.openHint': '{name} をダブルクリックでペイントアプリで開く',
   'cutRow.launchFailed': 'ペイントアプリを起動できませんでした: {error}',
   'cutRow.webEditHint': '{name} をローカルのペイントアプリで編集してください。\n保存後にプロジェクトを開き直すと反映されます。',
+  // CUT 列下部のアイコンクラスタ（per-cut 操作）
+  'cutRow.insertTooltip': '下に CUT を挿入',
+  'cutRow.insertAria': 'CUT {n} の下に CUT を挿入',
+  'cutRow.addLayerTooltip': '新規レイヤー',
+  'cutRow.addLayerAria': 'CUT {n} にレイヤーを追加',
+  'cutRow.deleteTooltip': 'CUT を削除',
+  'cutRow.deleteAria': 'CUT {n} を削除',
+  'cutRow.mergeTooltip': '下の CUT と結合',
+  'cutRow.mergeAria': 'CUT {n} を下と結合',
+  'cutRow.sceneBreakTooltip': 'シーン区切りを切り替え',
+  'cutRow.sceneBreakAria': 'CUT {n} のシーン区切りを切り替え',
 
   // カメラワーク
   'cameraWork.swapScale': 'Scale を In/Out 入替',
