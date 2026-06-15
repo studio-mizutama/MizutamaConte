@@ -144,4 +144,5 @@ export const ja: Record<TranslationKey, string> = {
   'videoExport.start': '書き出し',
   'videoExport.encoding': '動画を書き出し中…',
   'videoExport.frameCount': 'フレーム {frame} / {total}',
+  'videoExport.error': '書き出しに失敗しました。この環境は動画エンコード（H.264）に未対応の可能性があります。',
 };

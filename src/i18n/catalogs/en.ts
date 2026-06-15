@@ -146,6 +146,7 @@ export const en = {
   'videoExport.start': 'Export',
   'videoExport.encoding': 'Exporting video…',
   'videoExport.frameCount': '{frame} / {total} frames',
+  'videoExport.error': 'Export failed. This environment may not support H.264 video encoding.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

@@ -13,6 +13,9 @@ export const downloadOrSaveVideo = async (bytes: Uint8Array, baseName: string): 
   const a = document.createElement('a');
   a.href = url;
   a.download = fileName;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  // 大きな blob でも確実にダウンロードさせるため revoke を遅延
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 };

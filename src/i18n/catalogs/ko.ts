@@ -144,4 +144,5 @@ export const ko: Record<TranslationKey, string> = {
   'videoExport.start': '내보내기',
   'videoExport.encoding': '동영상 내보내는 중…',
   'videoExport.frameCount': '프레임 {frame} / {total}',
+  'videoExport.error': '내보내기에 실패했습니다. 이 환경은 비디오 인코딩(H.264)을 지원하지 않을 수 있습니다.',
 };

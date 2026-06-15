@@ -19,7 +19,7 @@ import { exportVideo, totalFrames, ExportControl } from 'video/exportVideo';
 import { downloadOrSaveVideo } from 'video/saveVideo';
 import type { VideoQuality } from 'video/quality';
 
-type Phase = 'options' | 'encoding';
+type Phase = 'options' | 'encoding' | 'error';
 
 /**
  * 動画書き出しの駆動役。videoExportRequested が立つと品質選択ダイアログを出し、
@@ -72,10 +72,10 @@ export const VideoExportHost: React.FC = () => {
         controlRef.current,
       );
       if (bytes) await downloadOrSaveVideo(bytes, baseName);
+      close();
     } catch (e) {
       console.error('video export failed', e);
-    } finally {
-      close();
+      setPhase('error');
     }
   };
 
@@ -86,7 +86,7 @@ export const VideoExportHost: React.FC = () => {
   return (
     <DialogContainer
       onDismiss={() => {
-        if (phase === 'options') close();
+        if (phase === 'options' || phase === 'error') close();
       }}
     >
       <Dialog>
@@ -101,6 +101,8 @@ export const VideoExportHost: React.FC = () => {
               <Radio value="high">{t('videoExport.quality.high')}</Radio>
               <Radio value="medium">{t('videoExport.quality.medium')}</Radio>
             </RadioGroup>
+          ) : phase === 'error' ? (
+            <Text>{t('videoExport.error')}</Text>
           ) : (
             <Flex direction="column" gap="size-100">
               <ProgressBar label={t('videoExport.encoding')} value={progress} />
@@ -118,6 +120,10 @@ export const VideoExportHost: React.FC = () => {
                 {t('videoExport.start')}
               </Button>
             </>
+          ) : phase === 'error' ? (
+            <Button variant="secondary" onPress={close}>
+              {t('common.cancel')}
+            </Button>
           ) : (
             <Button
               variant="secondary"
