@@ -185,6 +185,19 @@ const registerIpcHandlers = () => {
     return result.filePaths[0];
   });
 
+  // 書き出した MP4 を保存ダイアログで指定先へ書き込む
+  ipcMain.handle('video:save', async (_event, fileName: string, data: Uint8Array): Promise<boolean> => {
+    if (!mainWindow) return false;
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: mt(resolveLocale(), 'dialog.saveVideo.title'),
+      defaultPath: fileName,
+      filters: [{ name: 'MP4', extensions: ['mp4'] }],
+    });
+    if (result.canceled || !result.filePath) return false;
+    fs.writeFileSync(result.filePath, Buffer.from(data));
+    return true;
+  });
+
   // --- git バージョン管理（Electron 専用・上級者向けオプション） ---
   // detect は dir 不要。それ以外は既存 storage と同方針で currentProjectDir を使う。
   ipcMain.handle('git:detect', () => detect());

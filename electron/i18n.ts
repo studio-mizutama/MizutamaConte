@@ -14,9 +14,11 @@ type MenuStrings = {
   'menu.view': string;
   'menu.reload': string;
   'menu.print': string;
+  'menu.exportVideo': string;
   'dialog.create.title': string;
   'dialog.create.button': string;
   'dialog.selectPaintApp.title': string;
+  'dialog.saveVideo.title': string;
 };
 
 const catalogs: Record<MenuLocale, MenuStrings> = {
@@ -30,9 +32,11 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.view': '表示',
     'menu.reload': '再読み込み',
     'menu.print': 'PDF書き出し…',
+    'menu.exportVideo': '動画書き出し…',
     'dialog.create.title': '保存先フォルダを選択',
     'dialog.create.button': 'ここに作成',
     'dialog.selectPaintApp.title': 'お絵描きアプリを選択',
+    'dialog.saveVideo.title': '動画の保存先',
   },
   ko: {
     'menu.about': 'Mizutama Conte 정보',
@@ -44,9 +48,11 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.view': '보기',
     'menu.reload': '새로고침',
     'menu.print': 'PDF로 내보내기…',
+    'menu.exportVideo': '동영상 내보내기…',
     'dialog.create.title': '저장할 폴더 선택',
     'dialog.create.button': '여기에 만들기',
     'dialog.selectPaintApp.title': '페인트 앱 선택',
+    'dialog.saveVideo.title': '동영상 저장 위치',
   },
   en: {
     'menu.about': 'About Mizutama Conte',
@@ -58,9 +64,11 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.view': 'View',
     'menu.reload': 'Reload',
     'menu.print': 'Export PDF…',
+    'menu.exportVideo': 'Export Video…',
     'dialog.create.title': 'Select destination folder',
     'dialog.create.button': 'Create here',
     'dialog.selectPaintApp.title': 'Select paint app',
+    'dialog.saveVideo.title': 'Save video',
   },
 };
 

@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの File > Print からの印刷要求
   onPrintRequest: (listener: () => void) => ipcRenderer.on('menu:print', listener),
   removePrintRequest: () => ipcRenderer.removeAllListeners('menu:print'),
+  // メニューの File > 動画書き出し からの要求
+  onExportVideoRequest: (listener: () => void) => ipcRenderer.on('menu:export-video', listener),
+  removeExportVideoRequest: () => ipcRenderer.removeAllListeners('menu:export-video'),
+  // 書き出した MP4 を保存ダイアログでディスクへ書き込む
+  saveVideo: (fileName: string, data: Uint8Array) => ipcRenderer.invoke('video:save', fileName, data),
 
   // 新規プロジェクトフォルダ作成・保存
   createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),

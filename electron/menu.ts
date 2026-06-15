@@ -49,6 +49,14 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
           // 印刷はレンダラの window.print()（CSS組版）で行う
           click: () => win.webContents.send('menu:print'),
         },
+        {
+          label: mt(locale, 'menu.exportVideo'),
+          accelerator: 'CmdOrCtrl+E',
+          // プロジェクト未読込ではグレーアウト
+          enabled: hasProject,
+          // 動画書き出しはレンダラ（WebCodecs）で行う
+          click: () => win.webContents.send('menu:export-video'),
+        },
       ],
     },
     {
