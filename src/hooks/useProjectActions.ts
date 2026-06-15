@@ -2,8 +2,9 @@ import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
 import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd, isBlankPsd } from 'psd/template';
-import { FrameSize } from 'project/types';
+import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
+import { record } from 'history/undoManager';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
 export const useProjectActions = () => {
@@ -11,17 +12,36 @@ export const useProjectActions = () => {
   const [psdCache, setPsdCache] = useGlobal('psdCache');
   const storage = getStorage();
 
-  const setDialogue = (index: number, dialogue: string) => setProject(updateDialogueAt(project, index, dialogue));
+  const selectedCutIndex = useGlobal('selectedCutIndex')[0];
+
+  /** 純データ編集（ディスク副作用なし）の共通記録。coalesceKey 指定で連続編集を 1 ステップに合流 */
+  const commit = (label: string, next: ProjectFile, coalesceKey?: string): void => {
+    const prev = project;
+    setProject(next);
+    record({
+      label,
+      coalesceKey,
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: selectedCutIndex,
+      nextSelectedCutIndex: selectedCutIndex,
+    });
+  };
+
+  const setDialogue = (index: number, dialogue: string) =>
+    commit('dialogue', updateDialogueAt(project, index, dialogue), `dialogue:${index}`);
 
   const setActionText = (index: number, text: string) =>
-    setProject(updateCutAt(project, index, { action: { ...project.cuts[index]?.action, text } }));
+    commit('action', updateCutAt(project, index, { action: { ...project.cuts[index]?.action, text } }), `action:${index}`);
 
-  const setTime = (index: number, time: number) => setProject(updateCutAt(project, index, { time }));
+  const setTime = (index: number, time: number) =>
+    commit('time', updateCutAt(project, index, { time }), `time:${index}`);
 
-  const setAction = (index: number, action: Action) => setProject(updateCutAt(project, index, { action }));
+  const setAction = (index: number, action: Action) =>
+    commit('action', updateCutAt(project, index, { action }), `action:${index}`);
 
   const setCameraWork = (index: number, cameraWork: CameraWork) =>
-    setProject(updateCutAt(project, index, { cameraWork }));
+    commit('camera', updateCutAt(project, index, { cameraWork }));
 
   /** 行追加: PSD 雛形を生成・保存し、カットを末尾に追加する。
    *  新規カットはネイティブ解像度（canvas=frame）で生成する。カメラワークが必要なら
@@ -165,7 +185,7 @@ export const useProjectActions = () => {
   const setSceneStartIfAbsent = (index: number) => {
     if (index <= 0) return;
     if (project.cuts[index]?.sceneStart) return;
-    setProject(setSceneStart(project, index, {}));
+    commit('addScene', setSceneStart(project, index, {}));
   };
 
   /** 分離: 複数レイヤーCUTの最終レイヤーを新規CUTへ切り出す（New Layer の逆） */
@@ -184,8 +204,10 @@ export const useProjectActions = () => {
     await setProject(splitLastLayer(project, cutIndex, newPsdName, fps * 3));
   };
 
-  const setSceneTitleAt = (cutIndex: number, title: string) => setProject(setSceneTitle(project, cutIndex, title));
-  const removeSceneStart = (cutIndex: number) => setProject(setSceneStart(project, cutIndex, undefined));
+  const setSceneTitleAt = (cutIndex: number, title: string) =>
+    commit('sceneTitle', setSceneTitle(project, cutIndex, title), `sceneTitle:${cutIndex}`);
+  const removeSceneStart = (cutIndex: number) =>
+    commit('removeScene', setSceneStart(project, cutIndex, undefined));
 
   return {
     setDialogue,
