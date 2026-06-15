@@ -1,13 +1,16 @@
+import { useGlobal } from 'reactn';
 import { ProjectFile, PsdCache } from 'project/types';
-import { planReorderRename, remapPsdCache, RenameOp } from 'project/reorder';
+import { planReorderRename, remapPsdCache, reorderCut, reorderScene, RenameOp } from 'project/reorder';
 import { ProjectStorage } from 'storage/types';
+import { useProject } from 'hooks/useProject';
+import { getStorage } from 'storage';
 
 /** applyReorderWith に注入する依存。テストではフェイク storage + spy を渡す */
 export interface ReorderDeps {
   storage: Pick<ProjectStorage, 'renameFile' | 'capabilities'>;
   psdCache: PsdCache;
-  setProject: (project: ProjectFile) => void | Promise<void>;
-  setPsdCache: (cache: PsdCache) => void | Promise<void>;
+  setProject: (project: ProjectFile) => unknown;
+  setPsdCache: (cache: PsdCache) => unknown;
   /** 失敗時のユーザー通知（renderer では alert を注入する） */
   notifyError: (err: unknown) => void;
 }
@@ -65,4 +68,32 @@ export const applyReorderWith = async (deps: ReorderDeps, reordered: ProjectFile
   // 全 rename 成功 → 初めて psdCache 張替 → setProject（dirty 化で autosave が JSON 永続化）
   await setPsdCache(remapPsdCache(psdCache, renames));
   await setProject({ ...reordered, cuts });
+};
+
+export interface ReorderActions {
+  reorderCutAt: (from: number, to: number) => Promise<void>;
+  reorderSceneAt: (fromScene: number, toScene: number) => Promise<void>;
+}
+
+/** 並べ替えオーケストレータ（Shared Contract C-4）。グローバル状態 + storage を applyReorderWith に注入する */
+export const useReorder = (): ReorderActions => {
+  const { project, setProject } = useProject();
+  const [psdCache, setPsdCache] = useGlobal('psdCache');
+  const storage = getStorage();
+
+  const deps = (): ReorderDeps => ({
+    storage,
+    psdCache,
+    setProject,
+    setPsdCache,
+    notifyError: (err) => alert(err),
+  });
+
+  const reorderCutAt = (from: number, to: number): Promise<void> =>
+    applyReorderWith(deps(), reorderCut(project, from, to));
+
+  const reorderSceneAt = (fromScene: number, toScene: number): Promise<void> =>
+    applyReorderWith(deps(), reorderScene(project, fromScene, toScene));
+
+  return { reorderCutAt, reorderSceneAt };
 };
