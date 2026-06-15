@@ -25,6 +25,8 @@ import { thumbnailScale } from 'project/dimensions';
 import { deriveScenes, SceneGroup, canMerge } from 'project/scene';
 import { useEditorMode } from 'hooks/editorMode';
 import { useReorder } from 'hooks/useReorder';
+import { useRowDnd, makeDragHandlers } from 'hooks/useRowDnd';
+import { DraggableRow } from 'styles/DraggableRow';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
 
@@ -35,15 +37,7 @@ const Scroll = styled.div`
   overflow-x: hidden;
 `;
 
-/** 並べ替えドラッグ中の行ラッパ。ドラッグ元は半透明、ドロップ先候補は上辺をハイライト */
-const Draggable = styled.div<{ $dragging: boolean; $dropTarget: boolean }>`
-  opacity: ${(p) => (p.$dragging ? 0.4 : 1)};
-  box-shadow: ${(p) =>
-    p.$dropTarget ? 'inset 0 3px 0 0 var(--spectrum-semantic-informative-color-border, #2680eb)' : 'none'};
-  cursor: ${(p) => (p.$dragging ? 'grabbing' : 'grab')};
-`;
-
-const Band = styled.div`
+const Band = styled(DraggableRow)`
   width: 100%;
   display: flex;
   align-items: center;
@@ -82,30 +76,15 @@ const SceneBand: React.FC<{
   return (
     <Band
       id={`Scene${scene.sceneNumber}`}
-      draggable={reorderScene}
-      style={{
-        opacity: dragging ? 0.4 : 1,
-        boxShadow: dropTarget ? 'inset 0 3px 0 0 var(--spectrum-semantic-informative-color-border, #2680eb)' : 'none',
-        cursor: reorderScene ? 'grab' : 'default',
-      }}
-      onDragStart={reorderScene ? onDragStartScene : undefined}
-      onDragOver={
-        reorderScene
-          ? (e: React.DragEvent) => {
-              e.preventDefault();
-              onDragOverScene?.();
-            }
-          : undefined
-      }
-      onDrop={
-        reorderScene
-          ? (e: React.DragEvent) => {
-              e.preventDefault();
-              onDropScene?.();
-            }
-          : undefined
-      }
-      onDragEnd={reorderScene ? onDragEndScene : undefined}
+      $dragging={dragging}
+      $dropTarget={dropTarget}
+      $cursor={reorderScene ? 'grab' : 'default'}
+      {...makeDragHandlers({
+        onStart: reorderScene ? onDragStartScene : undefined,
+        onOver: reorderScene ? onDragOverScene : undefined,
+        onDrop: reorderScene ? onDropScene : undefined,
+        onEnd: reorderScene ? onDragEndScene : undefined,
+      })}
     >
       <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? t('conte.scene.expand') : t('conte.scene.collapse')}>
         {collapsed ? <ChevronRight /> : <ChevronDown />}
@@ -192,18 +171,10 @@ const CutContainer: React.FC = () => {
   scenes.forEach((s) => s.cutIndices.forEach((i) => sceneOfIndex.set(i, s.startIndex)));
 
   const { reorderCutAt, reorderSceneAt } = useReorder();
-  // ドラッグ中の発生元 index（CUT モード= cut index、SCENE モード= シーンの先頭 index）と
-  // ドロップ先候補 index。視覚フィードバック + onDrop の確定に使う。
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const { dragIndex, dropIndex, setDragIndex, setDropIndex, endDrag } = useRowDnd();
 
   const isReorderCut = editorMode === 'reorderCut';
   const isReorderScene = editorMode === 'reorderScene';
-
-  const endDrag = useCallback(() => {
-    setDragIndex(null);
-    setDropIndex(null);
-  }, []);
 
   // CUT 並べ替え: cut index 単位で from→to を確定して reorderCutAt
   const onCutDrop = useCallback(
@@ -211,6 +182,7 @@ const CutContainer: React.FC = () => {
       const from = dragIndex;
       endDrag();
       if (from === null || from === to) return;
+      // rename 失敗は useReorder 内で通知済み。この .catch は同期 throw（不正 index 等）のみを拾う防御ネット
       reorderCutAt(from, to).catch((err) => alert(err));
     },
     [dragIndex, endDrag, reorderCutAt],
@@ -232,6 +204,7 @@ const CutContainer: React.FC = () => {
       const toStart = sceneOfIndex.get(toCutIndex) ?? 0;
       const toScene = sceneOrderOfStart.get(toStart);
       if (fromScene === undefined || toScene === undefined || fromScene === toScene) return;
+      // rename 失敗は useReorder 内で通知済み。この .catch は同期 throw（不正 index 等）のみを拾う防御ネット
       reorderSceneAt(fromScene, toScene).catch((err) => alert(err));
     },
     [dragIndex, endDrag, sceneOrderOfStart, sceneOfIndex, reorderSceneAt],
@@ -299,33 +272,20 @@ const CutContainer: React.FC = () => {
                 />
               )}
               {!isCollapsed && (
-                <Draggable
+                <DraggableRow
                   $dragging={isReorderCut && dragIndex === index}
                   $dropTarget={(isReorderCut || isReorderScene) && dropIndex === index}
-                  draggable={isReorderCut}
-                  onDragStart={isReorderCut ? () => setDragIndex(index) : undefined}
-                  onDragOver={
-                    isReorderCut || isReorderScene
-                      ? (e: React.DragEvent) => {
-                          e.preventDefault();
-                          setDropIndex(index);
-                        }
-                      : undefined
-                  }
-                  onDrop={
-                    isReorderCut
-                      ? (e: React.DragEvent) => {
-                          e.preventDefault();
-                          onCutDrop(index);
-                        }
+                  {...makeDragHandlers({
+                    onStart: isReorderCut ? () => setDragIndex(index) : undefined,
+                    // CUT 行は CUT/SCENE どちらのモードでもドロップ先になれる
+                    onOver: isReorderCut || isReorderScene ? () => setDropIndex(index) : undefined,
+                    onDrop: isReorderCut
+                      ? () => onCutDrop(index)
                       : isReorderScene
-                      ? (e: React.DragEvent) => {
-                          e.preventDefault();
-                          onSceneDrop(index);
-                        }
-                      : undefined
-                  }
-                  onDragEnd={isReorderCut ? endDrag : undefined}
+                      ? () => onSceneDrop(index)
+                      : undefined,
+                    onEnd: isReorderCut ? endDrag : undefined,
+                  })}
                 >
                   <CutRow
                     index={index}
@@ -351,7 +311,7 @@ const CutContainer: React.FC = () => {
                     canMergeNext={index + 1 < project.cuts.length && canMerge(project.cuts[index], project.cuts[index + 1])}
                     onMerge={() => mergeNext(index)}
                   />
-                </Draggable>
+                </DraggableRow>
               )}
             </React.Fragment>
           );

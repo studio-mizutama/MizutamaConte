@@ -26,6 +26,11 @@ const tempName = (i: number): string => `__reorder_${i}.psd`;
  * - フェーズ B: 各 __reorder_<i>.psd → 最終名
  * - 全成功後に初めて psdCache 張替 → setProject（autosave が JSON 永続化）
  * - 途中失敗 → 完了済み rename を逆順 best-effort で戻し JSON は触らず notifyError
+ *
+ * エラー通知の責務はこの関数（notifyError）に一本化している。rename 失敗は
+ * ここで notifyError 済みなので resolve で返す（reject しない）。
+ * したがって呼び出し側の `.catch(alert)` は二重通知にはならず、reorderCut/reorderScene の
+ * 同期 throw（不正 index 等、planReorderRename 到達前の失敗）だけを拾う防御ネットとして働く。
  */
 export const applyReorderWith = async (deps: ReorderDeps, reordered: ProjectFile): Promise<void> => {
   const { storage, psdCache, setProject, setPsdCache, notifyError } = deps;
