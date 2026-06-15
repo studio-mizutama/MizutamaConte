@@ -149,21 +149,25 @@ export const splitLastLayer = (
   };
 };
 
-/** カットのキャンバスを新サイズへ。全レイヤーを同値にし(不変条件)、cover カメラを自動付与する */
+/** カットのキャンバスを新サイズへ。全レイヤーを同値にし(不変条件)、拡大時のみ cover カメラを自動付与する。
+ *  native（フレーム以下）に戻したときは cameraWork を消す（IN/OUT 非表示・CameraWork パネルをグレーアウト）。 */
 export const resizeCutCanvas = (
   project: ProjectFile,
   cutIndex: number,
   size: FrameSize,
   frame: FrameSize,
-): ProjectFile => ({
-  ...project,
-  cuts: project.cuts.map((cut, i) =>
-    i === cutIndex
-      ? {
-          ...cut,
-          rows: cut.rows.map((row) => ({ ...row, canvas: { ...size } })),
-          cameraWork: defaultCameraForResize(size, frame),
-        }
-      : cut,
-  ),
-});
+): ProjectFile => {
+  const isNative = size.width <= frame.width && size.height <= frame.height;
+  return {
+    ...project,
+    cuts: project.cuts.map((cut, i) =>
+      i === cutIndex
+        ? {
+            ...cut,
+            rows: cut.rows.map((row) => ({ ...row, canvas: { ...size } })),
+            cameraWork: isNative ? undefined : defaultCameraForResize(size, frame),
+          }
+        : cut,
+    ),
+  };
+};

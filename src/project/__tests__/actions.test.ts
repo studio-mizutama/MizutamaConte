@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeCuts, orphanedPsdAfterMerge } from '../actions';
+import { mergeCuts, orphanedPsdAfterMerge, resizeCutCanvas } from '../actions';
 import { ProjectFile, ProjectCut } from '../types';
 
 const cut = (id: string, psd: string): ProjectCut => ({
@@ -53,5 +53,47 @@ describe('orphanedPsdAfterMerge', () => {
   it('is case-insensitive: does not orphan a PSD still referenced under different casing (Mac/Win FS)', () => {
     const p = project([cut('a', 'c001.psd'), cut('b', 'c002.psd'), cut('c', 'C002.PSD')]);
     expect(orphanedPsdAfterMerge(p, 0)).toBeNull();
+  });
+});
+
+const cutSized = (id: string, width: number, height: number): ProjectCut => ({
+  id,
+  psd: 'c001.psd',
+  time: 24,
+  rows: [{ id: id + 'r', layer: '1', dialogue: '', canvas: { width, height } }],
+});
+
+describe('resizeCutCanvas', () => {
+  const frame = { width: 1920, height: 1080 };
+
+  it('拡大時は cover カメラを自動付与する', () => {
+    const p = project([cutSized('a', 1920, 1080)]);
+    const resized = resizeCutCanvas(p, 0, { width: 2880, height: 1080 }, frame);
+    // 全レイヤーが新サイズに揃う（不変条件）
+    expect(resized.cuts[0].rows[0].canvas).toEqual({ width: 2880, height: 1080 });
+    // 横のみ拡大 -> 左右パンの cameraWork が入る
+    expect(resized.cuts[0].cameraWork).toBeDefined();
+    expect(resized.cuts[0].cameraWork!.position!.in).toEqual({ x: -0.5, y: 0 });
+    expect(resized.cuts[0].cameraWork!.position!.out).toEqual({ x: 0.5, y: 0 });
+  });
+
+  it('native（フレーム以下）に戻すと cameraWork を消す', () => {
+    // いったん拡大カメラを持つ cut を native サイズへ戻す
+    const enlarged = resizeCutCanvas(project([cutSized('a', 1920, 1080)]), 0, { width: 2880, height: 1080 }, frame);
+    const back = resizeCutCanvas(enlarged, 0, { width: 1920, height: 1080 }, frame);
+    expect(back.cuts[0].rows[0].canvas).toEqual({ width: 1920, height: 1080 });
+    expect(back.cuts[0].cameraWork).toBeUndefined();
+  });
+
+  it('フレーム未満（縮小）も native 扱いで cameraWork なし', () => {
+    const p = project([cutSized('a', 1920, 1080)]);
+    const resized = resizeCutCanvas(p, 0, { width: 1280, height: 720 }, frame);
+    expect(resized.cuts[0].cameraWork).toBeUndefined();
+  });
+
+  it('対象 index 以外のカットは不変', () => {
+    const p = project([cutSized('a', 1920, 1080), cutSized('b', 1920, 1080)]);
+    const resized = resizeCutCanvas(p, 0, { width: 2880, height: 1080 }, frame);
+    expect(resized.cuts[1]).toBe(p.cuts[1]);
   });
 });
