@@ -5,6 +5,7 @@ import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLa
 import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 import { record } from 'history/undoManager';
+import { makeCreatePsdRevert, makeCreatePsdReapply } from 'history/effects';
 
 /** Edit 画面からのプロジェクト編集操作。変更は自動保存 (useAutoSave) が拾う */
 export const useProjectActions = () => {
@@ -47,14 +48,26 @@ export const useProjectActions = () => {
    *  新規カットはネイティブ解像度（canvas=frame）で生成する。カメラワークが必要なら
    *  クロップツールでキャンバスを拡大する（拡大した余白の中をフレームが動く）。 */
   const addCut = async () => {
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const size = { ...frame };
     const { psd, buffer } = createTemplatePsd(size.width, size.height);
-    const psdName = nextPsdName(project);
+    const psdName = nextPsdName(prev);
     if (storage.capabilities.write) {
       await storage.writeFile(psdName, buffer);
     }
     await setPsdCache({ ...psdCache, [psdName]: psd });
-    await setProject(appendCut(project, psdName, size, fps * 3));
+    const next = appendCut(prev, psdName, size, fps * 3);
+    await setProject(next);
+    record({
+      label: 'addCut',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      diskRevert: makeCreatePsdRevert(psdName),
+      diskReapply: makeCreatePsdReapply(psdName, size.width, size.height),
+    });
   };
 
   /** New Layer: 現在のカットへ透明レイヤーを追記し、行を追加する */
@@ -87,14 +100,26 @@ export const useProjectActions = () => {
 
   /** New Scene: ネイティブ解像度で新カットを生成し、新シーン開始としてマークする */
   const addSceneCut = async () => {
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const size = { ...frame };
     const { psd, buffer } = createTemplatePsd(size.width, size.height);
-    const psdName = nextPsdName(project);
+    const psdName = nextPsdName(prev);
     if (storage.capabilities.write) {
       await storage.writeFile(psdName, buffer);
     }
     await setPsdCache({ ...psdCache, [psdName]: psd });
-    await setProject(appendSceneCut(project, psdName, size, fps * 3));
+    const next = appendSceneCut(prev, psdName, size, fps * 3);
+    await setProject(next);
+    record({
+      label: 'addSceneCut',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      diskRevert: makeCreatePsdRevert(psdName),
+      diskReapply: makeCreatePsdReapply(psdName, size.width, size.height),
+    });
   };
 
   /** 🔗 結合: 隣接する index と index+1 のカットを統合（splitの逆＝リカバリー操作）。
@@ -149,14 +174,26 @@ export const useProjectActions = () => {
 
   /** 任意位置への CUT 挿入: index の直後にネイティブ解像度の単層CUTを挿入する（addCut の位置指定版） */
   const insertCut = async (index: number) => {
+    const prev = project;
+    const prevIdx = selectedCutIndex;
     const size = { ...frame };
     const { psd, buffer } = createTemplatePsd(size.width, size.height);
-    const psdName = nextPsdName(project);
+    const psdName = nextPsdName(prev);
     if (storage.capabilities.write) {
       await storage.writeFile(psdName, buffer);
     }
     await setPsdCache({ ...psdCache, [psdName]: psd });
-    await setProject(insertCutAfter(project, index, psdName, size, fps * 3));
+    const next = insertCutAfter(prev, index, psdName, size, fps * 3);
+    await setProject(next);
+    record({
+      label: 'insertCut',
+      prevProject: prev,
+      nextProject: next,
+      prevSelectedCutIndex: prevIdx,
+      nextSelectedCutIndex: prevIdx,
+      diskRevert: makeCreatePsdRevert(psdName),
+      diskReapply: makeCreatePsdReapply(psdName, size.width, size.height),
+    });
   };
 
   /** CUT 削除: 対象 CUT を除去（最後の1CUTは残す）。孤立した PSD はディスク+キャッシュから掃除する */
