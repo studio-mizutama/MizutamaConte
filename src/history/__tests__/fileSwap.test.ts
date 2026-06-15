@@ -55,6 +55,11 @@ describe('makeOverwriteSwap', () => {
     await swap.toUndo(f.ctx);
     await swap.toUndo(f.ctx);
     expect(f.files['c1.psd']).toEqual(new Uint8Array([1]));
+
+    // 2 サイクル目の redo もトークンが正しく入れ替わり post へ戻る
+    await swap.toRedo(f.ctx);
+    expect(f.files['c1.psd']).toEqual(new Uint8Array([2]));
+    expect(f.getCache()['c1.psd']).toEqual({ tag: 2 });
   });
 });
 

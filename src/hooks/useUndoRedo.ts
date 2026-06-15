@@ -86,6 +86,8 @@ export const useUndoRedo = (): void => {
     [],
   );
 
+  // doUndo/doRedo は live global state + 安定セッターのみ参照する state-free クロージャ。
+  // deps を足して毎レンダー再購読しないこと（[] のままが正しい）。
   // Electron Edit メニュー（menu:undo / menu:redo）。Web では api 不在で no-op
   useEffect(() => {
     const api = window.api;
