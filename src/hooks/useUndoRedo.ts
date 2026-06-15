@@ -1,4 +1,4 @@
-import { useEffect, useGlobal, getGlobal, setGlobal } from 'reactn';
+import { useEffect, useGlobal, getGlobal, setGlobal, useRef } from 'reactn';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useProject } from 'hooks/useProject';
 import { getStorage } from 'storage';
@@ -19,10 +19,12 @@ const effectContext = (): EffectContext => ({
  * - ⌘Z/⌘⇧Z（Win は Ctrl+Y も）を登録。preventDefault で Electron ネイティブ undo の二重発火を防ぐ
  * - テキスト欄内の ⌘Z は react-hotkeys-hook 既定（フォーム要素では発火しない）によりブラウザ標準の文字 undo に委譲
  * - undo は setProject(prevSnapshot)。autosave がそのまま JSON 永続化する
+ * - applyingRef で再入を禁止（連打中の非同期ディスク副作用＝reorder のリネーム等が重ならないように）
  */
 export const useUndoRedo = (): void => {
   const { setProject } = useProject();
   const setSelectedCutIndex = useGlobal('selectedCutIndex')[1];
+  const applyingRef = useRef(false);
 
   // canUndo/canRedo をグローバルへ同期する
   useEffect(() => {
@@ -31,19 +33,35 @@ export const useUndoRedo = (): void => {
   }, []);
 
   const doUndo = async (): Promise<void> => {
+    if (applyingRef.current) return;
     const txn = popUndo();
     if (!txn) return;
-    await txn.diskRevert?.(effectContext());
-    await setProject(txn.prevProject);
-    setSelectedCutIndex(clampIndex(txn.prevSelectedCutIndex, txn.prevProject.cuts.length));
+    applyingRef.current = true;
+    try {
+      await txn.diskRevert?.(effectContext());
+      await setProject(txn.prevProject);
+      setSelectedCutIndex(clampIndex(txn.prevSelectedCutIndex, txn.prevProject.cuts.length));
+    } catch (err) {
+      console.error('Undo に失敗しました', err);
+    } finally {
+      applyingRef.current = false;
+    }
   };
 
   const doRedo = async (): Promise<void> => {
+    if (applyingRef.current) return;
     const txn = popRedo();
     if (!txn) return;
-    await txn.diskReapply?.(effectContext());
-    await setProject(txn.nextProject);
-    setSelectedCutIndex(clampIndex(txn.nextSelectedCutIndex, txn.nextProject.cuts.length));
+    applyingRef.current = true;
+    try {
+      await txn.diskReapply?.(effectContext());
+      await setProject(txn.nextProject);
+      setSelectedCutIndex(clampIndex(txn.nextSelectedCutIndex, txn.nextProject.cuts.length));
+    } catch (err) {
+      console.error('Redo に失敗しました', err);
+    } finally {
+      applyingRef.current = false;
+    }
   };
 
   // react-hotkeys-hook 3.x は 'mod' 非対応のため command/ctrl を明示（既存 ⌘S 実装と同じ流儀）
@@ -51,7 +69,7 @@ export const useUndoRedo = (): void => {
     'command+z,ctrl+z',
     (event) => {
       event.preventDefault();
-      doUndo();
+      void doUndo();
     },
     [],
   );
@@ -59,7 +77,7 @@ export const useUndoRedo = (): void => {
     'command+shift+z,ctrl+shift+z,ctrl+y',
     (event) => {
       event.preventDefault();
-      doRedo();
+      void doRedo();
     },
     [],
   );
