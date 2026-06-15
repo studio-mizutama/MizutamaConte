@@ -2,7 +2,7 @@ import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow } from 'e
 import { mt, resolveLocale, MenuLocale } from './i18n';
 
 /** アプリケーションメニューを構築する。ラベルは locale（未指定時は settings から解決）でローカライズ。 */
-export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocale()) => {
+export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocale(), hasProject = false) => {
   const template: MenuItemConstructorOptions[] = [
     {
       label: 'Mizutama Conte',
@@ -44,6 +44,8 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
         {
           label: mt(locale, 'menu.print'),
           accelerator: 'CmdOrCtrl+P',
+          // プロジェクト未読込ではグレーアウト
+          enabled: hasProject,
           // 印刷はレンダラの window.print()（CSS組版）で行う
           click: () => win.webContents.send('menu:print'),
         },

@@ -18,6 +18,9 @@ export const PrintStyle = createGlobalStyle`
 
   @media print {
     @page { size: A4 portrait; margin: 12mm; }
+    /* アプリは html/body/#root に overflow:hidden+height:100% を敷いており、これが効くと
+       印刷が1ページ目でクリップされる。印刷時のみ解除して全ページ流す。 */
+    html, body { overflow: visible !important; height: auto !important; }
     #root { display: none !important; }
     .print-root {
       position: static !important;
@@ -35,12 +38,16 @@ export const PrintStyle = createGlobalStyle`
     grid-template-columns: 40px 288px 1fr 1fr 96px;
     gap: 8px;
     align-items: start;
-    border-top: 1px solid #000;
     padding: 6px 0;
     font-size: 12px;
   }
-  .print-colhead { font-weight: bold; }
-  .print-cut { break-inside: avoid; }
+  /* booktabs(LaTeX) 風の罫線: 見出し行の上下＝太線(2px)、カット間＝細線(1px)、
+     ページ最下段カットの下＝太線(2px)。縦線は引かない。各行の下端 border で共有し二重線を防ぐ。 */
+  .print-colhead { font-weight: bold; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+  .print-block { break-inside: avoid; border-bottom: 1px solid #000; }
+  .print-block-last { border-bottom: 2px solid #000; }
+
+  .print-scene { font-weight: bold; font-size: 13px; padding: 6px 0 2px; }
 
   .print-page {
     box-sizing: border-box;
@@ -54,8 +61,13 @@ export const PrintStyle = createGlobalStyle`
   .print-footer { margin-top: auto; text-align: right; font-size: 11px; padding-top: 6px; }
   .print-time-sum { opacity: 0.6; }
 
-  .print-col-action,
+  .print-col-action { display: flex; flex-direction: column; gap: 2px; }
+  .print-action-text { flex: 1 1 auto; white-space: pre-wrap; word-break: break-word; }
   .print-col-dialogue { white-space: pre-wrap; word-break: break-word; }
+
+  .print-fade { display: flex; align-items: center; gap: 4px; }
+  .print-fade svg { fill: #000; flex: 0 0 auto; }
+  .print-fade-label { font-size: 10px; }
 
   .print-frame-in {
     position: absolute;

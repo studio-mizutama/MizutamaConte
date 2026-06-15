@@ -234,6 +234,7 @@ const GitBranchButton: React.FC = () => {
 export const Header: React.FC = () => {
   const t = useT();
   const print = usePrint();
+  const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
   const setFileName = useGlobal('globalFileName')[1];
@@ -483,7 +484,7 @@ export const Header: React.FC = () => {
       <HeaderRight>
         {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
         <Flex alignItems="center" gap="size-100">
-          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} onPress={print}>
+          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} onPress={print} isDisabled={!fileName}>
             <Share />
           </ActionButton>
           <GitBranchButton />

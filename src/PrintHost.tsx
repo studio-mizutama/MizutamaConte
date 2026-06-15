@@ -9,7 +9,7 @@ import { PrintView } from 'PrintView';
 
 /**
  * 印刷の駆動役。printRequested が立つと PrintView を画面外に1パス描画して各 CUT の実高さを測り、
- * paginate でページ確定してから window.print() を呼ぶ。afterprint でフラグを下ろして撤去する。
+ * paginate でページ確定してから window.print() を呼ぶ。afterprint でフラグ・タイトルを戻し撤去する。
  */
 export const PrintHost: React.FC = () => {
   const [printRequested, setPrintRequested] = useGlobal('printRequested');
@@ -20,30 +20,40 @@ export const PrintHost: React.FC = () => {
   const [pages, setPages] = useState<Page[] | null>(null);
   const docRef = useRef<HTMLDivElement>(null);
 
+  const scenes = useMemo(() => deriveScenes(project.cuts), [project.cuts]);
   const sceneStarts = useMemo(() => {
     const starts = new Array<boolean>(project.cuts.length).fill(false);
-    deriveScenes(project.cuts).forEach((s) => {
+    scenes.forEach((s) => {
       starts[s.startIndex] = true;
     });
     return starts;
-  }, [project.cuts]);
+  }, [scenes, project.cuts.length]);
 
   // 計測パス（pages===null）→ 各 CUT 高さを実測してページ割り
   useLayoutEffect(() => {
-    if (!printRequested || pages || !docRef.current) return;
+    if (!printRequested) return;
+    // プロジェクト未読込（CUT 0件）では印刷しない（メニュー/ボタンの無効化に対する防御）
+    if (cuts.length === 0) {
+      setPrintRequested(false);
+      return;
+    }
+    if (pages || !docRef.current) return;
     const nodes = docRef.current.querySelectorAll<HTMLElement>('[data-cut-index]');
     const blocks: CutBlock[] = Array.from(nodes).map((node) => {
       const index = Number(node.dataset.cutIndex);
       return { index, isSceneStart: sceneStarts[index] ?? false, height: node.offsetHeight };
     });
     setPages(paginate(blocks, PAGE_CUT_CAPACITY));
-  }, [printRequested, pages, sceneStarts]);
+  }, [printRequested, pages, sceneStarts, cuts.length]);
 
-  // ページ確定後 → 印刷 → afterprint で後始末
+  // ページ確定後 → タイトルをプロジェクト名へ差し替え → 印刷 → afterprint で後始末
   useEffect(() => {
     if (!printRequested || !pages) return;
+    const prevTitle = document.title;
+    document.title = title || prevTitle; // PDF 既定ファイル名は document.title 由来
     const cleanup = () => {
       window.removeEventListener('afterprint', cleanup);
+      document.title = prevTitle;
       setPages(null);
       setPrintRequested(false);
     };
@@ -57,7 +67,7 @@ export const PrintHost: React.FC = () => {
 
   return createPortal(
     <div className="print-root" ref={docRef}>
-      <PrintView title={title} cuts={cuts} frame={frame} fps={fps} pages={pages} />
+      <PrintView title={title} cuts={cuts} scenes={scenes} frame={frame} fps={fps} pages={pages} />
     </div>,
     document.body,
   );

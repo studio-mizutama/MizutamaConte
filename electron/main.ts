@@ -67,6 +67,8 @@ const readProjectDir = (dirPath: string): ProjectPayload | null => {
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   currentProjectDir = dirPath;
   watchProjectDir(dirPath);
+  // プロジェクトが開いたので File→Print を有効化（メニュー再構築）
+  if (mainWindow) createMenu(mainWindow, resolveLocale(), true);
   return {
     dirPath,
     jsonFileName,
@@ -107,6 +109,8 @@ const registerIpcHandlers = () => {
     const projectDir = path.join(result.filePaths[0], safeName);
     fs.mkdirSync(projectDir, { recursive: true });
     currentProjectDir = projectDir;
+    // 新規プロジェクト作成で File→Print を有効化
+    if (mainWindow) createMenu(mainWindow, locale, true);
     return { name: safeName };
   });
 
@@ -168,7 +172,7 @@ const registerIpcHandlers = () => {
   // 言語・テーマ変更を main に反映: ネイティブテーマ切替 + メニュー再構築（ライブ更新）
   ipcMain.handle('app:apply-settings', (_event, language: MenuLocale, theme: 'light' | 'dark' | 'system') => {
     nativeTheme.themeSource = theme;
-    if (mainWindow) createMenu(mainWindow, language);
+    if (mainWindow) createMenu(mainWindow, language, currentProjectDir !== null);
   });
 
   ipcMain.handle('dialog:select-file', async () => {

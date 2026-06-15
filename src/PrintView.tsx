@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { Layer } from 'ag-psd';
 import { FrameSize } from 'project/types';
+import { SceneGroup } from 'project/scene';
 import { thumbnailScale } from 'project/dimensions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode } from 'project/time';
 import { cameraFrames, Rect } from 'print/cameraFrame';
 import { Page } from 'print/paginate';
+import { useT, TranslationKey } from 'i18n';
 
 const rectStyle = (r: Rect): React.CSSProperties => ({
   position: 'absolute',
@@ -15,53 +17,112 @@ const rectStyle = (r: Rect): React.CSSProperties => ({
   height: `${r.height}px`,
 });
 
-/** 1 CUT 行。data-cut-index は PrintHost の高さ実測に使う。 */
+/** フェード種別（保存値）→ i18n キー。CutRow の fadeLabelKey と対応（印刷では全ロケール英語）。 */
+const fadeLabelKey = (fade: string): TranslationKey => {
+  switch (fade) {
+    case 'White In':
+      return 'transition.fade.whiteIn';
+    case 'Black In':
+      return 'transition.fade.blackIn';
+    case 'White Out':
+      return 'transition.fade.whiteOut';
+    case 'Black Out':
+      return 'transition.fade.blackOut';
+    case 'Cross':
+      return 'transition.fade.cross';
+    default:
+      return 'transition.fade.none';
+  }
+};
+
+// トランジション記号（CutRow と同じ SVG パス）。fill は CSS で黒。
+const FadeInTriangle: React.FC = () => (
+  <svg viewBox="0 0 96 48" width="40" height="20">
+    <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
+  </svg>
+);
+const FadeOutTriangle: React.FC = () => (
+  <svg viewBox="0 0 96 48" width="40" height="20">
+    <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
+  </svg>
+);
+const CrossBowtie: React.FC = () => (
+  <svg viewBox="0 0 96 48" width="40" height="20">
+    <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
+  </svg>
+);
+
+/** 1 CUT 行。data-cut-index は PrintHost の高さ実測に使う（シーン見出しも含めて計測）。 */
 const PrintCutRow: React.FC<{
   index: number;
   cut: Cut;
   frame: FrameSize;
   fps: number;
   timeSum: number;
-}> = ({ index, cut, frame, fps, timeSum }) => {
+  scene?: SceneGroup;
+  /** ページ最下段のカットか（booktabs の bottomrule＝太線を引くため）。 */
+  lastOnPage?: boolean;
+}> = ({ index, cut, frame, fps, timeSum, scene, lastOnPage }) => {
+  const t = useT();
   const thumbScale = thumbnailScale(frame);
   const frameW = frame.width * thumbScale;
   const frameH = frame.height * thumbScale;
+  const action = cut.action;
   // children[0] はベース（フレーム枠）なので除外。children[1..] が時系列フリップブックのレイヤー
   const children = (cut.picture?.children ?? []) as Layer[];
   const layers = children.filter((_child, i) => i !== 0);
   return (
-    <div className="print-cut" data-cut-index={index}>
-      <div className="print-col-cut">{index + 1}</div>
-      <div className="print-col-picture">
-        {layers.map((child, layerI, arr) => {
-          const src = canvasToDataURL(child.canvas);
-          const dispW = (child.canvas?.width ?? 0) * thumbScale;
-          const dispH = (child.canvas?.height ?? 0) * thumbScale;
-          const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
-          return (
-            <div key={`p${index}-${layerI}`} style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px` }}>
-              <div style={{ width: `${dispW}px`, height: `${dispH}px`, position: 'relative', background: '#fff' }}>
-                <img src={src} alt="cut" style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }} />
+    <div className={`print-block${lastOnPage ? ' print-block-last' : ''}`} data-cut-index={index}>
+      {scene && (
+        <div className="print-scene">{`SCENE ${scene.sceneNumber}`}{scene.title ? ` ${scene.title}` : ''}</div>
+      )}
+      <div className="print-cut">
+        <div className="print-col-cut">{index + 1}</div>
+        <div className="print-col-picture">
+          {layers.map((child, layerI, arr) => {
+            const src = canvasToDataURL(child.canvas);
+            const dispW = (child.canvas?.width ?? 0) * thumbScale;
+            const dispH = (child.canvas?.height ?? 0) * thumbScale;
+            const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
+            return (
+              <div key={`p${index}-${layerI}`} style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px` }}>
+                <div style={{ width: `${dispW}px`, height: `${dispH}px`, position: 'relative', background: '#fff' }}>
+                  <img src={src} alt="cut" style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }} />
+                </div>
+                {layerI === 0 && frames.in && (
+                  <div className="print-frame-in" style={rectStyle(frames.in)}>
+                    IN
+                  </div>
+                )}
+                {layerI === arr.length - 1 && frames.out && (
+                  <div className="print-frame-out" style={rectStyle(frames.out)}>
+                    OUT
+                  </div>
+                )}
               </div>
-              {layerI === 0 && frames.in && (
-                <div className="print-frame-in" style={rectStyle(frames.in)}>
-                  IN
-                </div>
-              )}
-              {layerI === arr.length - 1 && frames.out && (
-                <div className="print-frame-out" style={rectStyle(frames.out)}>
-                  OUT
-                </div>
-              )}
+            );
+          })}
+        </div>
+        <div className="print-col-action">
+          {action?.fadeIn && (
+            <div className="print-fade">
+              {action.fadeIn === 'Cross' ? <CrossBowtie /> : <FadeInTriangle />}
+              <span className="print-fade-label">{`${t(fadeLabelKey(action.fadeIn))} ${Math.round(action.fadeInDuration ?? 0)}`}</span>
             </div>
-          );
-        })}
-      </div>
-      <div className="print-col-action">{cut.action?.text ?? ''}</div>
-      <div className="print-col-dialogue">{cut.dialogue ?? ''}</div>
-      <div className="print-col-time">
-        <div>{frameToTimecode(cut.time ?? 0, fps)}</div>
-        <div className="print-time-sum">{frameToTimecode(timeSum, fps)}</div>
+          )}
+          <div className="print-action-text">{action?.text ?? ''}</div>
+          {action?.fadeOut && (
+            <div className="print-fade">
+              {action.fadeOut === 'Cross' ? <CrossBowtie /> : <FadeOutTriangle />}
+              <span className="print-fade-label">{`${t(fadeLabelKey(action.fadeOut))} ${Math.round(action.fadeOutDuration ?? 0)}`}</span>
+            </div>
+          )}
+        </div>
+        <div className="print-col-dialogue">{cut.dialogue ?? ''}</div>
+        <div className="print-col-time">
+          <div>{frameToTimecode(cut.time ?? 0, fps)}</div>
+          <div className="print-time-sum">{frameToTimecode(timeSum, fps)}</div>
+        </div>
       </div>
     </div>
   );
@@ -83,25 +144,28 @@ const PrintHeader: React.FC<{ title: string }> = ({ title }) => (
 export interface PrintViewProps {
   title: string;
   cuts: Cut[];
+  scenes: SceneGroup[];
   frame: FrameSize;
   fps: number;
   /** null = 計測パス（全 CUT フラット）。指定でページ確定描画。 */
   pages: Page[] | null;
 }
 
-export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, frame, fps, pages }) => {
+export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, scenes, frame, fps, pages }) => {
   // 累積尺（各 CUT までの合計フレーム数）
   const timeSums = useMemo(() => {
     let acc = 0;
     return cuts.map((c) => (acc += c.time ?? 0));
   }, [cuts]);
+  // シーン先頭 index → SceneGroup
+  const sceneByStart = useMemo(() => new Map(scenes.map((s) => [s.startIndex, s])), [scenes]);
 
   if (!pages) {
     return (
       <div className="print-doc">
         <PrintHeader title={title} />
         {cuts.map((cut, i) => (
-          <PrintCutRow key={i} index={i} cut={cut} frame={frame} fps={fps} timeSum={timeSums[i]} />
+          <PrintCutRow key={i} index={i} cut={cut} frame={frame} fps={fps} timeSum={timeSums[i]} scene={sceneByStart.get(i)} />
         ))}
       </div>
     );
@@ -112,8 +176,17 @@ export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, frame, fps, p
       {pages.map((page) => (
         <div className="print-page" key={page.pageNumber}>
           <PrintHeader title={title} />
-          {page.cutIndices.map((i) => (
-            <PrintCutRow key={i} index={i} cut={cuts[i]} frame={frame} fps={fps} timeSum={timeSums[i]} />
+          {page.cutIndices.map((i, j) => (
+            <PrintCutRow
+              key={i}
+              index={i}
+              cut={cuts[i]}
+              frame={frame}
+              fps={fps}
+              timeSum={timeSums[i]}
+              scene={sceneByStart.get(i)}
+              lastOnPage={j === page.cutIndices.length - 1}
+            />
           ))}
           <div className="print-footer">{`${page.pageNumber} / ${pages.length}`}</div>
         </div>
