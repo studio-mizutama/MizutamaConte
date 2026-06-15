@@ -53,6 +53,31 @@ describe('makeReorderEffect', () => {
     expect((cache['c2.psd'] as { id: string }).id).toBe('a');
   });
 
+  it('undo 方向（next→prev）は redo 後の状態を元に戻す', async () => {
+    // forward 後の状態: next = [b@c1, a@c2]（c1.psd のバイト=b, c2.psd のバイト=a）
+    const prev = proj([cut('a', 'c1.psd'), cut('b', 'c2.psd')]);
+    const next = proj([cut('b', 'c1.psd'), cut('a', 'c2.psd')]);
+    // forward 適用後を再現したキャッシュ（c1.psd には b のバイト, c2.psd には a のバイト）
+    let cache: Record<string, unknown> = { 'c1.psd': { id: 'b' }, 'c2.psd': { id: 'a' } };
+    const ctx = {
+      storage: {
+        capabilities: { write: true },
+        renameFile: vi.fn(async () => undefined),
+      },
+      getPsdCache: () => cache as never,
+      setPsdCache: (c: never) => {
+        cache = c;
+      },
+    } as unknown as EffectContext;
+
+    // undo: next→prev
+    await makeReorderEffect(next, prev)(ctx);
+
+    // prev 状態に復元: c1.psd には a のバイト, c2.psd には b のバイトが戻る
+    expect((cache['c1.psd'] as { id: string }).id).toBe('a');
+    expect((cache['c2.psd'] as { id: string }).id).toBe('b');
+  });
+
   it('write 不可なら何もしない', async () => {
     const from = proj([cut('a', 'c1.psd'), cut('b', 'c2.psd')]);
     const to = proj([cut('b', 'c1.psd'), cut('a', 'c2.psd')]);

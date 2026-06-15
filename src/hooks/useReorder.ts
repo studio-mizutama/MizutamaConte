@@ -81,8 +81,10 @@ export const useReorder = (): ReorderActions => {
       label,
       prevProject: prev,
       nextProject: next,
+      // 並べ替えは選択 CUT の index を動かさない（行が入れ替わっても選択位置は維持）ため prev/next とも同値
       prevSelectedCutIndex: prevIdx,
       nextSelectedCutIndex: prevIdx,
+      // undo は next→prev、redo は prev→next。id 基準でファイルのバイトを動かす（方向で from/to を反転）
       diskRevert: makeReorderEffect(next, prev),
       diskReapply: makeReorderEffect(prev, next),
     });
