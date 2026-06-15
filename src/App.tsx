@@ -76,9 +76,11 @@ const App: React.FC = () => {
             <Preview />
           </div>
         </View>
+        {/* react-spectrum の Dialog を使うため Provider(GlobalGrid) の内側に置く。
+            PrintHost は createPortal + 素の HTML なので Provider 外でよい。 */}
+        <VideoExportHost />
       </GlobalGrid>
       <PrintHost />
-      <VideoExportHost />
     </>
   );
 };
