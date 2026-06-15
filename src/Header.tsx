@@ -26,6 +26,7 @@ import { SettingsDialog } from 'SettingsDialog';
 import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
 import { useT } from 'i18n';
 import { usePrint } from 'print/usePrint';
+import { useVideoExport } from 'hooks/useVideoExport';
 
 const { api } = window;
 
@@ -234,6 +235,7 @@ const GitBranchButton: React.FC = () => {
 export const Header: React.FC = () => {
   const t = useT();
   const print = usePrint();
+  const startVideoExport = useVideoExport();
   const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
@@ -484,9 +486,20 @@ export const Header: React.FC = () => {
       <HeaderRight>
         {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
         <Flex alignItems="center" gap="size-100">
-          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} onPress={print} isDisabled={!fileName}>
-            <Share />
-          </ActionButton>
+          <MenuTrigger>
+            <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} isDisabled={!fileName}>
+              <Share />
+            </ActionButton>
+            <Menu
+              onAction={(key) => {
+                if (key === 'pdf') print();
+                else if (key === 'video') startVideoExport();
+              }}
+            >
+              <Item key="pdf">{t('header.share.pdf')}</Item>
+              <Item key="video">{t('header.share.video')}</Item>
+            </Menu>
+          </MenuTrigger>
           <GitBranchButton />
           <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
             <Settings />
