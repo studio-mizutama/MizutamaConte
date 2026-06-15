@@ -57,7 +57,7 @@ export const ja: Record<TranslationKey, string> = {
   'panels.dialogue': '台詞',
 
   // ツール（タブの「編集」と被らないよう既定ツールのラベルは「選択」にする）
-  'toolGroup.edit': '選択 (S)',
+  'toolGroup.edit': '選択 (V)',
   'toolGroup.resize': 'リサイズ (C)',
   'toolGroup.reorder': '並べ替え (R)',
 

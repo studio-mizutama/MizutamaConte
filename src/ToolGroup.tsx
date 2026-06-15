@@ -23,8 +23,8 @@ export const ToolGroup: React.FC = () => {
     activeElement.blur();
   };
 
-  // ショートカット: s=選択(既定) / c=resize / r=reorder
-  useHotkeys('s', () => {
+  // ショートカット: v=選択(既定・Adobe 系と同じ手癖) / c=resize / r=reorder
+  useHotkeys('v', () => {
     setMode('edit');
     keyDown();
   });

@@ -57,9 +57,9 @@ export const en = {
   'panels.duration': 'Duration',
   'panels.dialogue': 'Dialogue',
 
-  // ツール（モードトグル。ショートカット S/C/R。CUT/SCENE は英語固定）
+  // ツール（モードトグル。ショートカット V/C/R。CUT/SCENE は英語固定）
   // 'toolGroup.edit' はタブの "Edit" と被らないよう表示ラベルは "Select" にする
-  'toolGroup.edit': 'Select (S)',
+  'toolGroup.edit': 'Select (V)',
   'toolGroup.resize': 'Resize (C)',
   'toolGroup.reorder': 'Reorder (R)',
 

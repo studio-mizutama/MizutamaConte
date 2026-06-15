@@ -57,7 +57,7 @@ export const ko: Record<TranslationKey, string> = {
   'panels.dialogue': '대사',
 
   // 도구（탭의 「편집」과 겹치지 않도록 기본 도구 라벨은 「선택」으로 함）
-  'toolGroup.edit': '선택 (S)',
+  'toolGroup.edit': '선택 (V)',
   'toolGroup.resize': '크기 조정 (C)',
   'toolGroup.reorder': '재정렬 (R)',
 
