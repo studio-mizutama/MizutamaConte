@@ -128,7 +128,7 @@ export const GitSnapshotPopover: React.FC<{ gitDetect: GitDetect }> = ({ gitDete
             width="100%"
           />
           <Flex direction="row" gap="size-100" alignItems="center">
-            <Button variant="cta" isDisabled={busy} onPress={snapshot}>
+            <Button variant="cta" isDisabled={busy || !dirty} onPress={snapshot}>
               {busy ? t('git.snapshot.creating') : t('git.snapshot.create')}
             </Button>
             {done ? <Text>{t('git.snapshot.done')}</Text> : <></>}
