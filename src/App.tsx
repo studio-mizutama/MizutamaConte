@@ -11,6 +11,7 @@ import { Preview } from 'Preview';
 import { PrintHost } from 'PrintHost';
 import { VideoExportHost } from 'VideoExportHost';
 import { PrintStyle } from 'styles/PrintStyle';
+import { useUndoRedo } from 'hooks/useUndoRedo';
 
 const BackGround = styled.div`
   width: 100%;
@@ -55,6 +56,7 @@ const GlobalGrid: React.FC = ({ children }) => {
 
 const App: React.FC = () => {
   const mode = useGlobal('mode')[0];
+  useUndoRedo();
   return (
     <>
       <PrintStyle />
