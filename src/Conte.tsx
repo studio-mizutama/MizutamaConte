@@ -48,10 +48,21 @@ const Band = styled(DraggableRow)`
 
 /** CUT 間（および最終行下）のシーン区切り追加アフォーダンス。
  *  普段は薄い帯で、ホバー時にだけ FolderAdd アイコンと挿入線を浮かび上がらせる。 */
+/* レイアウトに高さを足さないアンカー（CUT 間の余白を一切変えない）。
+ * 当たり判定/表示は SceneGutterHit が境界線上に absolute で重なる。 */
 const SceneGutterBar = styled.div`
   position: relative;
-  height: 10px;
-  margin: -1px 0;
+  height: 0;
+  z-index: 2;
+`;
+
+/* CUT 境界をまたぐホバー当たり判定。行送りには影響しない（absolute・親は高さ0）。 */
+const SceneGutterHit = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,10 +114,12 @@ const SceneGutter: React.FC<{ index: number; onAdd: (index: number) => void; lab
   onAdd,
   label,
 }) => (
-  <SceneGutterBar role="button" aria-label={label} onClick={() => onAdd(index)}>
-    <SceneGutterIcon>
-      <FolderAdd />
-    </SceneGutterIcon>
+  <SceneGutterBar>
+    <SceneGutterHit role="button" aria-label={label} onClick={() => onAdd(index)}>
+      <SceneGutterIcon>
+        <FolderAdd />
+      </SceneGutterIcon>
+    </SceneGutterHit>
   </SceneGutterBar>
 );
 
