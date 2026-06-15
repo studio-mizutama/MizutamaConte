@@ -2,6 +2,7 @@ import 'reactn';
 import { ProjectFile, PsdCache, AppSettings } from '../project/types';
 import { Locale, ColorScheme } from '../i18n/types';
 import { EditorMode } from '../hooks/editorMode';
+import { GitDetect, GitLogEntry } from '../git/types';
 
 declare module 'reactn/default' {
   export interface State {
@@ -26,6 +27,8 @@ declare module 'reactn/default' {
     locale: Locale;
     /** テーマ。'system' は OS 設定に追従（react-spectrum Provider colorScheme を駆動） */
     colorScheme: ColorScheme;
+    /** 起動時 1 回検出した git/git-lfs 導入状況。Web（api 不在）では undefined のまま */
+    gitDetect: GitDetect | undefined;
   }
 }
 
@@ -118,4 +121,13 @@ export interface Sandbox {
 
   getBlur: (listener: () => Promise<void>) => Electron.IpcRenderer;
   removeGetBlur: () => Electron.IpcRenderer;
+
+  git?: {
+    detect(): Promise<GitDetect>;
+    isRepo(): Promise<boolean>;
+    init(): Promise<void>;
+    status(): Promise<{ dirty: boolean }>;
+    commit(message: string): Promise<void>;
+    logLatest(): Promise<GitLogEntry | null>;
+  };
 }
