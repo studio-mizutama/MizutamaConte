@@ -43,6 +43,8 @@ const boot = async (): Promise<void> => {
     gitDetect: undefined,
     printRequested: false,
     videoExportRequested: false,
+    canUndo: false,
+    canRedo: false,
   });
 
   ReactDOM.render(

@@ -33,6 +33,10 @@ declare module 'reactn/default' {
     printRequested: boolean;
     /** 動画書き出し要求フラグ。useVideoExport で立て、VideoExportHost が品質選択→エンコードを駆動 */
     videoExportRequested: boolean;
+    /** Undo 可能か（Edit メニュー/将来の UI 用。undoManager が同期） */
+    canUndo: boolean;
+    /** Redo 可能か */
+    canRedo: boolean;
   }
 }
 
