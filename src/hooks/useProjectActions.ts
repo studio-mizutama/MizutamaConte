@@ -51,7 +51,7 @@ export const useProjectActions = () => {
     await setProject(appendLayer(project, cutIndex));
   };
 
-  /** Crop: カットのキャンバスをリサイズ（PSD 再書き込み + 全レイヤー canvas + cover カメラ） */
+  /** Crop: カットのキャンバスをリサイズ（PSD 再書き込み + 全レイヤー canvas。拡大時のみ cover カメラ付与 / native・縮小時は cameraWork を消す） */
   const resizeCanvas = async (cutIndex: number, size: FrameSize) => {
     const cut = project.cuts[cutIndex];
     if (!cut?.psd) return;
