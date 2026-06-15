@@ -1,5 +1,6 @@
 import type { ProjectFile, ProjectCut } from './types';
 import { deriveScenes } from './scene';
+import type { ProjectStorage } from 'storage/types';
 
 export interface RenameOp {
   from: string;
@@ -164,4 +165,37 @@ export const remapPsdCache = <T>(cache: Record<string, T>, renames: RenameOp[]):
     if (from in cache) next[to] = cache[from];
   }
   return next;
+};
+
+/**
+ * 2 フェーズ rename（衝突回避）。失敗時は完了分を逆順 best-effort で戻してから throw。
+ * reorder forward / undo の両方で共有する。
+ */
+export const applyRenamesTwoPhase = async (
+  storage: Pick<ProjectStorage, 'renameFile'>,
+  renames: RenameOp[],
+  tempPrefix = '__reorder_',
+): Promise<void> => {
+  const done: RenameOp[] = [];
+  try {
+    for (let i = 0; i < renames.length; i += 1) {
+      const op = { from: renames[i].from, to: `${tempPrefix}${i}.psd` };
+      await storage.renameFile(op.from, op.to);
+      done.push(op);
+    }
+    for (let i = 0; i < renames.length; i += 1) {
+      const op = { from: `${tempPrefix}${i}.psd`, to: renames[i].to };
+      await storage.renameFile(op.from, op.to);
+      done.push(op);
+    }
+  } catch (err) {
+    for (let i = done.length - 1; i >= 0; i -= 1) {
+      try {
+        await storage.renameFile(done[i].to, done[i].from);
+      } catch {
+        // best-effort
+      }
+    }
+    throw err;
+  }
 };
