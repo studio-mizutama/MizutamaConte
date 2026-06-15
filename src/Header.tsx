@@ -1,7 +1,7 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
 import { Key } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup, MenuTrigger, Menu, DialogTrigger, Dialog } from '@adobe/react-spectrum';
+import { ActionButton, Item, TabList, Tabs, Text, Picker, Flex, MenuTrigger, Menu, DialogTrigger, Dialog } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Home from '@spectrum-icons/workflow/Home';
 import TableEdit from '@spectrum-icons/workflow/TableEdit';
@@ -213,8 +213,11 @@ const SaveIndicator: React.FC = () => {
 const GitBranchButton: React.FC = () => {
   const t = useT();
   const gitDetect = useGlobal('gitDetect')[0];
+  const fileName = useGlobal('globalFileName')[0];
   // Web（api 不在で detect 未実行）では gitDetect undefined → VC 無効でアイコンを出さない
   if (!gitDetect) return null;
+  // プロジェクト未オープン時は非表示（git 操作はプロジェクトフォルダが必要なため）
+  if (!fileName) return null;
   return (
     <DialogTrigger type="popover">
       <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
@@ -467,20 +470,16 @@ export const Header: React.FC = () => {
       </NoDragArea>
 
       <HeaderRight>
-        <GitBranchButton />
-        <ActionGroup
-          isQuiet
-          onAction={(key) => {
-            if (key === 'Settings') setSettingsOpen(true);
-          }}
-        >
-          <Item key="Share">
+        {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
+        <Flex alignItems="center" gap="size-100">
+          <ActionButton isQuiet aria-label={t('header.share.ariaLabel')}>
             <Share />
-          </Item>
-          <Item key="Settings">
+          </ActionButton>
+          <GitBranchButton />
+          <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
             <Settings />
-          </Item>
-        </ActionGroup>
+          </ActionButton>
+        </Flex>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <WindowsButtons>
             <ActionButton isQuiet onPress={onMinimize}>

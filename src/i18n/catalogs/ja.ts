@@ -19,6 +19,8 @@ export const ja: Record<TranslationKey, string> = {
   'header.menu.ariaLabel': 'メニュー',
   'header.menu.new': '新規',
   'header.menu.open': '開く',
+  'header.share.ariaLabel': '共有',
+  'header.settings.ariaLabel': '設定',
 
   // 絵コンテ本体
   'conte.scene.expand': 'シーンを展開',

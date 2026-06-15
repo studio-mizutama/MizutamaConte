@@ -20,6 +20,8 @@ export const en = {
   'header.menu.ariaLabel': 'Menu',
   'header.menu.new': 'New',
   'header.menu.open': 'Open',
+  'header.share.ariaLabel': 'Share',
+  'header.settings.ariaLabel': 'Settings',
 
   // 絵コンテ本体（シーン帯・行挿入・行追加）
   'conte.scene.expand': 'Expand scene',
