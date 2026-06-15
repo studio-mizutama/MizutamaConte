@@ -35,20 +35,16 @@ const fadeLabelKey = (fade: string): TranslationKey => {
   }
 };
 
-// トランジション記号（CutRow と同じ SVG パス）。fill は CSS で黒。
+// トランジション記号（CutRow と同じリング三角の SVG パス）。Cross 専用アイコンは持たず、
+// 種別はテキストラベルで示す。fill は CSS で黒。
 const FadeInTriangle: React.FC = () => (
-  <svg viewBox="0 0 96 48" width="40" height="20">
+  <svg viewBox="0 0 96 48" width="56" height="28">
     <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
   </svg>
 );
 const FadeOutTriangle: React.FC = () => (
-  <svg viewBox="0 0 96 48" width="40" height="20">
+  <svg viewBox="0 0 96 48" width="56" height="28">
     <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
-  </svg>
-);
-const CrossBowtie: React.FC = () => (
-  <svg viewBox="0 0 96 48" width="40" height="20">
-    <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
   </svg>
 );
 
@@ -85,10 +81,14 @@ const PrintCutRow: React.FC<{
             const dispH = (child.canvas?.height ?? 0) * thumbScale;
             const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
             return (
-              <div key={`p${index}-${layerI}`} style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px` }}>
-                <div style={{ width: `${dispW}px`, height: `${dispH}px`, position: 'relative', background: '#fff' }}>
-                  <img src={src} alt="cut" style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }} />
-                </div>
+              <div
+                key={`p${index}-${layerI}`}
+                style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px`, background: '#fff' }}
+              >
+                {/* transform:scale ではなく実寸 width/height で描画する。transform だと img の
+                    レイアウトボックスが原寸のままになり、印刷のページ分割で各カットが原寸高に
+                    膨らんで「改ページされまくる」。実寸でレイアウトさせ計測＝印刷高を一致させる。 */}
+                <img src={src} alt="cut" style={{ width: `${dispW}px`, height: `${dispH}px`, display: 'block' }} />
                 {layerI === 0 && frames.in && (
                   <div className="print-frame-in" style={rectStyle(frames.in)}>
                     IN
@@ -106,14 +106,14 @@ const PrintCutRow: React.FC<{
         <div className="print-col-action">
           {action?.fadeIn && (
             <div className="print-fade">
-              {action.fadeIn === 'Cross' ? <CrossBowtie /> : <FadeInTriangle />}
+              <FadeInTriangle />
               <span className="print-fade-label">{`${t(fadeLabelKey(action.fadeIn))} ${Math.round(action.fadeInDuration ?? 0)}`}</span>
             </div>
           )}
           <div className="print-action-text">{action?.text ?? ''}</div>
           {action?.fadeOut && (
             <div className="print-fade">
-              {action.fadeOut === 'Cross' ? <CrossBowtie /> : <FadeOutTriangle />}
+              <FadeOutTriangle />
               <span className="print-fade-label">{`${t(fadeLabelKey(action.fadeOut))} ${Math.round(action.fadeOutDuration ?? 0)}`}</span>
             </div>
           )}

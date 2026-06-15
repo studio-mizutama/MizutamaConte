@@ -1,5 +1,5 @@
 import { createGlobalStyle } from 'styled-components';
-import { PAGE_CONTENT_WIDTH, PAGE_CONTENT_HEIGHT } from 'print/constants';
+import { PAGE_CONTENT_WIDTH, PAGE_BOX_HEIGHT } from 'print/constants';
 
 /**
  * 印刷専用スタイル。.print-root は画面では画面外(left:-10000px)に置いて計測可能にし、
@@ -51,7 +51,7 @@ export const PrintStyle = createGlobalStyle`
 
   .print-page {
     box-sizing: border-box;
-    min-height: ${PAGE_CONTENT_HEIGHT}px;
+    min-height: ${PAGE_BOX_HEIGHT}px;
     display: flex;
     flex-direction: column;
     break-after: page;
