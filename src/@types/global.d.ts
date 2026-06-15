@@ -1,7 +1,7 @@
 import 'reactn';
 import { ProjectFile, PsdCache, AppSettings } from '../project/types';
 import { Locale, ColorScheme } from '../i18n/types';
-import { EditorMode } from '../hooks/useTool';
+import { EditorMode } from '../hooks/editorMode';
 
 declare module 'reactn/default' {
   export interface State {

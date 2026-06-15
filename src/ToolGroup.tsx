@@ -6,7 +6,7 @@ import Crop from '@spectrum-icons/workflow/Crop';
 import Reorder from '@spectrum-icons/workflow/Reorder';
 import ViewList from '@spectrum-icons/workflow/ViewList';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useEditorMode } from 'hooks/useTool';
+import { EditorMode, useEditorMode } from 'hooks/editorMode';
 import { useT } from 'i18n';
 
 const AlignCenter = styled.div`
@@ -53,12 +53,7 @@ export const ToolGroup: React.FC = () => {
         isEmphasized
         selectedKeys={new Set([mode])}
         onSelectionChange={(keys) => {
-          const k = (keys instanceof Set ? [...keys][0] : undefined) as
-            | 'edit'
-            | 'resize'
-            | 'reorderCut'
-            | 'reorderScene'
-            | undefined;
+          const k = (keys instanceof Set ? [...keys][0] : undefined) as EditorMode | undefined;
           if (k) setMode(k);
         }}
       >

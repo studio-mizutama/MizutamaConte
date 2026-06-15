@@ -6,7 +6,7 @@ import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
 import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
-import { EditorMode } from 'hooks/useTool';
+import { EditorMode } from 'hooks/editorMode';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
@@ -26,10 +26,6 @@ const MyTextArea = styled.textarea`
   :focus {
     outline: 2px solid var(--spectrum-alias-border-color-focus);
     border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
-  }
-
-  &[readonly] {
-    cursor: default;
   }
 `;
 
@@ -97,11 +93,10 @@ const TextContainer: React.FC<{
   time?: number;
   timeSum?: number;
   fps: number;
-  editable: boolean;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
-}> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, editable, setDialogue, setActionText, setTime }) => {
+}> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, setDialogue, setActionText, setTime }) => {
   // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
   const [timeDraft, setTimeDraft] = useState<string | null>(null);
   const timeCancelRef = useRef(false);
@@ -124,8 +119,7 @@ const TextContainer: React.FC<{
     <>
       <View gridArea="action" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={editable ? 'hover' : undefined}
-          readOnly={!editable}
+          className="hover"
           onKeyDown={escKeyDown}
           value={action?.text ?? ''}
           onChange={(e) => setActionText(cutIndex, e.target.value)}
@@ -143,8 +137,7 @@ const TextContainer: React.FC<{
       </View>
       <View gridArea="dialogue" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={editable ? 'hover' : undefined}
-          readOnly={!editable}
+          className="hover"
           onKeyDown={escKeyDown}
           value={dialogue ?? ''}
           onChange={(e) => setDialogue(cutIndex, e.target.value)}
@@ -152,8 +145,7 @@ const TextContainer: React.FC<{
       </View>
       <View gridArea="time" width="100%" position="relative" height="auto">
         <MyTextArea
-          className={editable ? 'hover' : undefined}
-          readOnly={!editable}
+          className="hover"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -411,7 +403,6 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               time={cut?.time}
               timeSum={timeSum}
               fps={fps}
-              editable={true}
               setDialogue={setDialogue}
               setActionText={setActionText}
               setTime={setTime}

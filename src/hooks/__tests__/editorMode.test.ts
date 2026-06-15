@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveEditorMode } from '../useTool';
+import { resolveEditorMode } from '../editorMode';
 
 describe('resolveEditorMode', () => {
   it('有効なモードはそのまま返す', () => {

@@ -23,7 +23,7 @@ import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
 import { deriveScenes, SceneGroup, canMerge } from 'project/scene';
-import { useEditorMode } from 'hooks/useTool';
+import { useEditorMode } from 'hooks/editorMode';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
 
