@@ -34,4 +34,12 @@ export interface ProjectStorage {
    *  Electron=fs.rename、Web FSA=copy+delete、web-readonly=no-op。いずれもフォルダ内に限定 */
   renameFile(from: string, to: string): Promise<void>;
   exists(name: string): Promise<boolean>;
+  /** name を .trash/ へ rename 退避し、復元用トークン（trash 内ファイル名）を返す（undo 用） */
+  trashFile(name: string): Promise<string>;
+  /** trashFile が返したトークンの退避物を name へ戻す */
+  restoreFile(token: string, name: string): Promise<void>;
+  /** 指定ファイルの生バイトを読む（undo/redo 後のキャッシュ再構築用） */
+  readFile(name: string): Promise<Uint8Array>;
+  /** .trash/ を空にする（履歴破棄時） */
+  purgeTrash(): Promise<void>;
 }

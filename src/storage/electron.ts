@@ -35,6 +35,11 @@ export const electronStorage: ProjectStorage = {
     await api().renameFile(from, to);
   },
 
+  trashFile: (name) => api().trashFile(name),
+  restoreFile: (token, name) => api().restoreFile(token, name),
+  readFile: async (name) => new Uint8Array(await api().readFile(name)),
+  purgeTrash: () => api().purgeTrash(),
+
   async exists(name) {
     return api().fileExists(name);
   },

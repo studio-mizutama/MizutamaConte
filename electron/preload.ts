@@ -41,6 +41,10 @@ contextBridge.exposeInMainWorld('api', {
   writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
   deleteFile: (name: string) => ipcRenderer.invoke('storage:delete-file', name),
   renameFile: (from: string, to: string) => ipcRenderer.invoke('storage:rename-file', from, to),
+  trashFile: (name: string) => ipcRenderer.invoke('storage:trash-file', name),
+  restoreFile: (token: string, name: string) => ipcRenderer.invoke('storage:restore-file', token, name),
+  readFile: (name: string) => ipcRenderer.invoke('storage:read-file', name),
+  purgeTrash: () => ipcRenderer.invoke('storage:purge-trash'),
   fileExists: (name: string) => ipcRenderer.invoke('storage:exists', name),
 
   // 外部ペイントアプリで PSD を開く / 外部編集の検知

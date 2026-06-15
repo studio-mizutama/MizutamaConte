@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import { randomUUID } from 'node:crypto';
 import { createMenu } from './menu';
 import { openInPaintApp, findPaintApp } from './paint';
 import { loadSettings, saveSettings, AppSettings } from './settings';
@@ -43,6 +44,27 @@ let currentProjectDir: string | null = null;
 /** アプリ自身が書いたファイル（watch の自己反応を防ぐ） */
 const recentOwnWrites = new Map<string, number>();
 let watcher: fs.FSWatcher | null = null;
+
+/** .trash/ ディレクトリを確保し、初回作成時に既存 .gitignore へ .trash/ を冪等追記する */
+const ensureTrashDir = (): string => {
+  if (!currentProjectDir) throw new Error('No project directory');
+  const dir = path.join(currentProjectDir, '.trash');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    // 既存リポジトリ向け: .gitignore があり .trash/ が無ければ追記（新規 init は git.ts の定数で対応）
+    try {
+      const gi = path.join(currentProjectDir, '.gitignore');
+      if (fs.existsSync(gi)) {
+        const txt = fs.readFileSync(gi, 'utf8');
+        const has = txt.split(/\r?\n/).some((l) => l.trim() === '.trash/');
+        if (!has) fs.appendFileSync(gi, (txt.endsWith('\n') ? '' : '\n') + '.trash/\n');
+      }
+    } catch {
+      // best-effort（gitignore 追記失敗は致命的でない）
+    }
+  }
+  return dir;
+};
 
 /** プロジェクトフォルダの PSD 変更を監視し、外部アプリでの編集をレンダラへ通知する */
 const watchProjectDir = (dirPath: string) => {
@@ -149,6 +171,40 @@ const registerIpcHandlers = () => {
     recentOwnWrites.set(from, Date.now());
     recentOwnWrites.set(to, Date.now());
     fs.renameSync(path.join(currentProjectDir, from), path.join(currentProjectDir, to));
+  });
+
+  ipcMain.handle('storage:trash-file', (_event, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    const dir = ensureTrashDir();
+    const token = `${randomUUID()}.psd`;
+    recentOwnWrites.set(name, Date.now());
+    fs.renameSync(path.join(currentProjectDir, name), path.join(dir, token));
+    return token;
+  });
+
+  ipcMain.handle('storage:restore-file', (_event, token: string, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    if (token.includes('/') || token.includes('\\') || token.includes('..')) throw new Error(`Invalid token: ${token}`);
+    recentOwnWrites.set(name, Date.now());
+    fs.renameSync(path.join(currentProjectDir, '.trash', token), path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('storage:read-file', (_event, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    return fs.readFileSync(path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('storage:purge-trash', (_event) => {
+    if (!currentProjectDir) return;
+    const dir = path.join(currentProjectDir, '.trash');
+    try {
+      if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best-effort
+    }
   });
 
   ipcMain.handle('paint:open', (_event, psdName: string) => {

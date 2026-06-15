@@ -84,6 +84,44 @@ export const webFsaStorage: ProjectStorage = {
       return false;
     }
   },
+
+  trashFile: async (name: string): Promise<string> => {
+    if (!dirHandle) throw new Error('No directory handle');
+    const token = `${crypto.randomUUID()}.psd`;
+    const trashDir = await dirHandle.getDirectoryHandle('.trash', { create: true });
+    const srcHandle = await dirHandle.getFileHandle(name);
+    const bytes = new Uint8Array(await (await srcHandle.getFile()).arrayBuffer());
+    const destHandle = await trashDir.getFileHandle(token, { create: true });
+    const writable = await destHandle.createWritable();
+    await writable.write(bytes);
+    await writable.close();
+    await dirHandle.removeEntry(name);
+    return token;
+  },
+  restoreFile: async (token: string, name: string): Promise<void> => {
+    if (!dirHandle) throw new Error('No directory handle');
+    const trashDir = await dirHandle.getDirectoryHandle('.trash', { create: true });
+    const srcHandle = await trashDir.getFileHandle(token);
+    const bytes = new Uint8Array(await (await srcHandle.getFile()).arrayBuffer());
+    const destHandle = await dirHandle.getFileHandle(name, { create: true });
+    const writable = await destHandle.createWritable();
+    await writable.write(bytes);
+    await writable.close();
+    await trashDir.removeEntry(token);
+  },
+  readFile: async (name: string): Promise<Uint8Array> => {
+    if (!dirHandle) throw new Error('No directory handle');
+    const handle = await dirHandle.getFileHandle(name);
+    return new Uint8Array(await (await handle.getFile()).arrayBuffer());
+  },
+  purgeTrash: async (): Promise<void> => {
+    if (!dirHandle) return;
+    try {
+      await dirHandle.removeEntry('.trash', { recursive: true });
+    } catch {
+      // .trash が無い等は無視
+    }
+  },
 };
 
 /** 非 Chromium フォールバック: webkitdirectory input による読み取り専用 */
@@ -107,5 +145,17 @@ export const webReadonlyStorage: ProjectStorage = {
   },
   async exists() {
     return false;
+  },
+  trashFile: async () => {
+    throw new Error('trashFile is not supported in read-only mode');
+  },
+  restoreFile: async () => {
+    throw new Error('restoreFile is not supported in read-only mode');
+  },
+  readFile: async () => {
+    throw new Error('readFile is not supported in read-only mode');
+  },
+  purgeTrash: async () => {
+    // read-only: trash は作られないので no-op
   },
 };
