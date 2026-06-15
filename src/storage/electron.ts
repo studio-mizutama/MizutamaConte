@@ -30,6 +30,10 @@ export const electronStorage: ProjectStorage = {
     await api.deleteFile(name);
   },
 
+  async renameFile(from, to) {
+    await api.renameFile(from, to);
+  },
+
   async exists(name) {
     return api.fileExists(name);
   },

@@ -133,6 +133,16 @@ const registerIpcHandlers = () => {
     }
   });
 
+  // プロジェクトフォルダ内のファイル名変更（並べ替えの PSD リネーム）。
+  // from/to の双方をパストラバーサル検証し、フォルダ内に限定する。新名は自己 watch を抑止。
+  ipcMain.handle('storage:rename-file', (_event, from: string, to: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (from.includes('/') || from.includes('\\') || from.includes('..')) throw new Error(`Invalid file name: ${from}`);
+    if (to.includes('/') || to.includes('\\') || to.includes('..')) throw new Error(`Invalid file name: ${to}`);
+    recentOwnWrites.set(to, Date.now());
+    fs.renameSync(path.join(currentProjectDir, from), path.join(currentProjectDir, to));
+  });
+
   ipcMain.handle('paint:open', (_event, psdName: string) => {
     if (!currentProjectDir) return { ok: false, error: 'No project directory' };
     if (psdName.includes('/') || psdName.includes('\\') || psdName.includes('..')) {

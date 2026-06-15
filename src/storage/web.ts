@@ -65,6 +65,18 @@ export const webFsaStorage: ProjectStorage = {
     }
   },
 
+  // FSA にネイティブ rename は無いので copy+delete で実装する（フォルダ内限定）
+  async renameFile(from, to) {
+    if (!dirHandle) throw new Error('プロジェクトフォルダが開かれていません');
+    const srcHandle = await dirHandle.getFileHandle(from);
+    const bytes = new Uint8Array(await (await srcHandle.getFile()).arrayBuffer());
+    const destHandle = await dirHandle.getFileHandle(to, { create: true });
+    const writable = await destHandle.createWritable();
+    await writable.write(bytes as FileSystemWriteChunkType);
+    await writable.close();
+    await dirHandle.removeEntry(from);
+  },
+
   async exists(name) {
     if (!dirHandle) return false;
     try {
@@ -90,6 +102,9 @@ export const webReadonlyStorage: ProjectStorage = {
     throw new Error('このブラウザでは保存できません');
   },
   async deleteFile() {
+    // 読み取り専用環境では何もしない
+  },
+  async renameFile() {
     // 読み取り専用環境では何もしない
   },
   async exists() {

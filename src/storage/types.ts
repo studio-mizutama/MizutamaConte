@@ -30,5 +30,8 @@ export interface ProjectStorage {
   writeFile(name: string, data: string | Uint8Array): Promise<void>;
   /** 現在のプロジェクトフォルダからファイルを削除する（孤立 PSD の掃除）。存在しなければ無視 */
   deleteFile(name: string): Promise<void>;
+  /** 現在のプロジェクトフォルダ内でファイル名を変更する（並べ替えの PSD リネーム）。
+   *  Electron=fs.rename、Web FSA=copy+delete、web-readonly=no-op。いずれもフォルダ内に限定 */
+  renameFile(from: string, to: string): Promise<void>;
   exists(name: string): Promise<boolean>;
 }

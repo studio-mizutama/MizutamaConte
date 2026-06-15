@@ -85,6 +85,7 @@ export interface Sandbox {
   createProject: (defaultName: string) => Promise<{ name: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
   deleteFile: (name: string) => Promise<void>;
+  renameFile: (from: string, to: string) => Promise<void>;
   fileExists: (name: string) => Promise<boolean>;
 
   openInPaint: (psdName: string) => Promise<{ ok: boolean; app?: string; error?: string }>;
