@@ -57,16 +57,16 @@ export const appendLayerToPsd = (psd: Psd, name: string): { psd: Psd; buffer: Ui
 /**
  * PSD ドキュメントを新しい寸法へリサイズする。
  * - children[0]=背景は新寸で白塗り直し
- * - children[1..]=描画レイヤーは既存内容を中央アンカーで再配置（拡大=余白追加 / 縮小=端をクロップ）
+ * - children[1..]=描画レイヤーは既存内容を左上(0,0)アンカーで再配置（拡大=右下に白紙余白 / 縮小=右下端をクロップ）
  */
 export const resizeDocPsd = (psd: Psd, width: number, height: number): { psd: Psd; buffer: Uint8Array } => {
-  const centered = (src?: HTMLCanvasElement) => {
+  const anchored = (src?: HTMLCanvasElement) => {
     const c = document.createElement('canvas');
     c.width = width;
     c.height = height;
     const ctx = c.getContext('2d');
     if (ctx && src) {
-      ctx.drawImage(src, Math.round((width - src.width) / 2), Math.round((height - src.height) / 2));
+      ctx.drawImage(src, 0, 0);
     }
     return c;
   };
@@ -83,10 +83,10 @@ export const resizeDocPsd = (psd: Psd, width: number, height: number): { psd: Ps
       }
       return { ...child, canvas: bg };
     }
-    return { ...child, canvas: centered(child.canvas as HTMLCanvasElement | undefined) };
+    return { ...child, canvas: anchored(child.canvas as HTMLCanvasElement | undefined) };
   });
 
-  const background = children[0]?.canvas ?? centered(undefined);
+  const background = children[0]?.canvas ?? anchored(undefined);
   const next: Psd = { ...psd, width, height, children, canvas: background };
   const buffer = new Uint8Array(writePsd(next, { generateThumbnail: true }));
   return { psd: next, buffer };
