@@ -134,11 +134,13 @@ const registerIpcHandlers = () => {
   });
 
   // プロジェクトフォルダ内のファイル名変更（並べ替えの PSD リネーム）。
-  // from/to の双方をパストラバーサル検証し、フォルダ内に限定する。新名は自己 watch を抑止。
+  // from/to の双方をパストラバーサル検証し、フォルダ内に限定する。
+  // fs.renameSync は from 名でも watch イベントを発火するため、from/to 双方の自己 watch を抑止する。
   ipcMain.handle('storage:rename-file', (_event, from: string, to: string) => {
     if (!currentProjectDir) throw new Error('No project directory');
     if (from.includes('/') || from.includes('\\') || from.includes('..')) throw new Error(`Invalid file name: ${from}`);
     if (to.includes('/') || to.includes('\\') || to.includes('..')) throw new Error(`Invalid file name: ${to}`);
+    recentOwnWrites.set(from, Date.now());
     recentOwnWrites.set(to, Date.now());
     fs.renameSync(path.join(currentProjectDir, from), path.join(currentProjectDir, to));
   });

@@ -65,16 +65,14 @@ export const webFsaStorage: ProjectStorage = {
     }
   },
 
-  // FSA にネイティブ rename は無いので copy+delete で実装する（フォルダ内限定）
+  // FSA にネイティブ rename は無いので copy+delete で実装する（フォルダ内限定）。
+  // 書込/削除は既存の writeFile/deleteFile を再利用する（DRY）。
   async renameFile(from, to) {
     if (!dirHandle) throw new Error('プロジェクトフォルダが開かれていません');
     const srcHandle = await dirHandle.getFileHandle(from);
     const bytes = new Uint8Array(await (await srcHandle.getFile()).arrayBuffer());
-    const destHandle = await dirHandle.getFileHandle(to, { create: true });
-    const writable = await destHandle.createWritable();
-    await writable.write(bytes as FileSystemWriteChunkType);
-    await writable.close();
-    await dirHandle.removeEntry(from);
+    await this.writeFile(to, bytes);
+    await this.deleteFile(from);
   },
 
   async exists(name) {
