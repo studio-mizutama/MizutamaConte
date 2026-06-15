@@ -130,6 +130,7 @@ const registerIpcHandlers = () => {
   ipcMain.handle('storage:delete-file', (_event, name: string) => {
     if (!currentProjectDir) return;
     if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    recentOwnWrites.set(name, Date.now());
     const target = path.join(currentProjectDir, name);
     try {
       fs.rmSync(target, { force: true });

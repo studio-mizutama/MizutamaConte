@@ -33,6 +33,8 @@ export const useUndoRedo = (): void => {
   }, []);
 
   const doUndo = async (): Promise<void> => {
+    // Undo/Redo は Edit モードのみ（design §8.4）。Preview 中は no-op
+    if (getGlobal().mode !== 'Edit') return;
     if (applyingRef.current) return;
     const txn = popUndo();
     if (!txn) return;
@@ -49,6 +51,8 @@ export const useUndoRedo = (): void => {
   };
 
   const doRedo = async (): Promise<void> => {
+    // Undo/Redo は Edit モードのみ（design §8.4）。Preview 中は no-op
+    if (getGlobal().mode !== 'Edit') return;
     if (applyingRef.current) return;
     const txn = popRedo();
     if (!txn) return;
