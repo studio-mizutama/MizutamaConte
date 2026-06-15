@@ -55,9 +55,10 @@ export const ja: Record<TranslationKey, string> = {
   'panels.dialogue': '台詞',
 
   // ツール
-  'toolGroup.select': '選択 (V)',
-  'toolGroup.crop': 'クロップ (C)',
-  'toolGroup.text': 'テキスト (T)',
+  'toolGroup.edit': '編集 (S)',
+  'toolGroup.resize': 'リサイズ (C)',
+  'toolGroup.reorderCut': 'CUT 並べ替え (R)',
+  'toolGroup.reorderScene': 'SCENE 並べ替え (G)',
 
   // トランジション
   'transition.fadeIn': 'フェードイン',

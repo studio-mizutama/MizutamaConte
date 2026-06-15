@@ -6,7 +6,7 @@ import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
 import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
-import { ToolName } from 'hooks/useTool';
+import { EditorMode } from 'hooks/useTool';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
@@ -239,7 +239,7 @@ export interface CutRowProps {
   thumbScale: number;
   frameThumbWidth: number;
   frameThumbHeight: number;
-  tool: ToolName;
+  editorMode: EditorMode;
   inserting: boolean;
   timeSum?: number;
   fps: number;
@@ -259,7 +259,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     thumbScale,
     frameThumbWidth,
     frameThumbHeight,
-    tool,
+    editorMode,
     inserting,
     timeSum,
     fps,
@@ -307,7 +307,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
             </View>
             <View gridArea="picture" width="100%" height="auto">
               <div style={{ position: 'relative', width: `${cutCanvas(projectCut).width * thumbScale}px` }}>
-                {tool === 'Crop' && cut.psdName && (
+                {editorMode === 'resize' && cut.psdName && (
                   <ResizeHandle cutIndex={index} canvas={cutCanvas(projectCut)} frame={frame} thumbScale={thumbScale} />
                 )}
                 {cut.picture?.children
@@ -320,7 +320,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                           height: `${child.canvas && child.canvas.height * thumbScale}px`,
                           width: `${child.canvas && child.canvas.width * thumbScale}px`,
                           position: 'relative',
-                          cursor: tool === 'Crop' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
+                          cursor: editorMode === 'resize' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
                         }}
                         key={`CC${index + 1}PP${child.name}`}
                         title={cut.psdName ? t('cutRow.openHint', { name: cut.psdName }) : undefined}
@@ -411,7 +411,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               time={cut?.time}
               timeSum={timeSum}
               fps={fps}
-              editable={tool === 'Text'}
+              editable={true}
               setDialogue={setDialogue}
               setActionText={setActionText}
               setTime={setTime}

@@ -27,7 +27,7 @@ const boot = async (): Promise<void> => {
 
   setGlobal({
     mode: 'Edit',
-    tool: new Set(['Select']),
+    editorMode: 'edit',
     cut: {},
     project: emptyProject(),
     psdCache: {},

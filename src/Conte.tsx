@@ -23,7 +23,7 @@ import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { thumbnailScale } from 'project/dimensions';
 import { deriveScenes, SceneGroup, canMerge } from 'project/scene';
-import { useTool } from 'hooks/useTool';
+import { useEditorMode } from 'hooks/useTool';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
 
@@ -52,8 +52,6 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
 }) => {
   const t = useT();
   const { setSceneTitleAt, removeSceneStart } = useProjectActions();
-  const tool = useTool();
-  const editable = tool === 'Text';
   return (
     <Band id={`Scene${scene.sceneNumber}`}>
       <ActionButton isQuiet onPress={onToggle} aria-label={collapsed ? t('conte.scene.expand') : t('conte.scene.collapse')}>
@@ -67,7 +65,7 @@ const SceneBand: React.FC<{ scene: SceneGroup; collapsed: boolean; onToggle: () 
         placeholder={t('conte.scene.untitledPlaceholder')}
         width="size-3000"
         isQuiet
-        isReadOnly={!editable}
+        isReadOnly={false}
       />
       {scene.startIndex > 0 && (
         <TooltipTrigger delay={300}>
@@ -133,7 +131,7 @@ const CutContainer: React.FC = () => {
   // 最新の actions を ref 経由で参照し、コールバックの参照を安定させる（CutRow の memo を機能させる）
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
-  const tool = useTool();
+  const [editorMode] = useEditorMode();
 
   const scenes = deriveScenes(project.cuts);
   const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
@@ -203,7 +201,7 @@ const CutContainer: React.FC = () => {
                   thumbScale={thumbScale}
                   frameThumbWidth={frameThumbWidth}
                   frameThumbHeight={frameThumbHeight}
-                  tool={tool}
+                  editorMode={editorMode}
                   inserting={inserting}
                   timeSum={timeSum}
                   fps={fps}

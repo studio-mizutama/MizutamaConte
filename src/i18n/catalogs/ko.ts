@@ -55,9 +55,10 @@ export const ko: Record<TranslationKey, string> = {
   'panels.dialogue': '대사',
 
   // 도구
-  'toolGroup.select': '선택 (V)',
-  'toolGroup.crop': '자르기 (C)',
-  'toolGroup.text': '텍스트 (T)',
+  'toolGroup.edit': '편집 (S)',
+  'toolGroup.resize': '크기 조정 (C)',
+  'toolGroup.reorderCut': 'CUT 재정렬 (R)',
+  'toolGroup.reorderScene': 'SCENE 재정렬 (G)',
 
   // 트랜지션
   'transition.fadeIn': '페이드 인',

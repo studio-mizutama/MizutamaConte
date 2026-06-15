@@ -1,11 +1,12 @@
-import React, { useGlobal } from 'reactn';
+import React from 'reactn';
 import { ActionGroup, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import Select from '@spectrum-icons/workflow/Select';
+import Edit from '@spectrum-icons/workflow/Edit';
 import Crop from '@spectrum-icons/workflow/Crop';
-import Text from '@spectrum-icons/workflow/Text';
-import { Selection } from '@react-types/shared/src/selection';
+import Reorder from '@spectrum-icons/workflow/Reorder';
+import ViewList from '@spectrum-icons/workflow/ViewList';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useEditorMode } from 'hooks/useTool';
 import { useT } from 'i18n';
 
 const AlignCenter = styled.div`
@@ -16,25 +17,30 @@ const AlignCenter = styled.div`
 
 export const ToolGroup: React.FC = () => {
   const t = useT();
-  const [selected, setSelected] = useGlobal('tool');
+  const [mode, setMode] = useEditorMode();
 
   const keyDown = () => {
     const activeElement = document.activeElement as HTMLElement;
     activeElement.blur();
   };
 
-  useHotkeys('v', () => {
-    setSelected(new Set(['Select']));
+  useHotkeys('s', () => {
+    setMode('edit');
     keyDown();
   });
 
   useHotkeys('c', () => {
-    setSelected(new Set(['Crop']));
+    setMode('resize');
     keyDown();
   });
 
-  useHotkeys('t', () => {
-    setSelected(new Set(['Text']));
+  useHotkeys('r', () => {
+    setMode('reorderCut');
+    keyDown();
+  });
+
+  useHotkeys('g', () => {
+    setMode('reorderScene');
     keyDown();
   });
 
@@ -45,26 +51,40 @@ export const ToolGroup: React.FC = () => {
         selectionMode="single"
         isQuiet
         isEmphasized
-        selectedKeys={selected}
-        onSelectionChange={setSelected as (keys: Selection) => any}
+        selectedKeys={new Set([mode])}
+        onSelectionChange={(keys) => {
+          const k = (keys instanceof Set ? [...keys][0] : undefined) as
+            | 'edit'
+            | 'resize'
+            | 'reorderCut'
+            | 'reorderScene'
+            | undefined;
+          if (k) setMode(k);
+        }}
       >
         <TooltipTrigger placement="end">
-          <Item key="Select">
-            <Select />
+          <Item key="edit">
+            <Edit />
           </Item>
-          <Tooltip>{t('toolGroup.select')}</Tooltip>
+          <Tooltip>{t('toolGroup.edit')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
-          <Item key="Crop">
+          <Item key="resize">
             <Crop />
           </Item>
-          <Tooltip>{t('toolGroup.crop')}</Tooltip>
+          <Tooltip>{t('toolGroup.resize')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
-          <Item key="Text">
-            <Text />
+          <Item key="reorderCut">
+            <Reorder />
           </Item>
-          <Tooltip>{t('toolGroup.text')}</Tooltip>
+          <Tooltip>{t('toolGroup.reorderCut')}</Tooltip>
+        </TooltipTrigger>
+        <TooltipTrigger placement="end">
+          <Item key="reorderScene">
+            <ViewList />
+          </Item>
+          <Tooltip>{t('toolGroup.reorderScene')}</Tooltip>
         </TooltipTrigger>
       </ActionGroup>
     </AlignCenter>
