@@ -1,11 +1,13 @@
 import 'reactn';
 import { ProjectFile, PsdCache, AppSettings } from '../project/types';
 import { Locale, ColorScheme } from '../i18n/types';
+import { EditorMode } from '../hooks/useTool';
 
 declare module 'reactn/default' {
   export interface State {
     mode: string;
-    tool: Set<string> | undefined;
+    /** 編集モード（相互排他）。既定 'edit'＝テキスト常時編集可・クリックで CUT 選択 */
+    editorMode: EditorMode | undefined;
     cut: Cut;
     project: ProjectFile;
     psdCache: PsdCache;

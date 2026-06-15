@@ -1,12 +1,12 @@
 import { useGlobal } from 'reactn';
 
-export type ToolName = 'Select' | 'Crop' | 'Text';
+export type EditorMode = 'edit' | 'resize' | 'reorderCut' | 'reorderScene';
 
-/** tool グローバル（単一選択 Set）から現在のツールを解決する。不正値は Select */
-export const activeTool = (tool: Set<string> | undefined): ToolName => {
-  const first = tool ? tool.values().next().value : undefined;
-  return first === 'Crop' || first === 'Text' ? first : 'Select';
+/** editorMode グローバル（undefined 含む）を既定 'edit' へ解決する純粋関数 */
+export const resolveEditorMode = (mode: EditorMode | undefined): EditorMode => mode ?? 'edit';
+
+// 既定は 'edit'（テキスト常時編集可・クリックで CUT 選択）
+export const useEditorMode = (): [EditorMode, (m: EditorMode) => void] => {
+  const [mode, setMode] = useGlobal('editorMode');
+  return [resolveEditorMode(mode), setMode];
 };
-
-/** 現在の編集ツールを返すフック */
-export const useTool = (): ToolName => activeTool(useGlobal('tool')[0]);
