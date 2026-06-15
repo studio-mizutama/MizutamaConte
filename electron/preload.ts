@@ -64,4 +64,14 @@ contextBridge.exposeInMainWorld('api', {
 
   getBlur: (listener: () => Promise<void>) => ipcRenderer.on('get-blur', listener),
   removeGetBlur: () => ipcRenderer.removeAllListeners('get-blur'),
+
+  // git バージョン管理（Electron 専用）。detect 以外は main 側で currentProjectDir を使う。
+  git: {
+    detect: () => ipcRenderer.invoke('git:detect'),
+    isRepo: () => ipcRenderer.invoke('git:is-repo'),
+    init: () => ipcRenderer.invoke('git:init'),
+    status: () => ipcRenderer.invoke('git:status'),
+    commit: (message: string) => ipcRenderer.invoke('git:commit', message),
+    logLatest: () => ipcRenderer.invoke('git:log-latest'),
+  },
 });
