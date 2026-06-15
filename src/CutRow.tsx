@@ -75,17 +75,6 @@ const Fade = styled.svg`
   left: calc((100% - 96px) / 2);
 `;
 
-/** Cross（クロスフェード）用の記号。上向き三角と下向き三角が頂点で合わさる蝶ネクタイ型。
- *  White/Black の In/Out は従来の三角(Fade)を維持し、Cross のときだけこれを使う。 */
-const Cross = styled.svg`
-  padding: 0;
-  margin: 0;
-  stroke: none;
-  fill: var(--spectrum-alias-text-color);
-  position: absolute;
-  left: calc((100% - 96px) / 2);
-`;
-
 /** CUT 列下端の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列で折り返す。
  *  margin-top:auto で列の下端へ押し下げる（CUT 番号は上端・クラスタは下端）。
  *  通常はうっすら表示し、CUT 行(.hover)ホバー時に不透明にして誤クリックを防ぐ。 */
@@ -208,33 +197,23 @@ const TextContainer: React.FC<{
           value={action?.text ?? ''}
           onChange={(e) => setActionText(cutIndex, e.target.value)}
         />
-        {/* IN 側トランジション: Cross は蝶ネクタイ型、White/Black In は従来の上向き三角 */}
-        {action?.fadeIn &&
-          (action.fadeIn === 'Cross' ? (
-            <Cross viewBox="0 0 96 48" width="96px">
-              <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
-            </Cross>
-          ) : (
-            <Fade viewBox="0 0 96 48" width="96px">
-              <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
-            </Fade>
-          ))}
+        {/* IN 側トランジション: 種別によらず上向き三角（Fade）。尺・種別はテキストラベルで示す */}
+        {action?.fadeIn && (
+          <Fade viewBox="0 0 96 48" width="96px">
+            <path d="M48,2.83,91.17,46H4.83L48,2.83M48,0,0,48H96L48,0Z" />
+          </Fade>
+        )}
         {action?.fadeIn && (
           <TransitionLabel style={{ top: '2px' }}>
             {`${t(fadeLabelKey(action.fadeIn))} ${Math.round(action.fadeInDuration ?? 0)}`}
           </TransitionLabel>
         )}
-        {/* OUT 側トランジション: Cross は蝶ネクタイ型、White/Black Out は従来の下向き三角 */}
-        {action?.fadeOut &&
-          (action.fadeOut === 'Cross' ? (
-            <Cross viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
-              <path d="M0,0H96L48,24,0,0Z M0,48H96L48,24,0,48Z" />
-            </Cross>
-          ) : (
-            <Fade viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
-              <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
-            </Fade>
-          ))}
+        {/* OUT 側トランジション: 種別によらず下向き三角（Fade）。尺・種別はテキストラベルで示す */}
+        {action?.fadeOut && (
+          <Fade viewBox="0 0 96 48" width="96px" style={{ bottom: 0 }}>
+            <path d="M91.17,2,48,45.17,4.83,2H91.17M96,0Zm0,0H0L48,48,96,0Z" />
+          </Fade>
+        )}
         {action?.fadeOut && (
           <TransitionLabel style={{ bottom: '2px' }}>
             {`${t(fadeLabelKey(action.fadeOut))} ${Math.round(action.fadeOutDuration ?? 0)}`}
