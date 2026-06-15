@@ -5,6 +5,7 @@ import { createMenu } from './menu';
 import { openInPaintApp, findPaintApp } from './paint';
 import { loadSettings, saveSettings, AppSettings } from './settings';
 import { mt, resolveLocale, MenuLocale } from './i18n';
+import { detect, isRepo, initRepo, status, commit, logLatest } from './git';
 
 interface Bounds {
   width: number;
@@ -178,6 +179,35 @@ const registerIpcHandlers = () => {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
+  });
+
+  // --- git バージョン管理（Electron 専用・上級者向けオプション） ---
+  // detect は dir 不要。それ以外は既存 storage と同方針で currentProjectDir を使う。
+  ipcMain.handle('git:detect', () => detect());
+
+  ipcMain.handle('git:is-repo', () => {
+    if (!currentProjectDir) return false;
+    return isRepo(currentProjectDir);
+  });
+
+  ipcMain.handle('git:init', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return initRepo(currentProjectDir);
+  });
+
+  ipcMain.handle('git:status', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return status(currentProjectDir);
+  });
+
+  ipcMain.handle('git:commit', (_event, message: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return commit(currentProjectDir, message);
+  });
+
+  ipcMain.handle('git:log-latest', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return logLatest(currentProjectDir);
   });
 };
 
