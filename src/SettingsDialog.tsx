@@ -17,6 +17,8 @@ import { useProject } from 'hooks/useProject';
 import { AppSettings } from 'project/types';
 import { saveAppSettings } from 'settings/appSettings';
 import { useT, LOCALES, LANGUAGE_LABELS, Locale, ColorScheme } from 'i18n';
+import { GitDetect } from 'git/types';
+import { GitHelpPopover } from 'git/GitHelpPopover';
 
 const api = window.api;
 
@@ -33,6 +35,9 @@ export const SettingsDialog: React.FC = () => {
   const [mode, setMode] = useState<'auto' | 'custom'>('auto');
   const [customPath, setCustomPath] = useState('');
   const [detected, setDetected] = useState<string | null>(null);
+  const gitDetect = useGlobal('gitDetect')[0] as GitDetect | undefined;
+  const [gitIsRepo, setGitIsRepo] = useState<boolean | null>(null);
+  const [gitBusy, setGitBusy] = useState(false);
 
   // 開くたびに現在の適用値（言語・テーマ）でドラフトを初期化し、paintApp（Electron）を読み込む
   useEffect(() => {
@@ -46,6 +51,11 @@ export const SettingsDialog: React.FC = () => {
       });
     }
     setDetected(null);
+    if (api?.git && gitDetect?.hasGit && gitDetect?.hasLfs) {
+      api.git.isRepo().then(setGitIsRepo);
+    } else {
+      setGitIsRepo(null);
+    }
     // locale/colorScheme は save 時にしか変化しない（その時 open=false になる）ため open のみを依存にする
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -60,6 +70,19 @@ export const SettingsDialog: React.FC = () => {
     if (!api) return;
     const found = await api.detectPaintApp();
     setDetected(found ? found.path : t('settings.paintApp.noneDetected'));
+  };
+
+  const gitInit = async () => {
+    if (!api?.git) return;
+    setGitBusy(true);
+    try {
+      await api.git.init();
+      setGitIsRepo(true);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setGitBusy(false);
+    }
   };
 
   const save = async () => {
@@ -164,6 +187,30 @@ export const SettingsDialog: React.FC = () => {
                     {detected ? <Text>{detected}</Text> : <></>}
                   </Flex>
                 </Flex>
+              )}
+              {api && gitDetect ? (
+                <Flex direction="column" gap="size-150">
+                  <Heading level={4} margin={0}>
+                    {t('git.snapshot.heading')}
+                  </Heading>
+                  {!(gitDetect.hasGit && gitDetect.hasLfs) ? (
+                    <Flex direction="row" gap="size-100" alignItems="center">
+                      <Text>{t('git.help.uninstalled.heading')}</Text>
+                      <GitHelpPopover platform={gitDetect.platform} />
+                    </Flex>
+                  ) : gitIsRepo ? (
+                    <Text>{t('git.snapshot.cliNote')}</Text>
+                  ) : (
+                    <Flex direction="column" gap="size-100">
+                      <Text>{t('git.init.notRepo')}</Text>
+                      <Button variant="secondary" isDisabled={gitBusy} onPress={gitInit}>
+                        {gitBusy ? t('git.init.starting') : t('git.init.start')}
+                      </Button>
+                    </Flex>
+                  )}
+                </Flex>
+              ) : (
+                <></>
               )}
             </Flex>
           </Content>
