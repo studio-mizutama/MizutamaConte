@@ -1,7 +1,7 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
 import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
-import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd } from 'psd/template';
+import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd, isBlankPsd } from 'psd/template';
 import { FrameSize } from 'project/types';
 import { getStorage } from 'storage';
 
@@ -77,9 +77,10 @@ export const useProjectActions = () => {
     await setProject(appendSceneCut(project, psdName, size, fps * 3));
   };
 
-  /** 🔗 結合: 隣接する index と index+1 のカットを統合（PSD 連結 + TIME 合算）。
-   *  データ結合(mergeCuts)は psd/キャッシュの有無に関わらず必ず実行する＝空行が残るバグの根治。
-   *  PSD 合成(mergePsd)＋孤立PSD掃除は素材が揃うときだけの best-effort。 */
+  /** 🔗 結合: 隣接する index と index+1 のカットを統合（splitの逆＝リカバリー操作）。
+   *  「中身のあるレイヤーだけ積む」方針:
+   *  - 下CUT(B)に描画があり composite 可能なら、従来通り mergePsd で上CUT(A)へ連結し mergeCuts でデータ結合。
+   *  - 下CUT(B)が白紙、または composite 不能なら、空レイヤー/ghost を作らないよう **B を綺麗に除去するだけ**。 */
   const mergeCutWithNext = async (index: number) => {
     const a = project.cuts[index];
     const b = project.cuts[index + 1];
@@ -88,26 +89,42 @@ export const useProjectActions = () => {
 
     const pa = a.psd ? psdCache[a.psd] : undefined;
     const pb = b.psd ? psdCache[b.psd] : undefined;
-    // mergePsd で下CUTの内容は上CUTへコピーされるため、結合後に孤立する下CUTの PSD は掃除対象
-    const orphan = orphanedPsdAfterMerge(project, index);
+    const canComposite = !!(a.psd && b.psd && pa && pb && storage.capabilities.write);
+    // キャッシュ未取得時も blank 扱い＝積まずに除去する安全側に倒す
+    const bBlank = pb ? isBlankPsd(pb) : true;
 
-    // PSD 合成が可能なケース（両 PSD・両キャッシュ・書込可）だけ実際に合成して上CUTへ書き戻す
-    const canMergePsd = !!(a.psd && b.psd && pa && pb && storage.capabilities.write);
-    const nextCache = { ...psdCache };
-    if (canMergePsd) {
+    if (canComposite && !bBlank) {
+      // 中身のある B を A の flipbook へ積む（従来経路）
       const { psd: mergedPsd, buffer } = mergePsd(pa!, pb!);
       await storage.writeFile(a.psd!, buffer);
-      nextCache[a.psd!] = mergedPsd;
+      // 連結で孤立する下CUTの PSD は掃除（内容は A へコピー済みなので削除安全）
+      const orphan = orphanedPsdAfterMerge(project, index);
+      const nextCache = { ...psdCache, [a.psd!]: mergedPsd };
+      if (orphan) {
+        await storage.deleteFile(orphan).catch(() => undefined);
+        delete nextCache[orphan];
+      }
+      await setPsdCache(nextCache);
+      // レイヤー数と rows が一致した状態でデータ結合（空レイヤーが出ない）
+      await setProject(mergeCuts(project, index));
+      return;
     }
-    // 孤立しうる下CUT PSD の掃除は素材が揃わなくても best-effort で行う
-    if (orphan) {
-      if (storage.capabilities.write) await storage.deleteFile(orphan).catch(() => undefined);
-      delete nextCache[orphan];
-    }
-    await setPsdCache(nextCache);
 
-    // データ結合は必ず到達させる（下CUTを除去＝番号が繰り上がり、空行が消える）
-    await setProject(mergeCuts(project, index));
+    // 白紙 B または composite 不能: rows もレイヤーも増やさず B を綺麗に除去する。
+    // deleteCutAt はシーンマーカーの再正規化込みの純粋関数。
+    const next = deleteCutAt(project, index + 1);
+    // 下CUTの PSD が結果のどの cut からも参照されなくなったら掃除（大小無視で保守的に判定）
+    if (b.psd) {
+      const target = b.psd.toLowerCase();
+      const stillReferenced = next.cuts.some((cut) => cut.psd?.toLowerCase() === target);
+      if (!stillReferenced) {
+        if (storage.capabilities.write) await storage.deleteFile(b.psd).catch(() => undefined);
+        const nextCache = { ...psdCache };
+        delete nextCache[b.psd];
+        await setPsdCache(nextCache);
+      }
+    }
+    await setProject(next);
   };
 
   /** 任意位置への CUT 挿入: index の直後にネイティブ解像度の単層CUTを挿入する（addCut の位置指定版） */
@@ -143,12 +160,12 @@ export const useProjectActions = () => {
     await setProject(next);
   };
 
-  /** シーン区切りトグル: sceneStart があれば解除、無ければ空マーカー（無題境界）を付与。
-   *  index0 は常に暗黙シーンなのでトグル不可（no-op）。 */
-  const toggleSceneBreak = (index: number) => {
+  /** シーン区切りを「追加」する（CUT 間ガター用）。既に sceneStart があれば何もしない。
+   *  index0 は暗黙シーンなので no-op。解除は SceneBand の X に委ねる。 */
+  const setSceneStartIfAbsent = (index: number) => {
     if (index <= 0) return;
-    const has = !!project.cuts[index]?.sceneStart;
-    setProject(setSceneStart(project, index, has ? undefined : {}));
+    if (project.cuts[index]?.sceneStart) return;
+    setProject(setSceneStart(project, index, {}));
   };
 
   /** 分離: 複数レイヤーCUTの最終レイヤーを新規CUTへ切り出す（New Layer の逆） */
@@ -186,6 +203,6 @@ export const useProjectActions = () => {
     splitCutLastLayer,
     insertCut,
     deleteCut,
-    toggleSceneBreak,
+    setSceneStartIfAbsent,
   };
 };

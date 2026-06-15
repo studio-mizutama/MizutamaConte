@@ -1,5 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { ActionButton, Grid, Heading, View, Flex, TooltipTrigger, Tooltip } from '@adobe/react-spectrum';
+import {
+  ActionButton,
+  Button,
+  ButtonGroup,
+  Content,
+  Dialog,
+  DialogContainer,
+  Grid,
+  Heading,
+  View,
+  Flex,
+  TooltipTrigger,
+  Tooltip,
+} from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
@@ -7,7 +20,6 @@ import Add from '@spectrum-icons/workflow/Add';
 import Layers from '@spectrum-icons/workflow/Layers';
 import Delete from '@spectrum-icons/workflow/Delete';
 import Link from '@spectrum-icons/workflow/Link';
-import FolderAdd from '@spectrum-icons/workflow/FolderAdd';
 import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
@@ -74,7 +86,8 @@ const Cross = styled.svg`
   left: calc((100% - 96px) / 2);
 `;
 
-/** CUT 列下部の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列で折り返す。
+/** CUT 列下端の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列で折り返す。
+ *  margin-top:auto で列の下端へ押し下げる（CUT 番号は上端・クラスタは下端）。
  *  通常はうっすら表示し、CUT 行(.hover)ホバー時に不透明にして誤クリックを防ぐ。 */
 const CutActions = styled.div`
   display: flex;
@@ -82,6 +95,7 @@ const CutActions = styled.div`
   justify-content: center;
   gap: 0;
   max-width: 72px;
+  margin-top: auto;
   opacity: 0.25;
   transition: opacity 0.12s ease;
   /* CUT 行（祖先の div.hover）をホバーしたときに表示 */
@@ -346,8 +360,6 @@ export interface CutRowProps {
   onDeleteCut: (index: number) => void;
   /** この CUT を下の CUT と結合 */
   onMergeNext: (index: number) => void;
-  /** この CUT のシーン区切りをトグル（index0 では呼ばれない） */
-  onToggleSceneBreak: (index: number) => void;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
@@ -374,12 +386,13 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     onAddLayer,
     onDeleteCut,
     onMergeNext,
-    onToggleSceneBreak,
     setDialogue,
     setActionText,
     setTime,
   }) => {
     const t = useT();
+    // 削除確認ダイアログの開閉。確認時のみ onDeleteCut を呼ぶ（誤削除防止）
+    const [confirmDelete, setConfirmDelete] = useState(false);
     return (
       <View backgroundColor="gray-100">
         <div
@@ -396,12 +409,14 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
             height="auto"
             marginBottom="size-25"
           >
-            <View gridArea="cut" width="100%" height="auto">
-              <Flex direction="column" alignItems="center" gap="size-50">
+            <View gridArea="cut" width="100%" height="100%">
+              {/* CUT 番号は上端・アイコンクラスタは下端（CutActions の margin-top:auto で押し下げ） */}
+              <Flex direction="column" alignItems="center" gap="size-50" height="100%">
                 <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
-                {/* per-cut 操作クラスタ。72px に収めるため小アイコンを 2 列で折り返す */}
+                {/* per-cut 操作クラスタ。72px に収めるため小アイコンを 2 列で折り返す。
+                    使えないアイコンは消さず isDisabled でグレーアウトし、配置を固定する */}
                 <CutActions>
-                  {/* この下に CUT 挿入 */}
+                  {/* この下に CUT 挿入（常時有効） */}
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
@@ -413,7 +428,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                     </ActionButton>
                     <Tooltip>{t('cutRow.insertTooltip')}</Tooltip>
                   </TooltipTrigger>
-                  {/* レイヤー追加 */}
+                  {/* レイヤー追加（常時有効） */}
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
@@ -425,64 +440,68 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                     </ActionButton>
                     <Tooltip>{t('cutRow.addLayerTooltip')}</Tooltip>
                   </TooltipTrigger>
-                  {/* CUT 削除（最後の1CUTは残すため canDelete のときだけ有効） */}
-                  {canDelete && (
-                    <TooltipTrigger delay={300}>
-                      <ActionButton
-                        isQuiet
-                        isDisabled={inserting}
-                        onPress={() => onDeleteCut(index)}
-                        aria-label={t('cutRow.deleteAria', { n: index + 1 })}
-                      >
-                        <Delete />
-                      </ActionButton>
-                      <Tooltip>{t('cutRow.deleteTooltip')}</Tooltip>
-                    </TooltipTrigger>
-                  )}
-                  {/* 下と結合（隣接 CUT が結合可能なときだけ表示） */}
-                  {canMergeNext && (
-                    <TooltipTrigger delay={300}>
-                      <ActionButton
-                        isQuiet
-                        isDisabled={inserting}
-                        onPress={() => onMergeNext(index)}
-                        aria-label={t('cutRow.mergeAria', { n: index + 1 })}
-                      >
-                        <Link />
-                      </ActionButton>
-                      <Tooltip>{t('cutRow.mergeTooltip')}</Tooltip>
-                    </TooltipTrigger>
-                  )}
-                  {/* シーン区切りトグル（index0 は暗黙 Scene1 なので出さない） */}
-                  {index > 0 && (
-                    <TooltipTrigger delay={300}>
-                      <ActionButton
-                        isQuiet
-                        isDisabled={inserting}
-                        onPress={() => onToggleSceneBreak(index)}
-                        aria-label={t('cutRow.sceneBreakAria', { n: index + 1 })}
-                      >
-                        <FolderAdd />
-                      </ActionButton>
-                      <Tooltip>{t('cutRow.sceneBreakTooltip')}</Tooltip>
-                    </TooltipTrigger>
-                  )}
-                  {/* 分離（複数レイヤーのとき最終レイヤーを別 CUT に切り出す） */}
-                  {projectCut.rows.length > 1 && (
-                    <TooltipTrigger delay={300}>
-                      <ActionButton
-                        isQuiet
-                        isDisabled={inserting}
-                        onPress={() => onSplitLast(index)}
-                        aria-label={t('cutRow.splitAria', { n: index + 1 })}
-                      >
-                        <RemoveCircle />
-                      </ActionButton>
-                      <Tooltip>{t('cutRow.splitTooltip')}</Tooltip>
-                    </TooltipTrigger>
-                  )}
+                  {/* CUT 削除（最後の1CUTは残す＝canDelete でグレーアウト・配置固定）。確認ダイアログを挟む */}
+                  <TooltipTrigger delay={300}>
+                    <ActionButton
+                      isQuiet
+                      isDisabled={inserting || !canDelete}
+                      onPress={() => setConfirmDelete(true)}
+                      aria-label={t('cutRow.deleteAria', { n: index + 1 })}
+                    >
+                      <Delete />
+                    </ActionButton>
+                    <Tooltip>{t('cutRow.deleteTooltip')}</Tooltip>
+                  </TooltipTrigger>
+                  {/* 下と結合（隣接 CUT が結合可能なときだけ有効・配置固定でグレーアウト） */}
+                  <TooltipTrigger delay={300}>
+                    <ActionButton
+                      isQuiet
+                      isDisabled={inserting || !canMergeNext}
+                      onPress={() => onMergeNext(index)}
+                      aria-label={t('cutRow.mergeAria', { n: index + 1 })}
+                    >
+                      <Link />
+                    </ActionButton>
+                    <Tooltip>{t('cutRow.mergeTooltip')}</Tooltip>
+                  </TooltipTrigger>
+                  {/* 分離（複数レイヤーのとき最終レイヤーを別 CUT に切り出す・配置固定でグレーアウト） */}
+                  <TooltipTrigger delay={300}>
+                    <ActionButton
+                      isQuiet
+                      isDisabled={inserting || projectCut.rows.length <= 1}
+                      onPress={() => onSplitLast(index)}
+                      aria-label={t('cutRow.splitAria', { n: index + 1 })}
+                    >
+                      <RemoveCircle />
+                    </ActionButton>
+                    <Tooltip>{t('cutRow.splitTooltip')}</Tooltip>
+                  </TooltipTrigger>
                 </CutActions>
               </Flex>
+              {/* CUT 削除の確認ダイアログ。確認時のみ onDeleteCut を呼ぶ */}
+              <DialogContainer onDismiss={() => setConfirmDelete(false)}>
+                {confirmDelete && (
+                  <Dialog>
+                    <Heading>{t('cutRow.deleteConfirm.title')}</Heading>
+                    <Content>{t('cutRow.deleteConfirm.body', { n: index + 1 })}</Content>
+                    <ButtonGroup>
+                      <Button variant="secondary" onPress={() => setConfirmDelete(false)}>
+                        {t('cutRow.deleteConfirm.cancel')}
+                      </Button>
+                      <Button
+                        variant="negative"
+                        autoFocus
+                        onPress={() => {
+                          setConfirmDelete(false);
+                          onDeleteCut(index);
+                        }}
+                      >
+                        {t('cutRow.deleteConfirm.confirm')}
+                      </Button>
+                    </ButtonGroup>
+                  </Dialog>
+                )}
+              </DialogContainer>
             </View>
             <View gridArea="picture" width="100%" height="auto">
               <div style={{ position: 'relative', width: `${cutCanvas(projectCut).width * thumbScale}px` }}>

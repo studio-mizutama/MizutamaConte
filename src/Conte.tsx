@@ -15,6 +15,7 @@ import Add from '@spectrum-icons/workflow/Add';
 import ChevronDown from '@spectrum-icons/workflow/ChevronDown';
 import ChevronRight from '@spectrum-icons/workflow/ChevronRight';
 import Close from '@spectrum-icons/workflow/Close';
+import FolderAdd from '@spectrum-icons/workflow/FolderAdd';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
@@ -44,6 +45,70 @@ const Band = styled(DraggableRow)`
   background: var(--spectrum-global-color-gray-200);
   border-radius: var(--spectrum-alias-border-radius-regular);
 `;
+
+/** CUT 間（および最終行下）のシーン区切り追加アフォーダンス。
+ *  普段は薄い帯で、ホバー時にだけ FolderAdd アイコンと挿入線を浮かび上がらせる。 */
+const SceneGutterBar = styled.div`
+  position: relative;
+  height: 10px;
+  margin: -1px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  /* ホバー時に CUT 間へ入るシーン境界を示す挿入線 */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    background: var(--spectrum-semantic-informative-color-border, #2680eb);
+    pointer-events: none;
+  }
+`;
+
+const SceneGutterIcon = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--spectrum-global-color-gray-50, #fff);
+  background: var(--spectrum-semantic-informative-color-border, #2680eb);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+/** CUT i の下のガター。クリックでシーン区切りを「下に追加」する。
+ *  最終行(i+1 が無い)では addSceneCut（末尾に新シーンCUT）を呼ぶ。 */
+const SceneGutter: React.FC<{ index: number; onAdd: (index: number) => void; label: string }> = ({
+  index,
+  onAdd,
+  label,
+}) => (
+  <SceneGutterBar role="button" aria-label={label} onClick={() => onAdd(index)}>
+    <SceneGutterIcon>
+      <FolderAdd />
+    </SceneGutterIcon>
+  </SceneGutterBar>
+);
 
 const SceneBand: React.FC<{
   scene: SceneGroup;
@@ -203,9 +268,22 @@ const CutContainer: React.FC = () => {
   const mergeNext = useCallback((i: number) => runBusy(() => actionsRef.current.mergeCutWithNext(i)), [runBusy]);
   const insertCutCb = useCallback((i: number) => runBusy(() => actionsRef.current.insertCut(i)), [runBusy]);
   const deleteCutCb = useCallback((i: number) => runBusy(() => actionsRef.current.deleteCut(i)), [runBusy]);
-  // toggleSceneBreak は同期処理（Promise を返さない）ので Promise.resolve でラップして runBusy に通す
-  const toggleSceneBreakCb = useCallback(
-    (i: number) => runBusy(async () => actionsRef.current.toggleSceneBreak(i)),
+  // CUT i の下のガターから「下にシーン区切りを追加」する。
+  // i+1 が存在すれば i+1 を新シーン開始にする（追加用途なので setSceneStartIfAbsent で既存時は no-op）。
+  // 最終行(i+1 が無い)では末尾に新シーン CUT を追加する。
+  const cutsLengthRef = useRef(project.cuts.length);
+  cutsLengthRef.current = project.cuts.length;
+  const addSceneBreakBelow = useCallback(
+    (i: number) =>
+      runBusy(async () => {
+        // 最終行の下: 末尾に新シーン CUT を追加（「最終行の下にシーン区切り追加」を回復）
+        if (i + 1 >= cutsLengthRef.current) {
+          await actionsRef.current.addSceneCut();
+          return;
+        }
+        // CUT 間: i+1 を新シーン開始にする。既に sceneStart なら何もしない（追加 UI なので解除はしない）
+        actionsRef.current.setSceneStartIfAbsent(i + 1);
+      }),
     [runBusy],
   );
 
@@ -283,12 +361,16 @@ const CutContainer: React.FC = () => {
                     onAddLayer={addLayerCb}
                     onDeleteCut={deleteCutCb}
                     onMergeNext={mergeNext}
-                    onToggleSceneBreak={toggleSceneBreakCb}
                     setDialogue={setDialogue}
                     setActionText={setActionText}
                     setTime={setTime}
                   />
                 </DraggableRow>
+              )}
+              {/* CUT 間のシーン区切りガター。次CUTが既にシーン開始（SceneBand 表示済み）の位置では出さない。
+                  最終行の下では addSceneCut で末尾に新シーンを追加する。並べ替え中は誤爆防止のため非表示。 */}
+              {!isCollapsed && !isReorder && !sceneByStart.has(index + 1) && (
+                <SceneGutter index={index} onAdd={addSceneBreakBelow} label={t('cutRow.sceneBreakAria', { n: index + 1 })} />
               )}
             </React.Fragment>
           );
