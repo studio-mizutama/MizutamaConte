@@ -81,4 +81,17 @@ export const useUndoRedo = (): void => {
     },
     [],
   );
+
+  // Electron Edit メニュー（menu:undo / menu:redo）。Web では api 不在で no-op
+  useEffect(() => {
+    const api = window.api;
+    if (!api) return;
+    api.onUndoRequest(() => void doUndo());
+    api.onRedoRequest(() => void doRedo());
+    return () => {
+      api.removeUndoRequest();
+      api.removeRedoRequest();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 };

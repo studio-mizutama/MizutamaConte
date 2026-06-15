@@ -96,6 +96,10 @@ export interface Sandbox {
   removePrintRequest: () => void;
   onExportVideoRequest: (listener: () => void) => void;
   removeExportVideoRequest: () => void;
+  onUndoRequest: (listener: () => void) => void;
+  removeUndoRequest: () => void;
+  onRedoRequest: (listener: () => void) => void;
+  removeRedoRequest: () => void;
   saveVideo: (fileName: string, data: Uint8Array) => Promise<boolean>;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;

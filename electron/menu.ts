@@ -26,6 +26,21 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
       ],
     },
     {
+      label: mt(locale, 'menu.edit'),
+      submenu: [
+        {
+          label: mt(locale, 'menu.undo'),
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => win.webContents.send('menu:undo'),
+        },
+        {
+          label: mt(locale, 'menu.redo'),
+          accelerator: 'CmdOrCtrl+Shift+Z',
+          click: () => win.webContents.send('menu:redo'),
+        },
+      ],
+    },
+    {
       label: mt(locale, 'menu.file'),
       submenu: [
         {

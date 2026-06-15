@@ -28,6 +28,11 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの File > 動画書き出し からの要求
   onExportVideoRequest: (listener: () => void) => ipcRenderer.on('menu:export-video', listener),
   removeExportVideoRequest: () => ipcRenderer.removeAllListeners('menu:export-video'),
+  // メニューの Edit > 取り消す / やり直す からの要求
+  onUndoRequest: (listener: () => void) => ipcRenderer.on('menu:undo', listener),
+  removeUndoRequest: () => ipcRenderer.removeAllListeners('menu:undo'),
+  onRedoRequest: (listener: () => void) => ipcRenderer.on('menu:redo', listener),
+  removeRedoRequest: () => ipcRenderer.removeAllListeners('menu:redo'),
   // 書き出した MP4 を保存ダイアログでディスクへ書き込む
   saveVideo: (fileName: string, data: Uint8Array) => ipcRenderer.invoke('video:save', fileName, data),
 
