@@ -7,6 +7,7 @@ import {
   remapPsdCache,
   RenameOp,
 } from '../reorder';
+import { deriveScenes } from '../scene';
 import { ProjectFile, ProjectCut } from '../types';
 
 const cut = (id: string, psd?: string, sceneStart?: { title?: string }): ProjectCut => ({
@@ -84,6 +85,112 @@ describe('reorderScene', () => {
     const p = project([cut('a'), cut('b', undefined, { title: 'S2' }), cut('c')]);
     reorderScene(p, 1, 0);
     expect(p.cuts.map((c) => c.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  /** deriveScenes 結果を「期待ブロック順」と突き合わせる検証ヘルパー。
+   *  expected は各シーンの { title, ids } をブロック順に並べたもの。 */
+  const expectScenes = (
+    cuts: ProjectCut[],
+    expected: { title?: string; ids: string[] }[],
+  ): void => {
+    const scenes = deriveScenes(cuts);
+    expect(scenes.length).toBe(expected.length);
+    scenes.forEach((scene, i) => {
+      expect(scene.title).toBe(expected[i].title);
+      expect(scene.cutIndices.map((idx) => cuts[idx].id)).toEqual(expected[i].ids);
+    });
+  };
+
+  describe('deriveScenes round-trip（sceneStart マーカー正規化）', () => {
+    it('暗黙の第1シーンを末尾へ後方移動してもシーンが消失しない', () => {
+      // S1=[c0]（暗黙・マーカー無）, S2=[c1,c2], S3=[c3]
+      const p = project([
+        cut('c0'),
+        cut('c1', undefined, { title: 'S2' }),
+        cut('c2'),
+        cut('c3', undefined, { title: 'S3' }),
+      ]);
+      const next = reorderScene(p, 0, 2); // S1 ブロックを末尾へ
+      // ブロック順: S2 | S3 | 旧S1。cut.id 順序は既存テスト通り維持
+      expect(next.cuts.map((c) => c.id)).toEqual(['c1', 'c2', 'c3', 'c0']);
+      // 3 シーンが保たれること（c0 が S3 に吸収されない）
+      expectScenes(next.cuts, [
+        { title: 'S2', ids: ['c1', 'c2'] },
+        { title: 'S3', ids: ['c3'] },
+        { title: undefined, ids: ['c0'] },
+      ]);
+    });
+
+    it('タイトル付きシーンを先頭へ前方移動すると title が保全される', () => {
+      // S1=[c0]（暗黙・無題）, S2=[c1,c2], S3=[c3]
+      const p = project([
+        cut('c0'),
+        cut('c1', undefined, { title: 'S2' }),
+        cut('c2'),
+        cut('c3', undefined, { title: 'S3' }),
+      ]);
+      const next = reorderScene(p, 1, 0); // S2 を先頭へ
+      expect(next.cuts.map((c) => c.id)).toEqual(['c1', 'c2', 'c0', 'c3']);
+      // 先頭ブロックは title 'S2' を保全し deriveScenes が拾う。
+      // 旧S1（無題）は order>0 へ移ったのでマーカー付与され境界化する
+      expectScenes(next.cuts, [
+        { title: 'S2', ids: ['c1', 'c2'] },
+        { title: undefined, ids: ['c0'] },
+        { title: 'S3', ids: ['c3'] },
+      ]);
+      // 先頭 cut に sceneStart:{title} が乗っていること
+      expect(next.cuts[0].sceneStart).toEqual({ title: 'S2' });
+    });
+
+    it('暗黙の第1シーンを後方移動するとタイトル付きシーンが先頭で title を保つ', () => {
+      const p = project([
+        cut('c0'),
+        cut('c1', undefined, { title: 'S2' }),
+        cut('c2'),
+        cut('c3', undefined, { title: 'S3' }),
+      ]);
+      const next = reorderScene(p, 0, 1); // S1 を S2 の後へ
+      expect(next.cuts.map((c) => c.id)).toEqual(['c1', 'c2', 'c0', 'c3']);
+      expectScenes(next.cuts, [
+        { title: 'S2', ids: ['c1', 'c2'] },
+        { title: undefined, ids: ['c0'] },
+        { title: 'S3', ids: ['c3'] },
+      ]);
+    });
+
+    it('先頭へ来た無題シーンは sceneStart マーカーが除去され暗黙化する', () => {
+      // S1=[c0]（タイトル付き）, S2=[c1]（無題マーカー）...という構成を作るため
+      // 先頭にタイトル付きシーンを置く
+      const p = project([
+        cut('c0', undefined, { title: 'Opening' }),
+        cut('c1', undefined, { title: undefined }),
+        cut('c2', undefined, { title: 'S3' }),
+      ]);
+      // 無題の S2 を先頭へ移動
+      const next = reorderScene(p, 1, 0);
+      expect(next.cuts.map((c) => c.id)).toEqual(['c1', 'c0', 'c2']);
+      // 先頭ブロックは無題なので sceneStart 除去（暗黙の Scene 1）
+      expect(next.cuts[0].sceneStart).toBeUndefined();
+      expectScenes(next.cuts, [
+        { title: undefined, ids: ['c1'] },
+        { title: 'Opening', ids: ['c0'] },
+        { title: 'S3', ids: ['c2'] },
+      ]);
+    });
+
+    it('内部 cut の sceneStart は除去される（重複境界を作らない）', () => {
+      const p = project([
+        cut('c0'),
+        cut('c1', undefined, { title: 'S2' }),
+        cut('c2'),
+        cut('c3', undefined, { title: 'S3' }),
+      ]);
+      const next = reorderScene(p, 0, 2);
+      // 末尾へ移った旧S1 内部に余計なマーカーが無いこと（単独 cut なので内部 cut は無いが、
+      // S2 ブロックの内部 cut c2 にマーカーが付いていないことを確認）
+      const c2 = next.cuts.find((c) => c.id === 'c2');
+      expect(c2?.sceneStart).toBeUndefined();
+    });
   });
 });
 

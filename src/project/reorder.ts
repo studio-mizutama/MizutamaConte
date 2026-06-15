@@ -24,7 +24,21 @@ export const reorderCut = (project: ProjectFile, from: number, to: number): Proj
   cuts: moveItem(project.cuts, from, to),
 });
 
-/** シーン（連続 CUT ブロック）単位で移動。deriveScenes で境界を取得しブロックごと差し替える（純粋・不変） */
+/** cut から sceneStart キーを除去した新オブジェクトを返す（不変・キーごと削除） */
+const stripSceneStart = (cut: ProjectCut): ProjectCut => {
+  const { sceneStart: _omit, ...rest } = cut;
+  return rest;
+};
+
+/**
+ * シーン（連続 CUT ブロック）単位で移動。deriveScenes で境界を取得しブロックごと差し替え、
+ * 移動後に sceneStart マーカーを再正規化する（純粋・不変）。
+ *
+ * 正規化ルール:
+ * - 各ブロックの先頭 cut（k===0）のみがシーン境界を担う。内部 cut（k>0）の sceneStart は除去。
+ * - 先頭ブロック（order===0）: title があれば sceneStart:{title} を維持、無題なら除去（暗黙の Scene 1）。
+ * - 非先頭ブロック（order>0）: 必ず sceneStart:{title} を付与（title が undefined でも境界マーカーになる）。
+ */
 export const reorderScene = (project: ProjectFile, fromScene: number, toScene: number): ProjectFile => {
   const scenes = deriveScenes(project.cuts);
   if (
@@ -36,10 +50,25 @@ export const reorderScene = (project: ProjectFile, fromScene: number, toScene: n
   ) {
     return { ...project, cuts: [...project.cuts] };
   }
-  // 各シーンを CUT ブロック（ProjectCut[]）に分解 → ブロック単位で移動 → 平坦化
-  const blocks = scenes.map((scene) => scene.cutIndices.map((i) => project.cuts[i]));
-  const movedBlocks = moveItem(blocks, fromScene, toScene);
-  return { ...project, cuts: movedBlocks.flat() };
+  // 各シーンを { title, block } に分解（title=meta を保持） → 移動 → 平坦化＋マーカー再正規化
+  const sceneBlocks = scenes.map((scene) => ({
+    title: scene.title,
+    block: scene.cutIndices.map((i) => project.cuts[i]),
+  }));
+  const movedBlocks = moveItem(sceneBlocks, fromScene, toScene);
+  const cuts = movedBlocks.flatMap(({ title, block }, order) =>
+    block.map((cut, k) => {
+      // 内部 cut は常に境界を持たない
+      if (k > 0) return stripSceneStart(cut);
+      // 先頭 cut: 先頭ブロックは title 有無で出し分け、非先頭ブロックは必ずマーカー付与
+      if (order === 0) {
+        if (title === undefined) return stripSceneStart(cut);
+        return { ...stripSceneStart(cut), sceneStart: { title } };
+      }
+      return { ...stripSceneStart(cut), sceneStart: { title } };
+    }),
+  );
+  return { ...project, cuts };
 };
 
 /**
