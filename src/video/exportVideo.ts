@@ -1,11 +1,13 @@
 import type { FrameSize } from 'project/types';
-import { frameState } from 'project/frameState';
+import { frameStates } from 'project/frameState';
 import { compositeFrame } from 'video/compositor';
 import { createEncoder } from 'video/encoder';
 import { evenFrameSize, VideoQuality } from 'video/quality';
+import { totalFrames } from 'project/cutOffsets';
 
-/** 全カットの time を合計（総フレーム数） */
-export const totalFrames = (cuts: Cut[]): number => cuts.reduce((sum, c) => sum + (c.time || 0), 0);
+// 総フレーム数は時間モデルの単一ソース（Cross 重なり差し引き済み）を再エクスポート。
+// VideoExportHost が 'video/exportVideo' から import しているため公開 API を維持する。
+export { totalFrames };
 
 export interface ExportProgress {
   frame: number;
@@ -45,8 +47,8 @@ export const exportVideo = async (
         encoder.close();
         return null;
       }
-      const state = frameState(f, cuts);
-      compositeFrame(state, cuts, size, out, scratch, frameBuffer, unitScratch);
+      const states = frameStates(f, cuts);
+      compositeFrame(states, cuts, size, out, scratch, frameBuffer, unitScratch);
       const vf = new VideoFrame(out, {
         timestamp: Math.round((f * 1_000_000) / fps),
         duration: Math.round(1_000_000 / fps),
