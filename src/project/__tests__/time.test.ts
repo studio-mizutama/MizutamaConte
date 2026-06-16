@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { frameToTimecode, parseTimecode } from '../time';
+import { frameToTimecode, parseTimecode, msToFrames } from '../time';
 
 describe('frameToTimecode (24fps)', () => {
   it('60秒未満は SS+FF（各2桁ゼロ詰め）', () => {
@@ -56,4 +56,15 @@ describe('parseTimecode (24fps)', () => {
       expect(parseTimecode(frameToTimecode(n, 24), 24)).toBe(n);
     }
   });
+});
+
+describe('msToFrames', () => {
+  it('0ms は 0', () => expect(msToFrames(0, 24)).toBe(0));
+  it('1000ms @24fps は 24', () => expect(msToFrames(1000, 24)).toBe(24));
+  it('500ms @24fps は 12', () => expect(msToFrames(500, 24)).toBe(12));
+  it('4000ms @24fps は 96', () => expect(msToFrames(4000, 24)).toBe(96));
+  it('83ms @24fps は四捨五入で 2', () => expect(msToFrames(83, 24)).toBe(2));
+  it('41ms @24fps は四捨五入で 1', () => expect(msToFrames(41, 24)).toBe(1));
+  it('1000ms @30fps は 30', () => expect(msToFrames(1000, 30)).toBe(30));
+  it('負の経過は 0 にクランプ', () => expect(msToFrames(-100, 24)).toBe(0));
 });

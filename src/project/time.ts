@@ -46,3 +46,6 @@ export const parseTimecode = (text: string, fps: number): number | null => {
   }
   return null;
 };
+
+/** 実時間 ms を fps でフレーム数へ換算（ストップウォッチ用・0未満は0にクランプ）。 */
+export const msToFrames = (ms: number, fps: number): number => Math.max(0, Math.round((ms / 1000) * fps));
