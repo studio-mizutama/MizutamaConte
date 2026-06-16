@@ -33,8 +33,7 @@ export const useUndoRedoControls = (): UndoRedoControls => {
   const canRedo = useGlobal('canRedo')[0];
 
   const doUndo = async (): Promise<void> => {
-    // Undo/Redo は Edit モードのみ（design §8.4）。Preview 中は no-op
-    if (getGlobal().mode !== 'Edit') return;
+    // Undo/Redo は Edit/Preview の両タブで有効（Preview のセリフ/尺編集も履歴記録済み）
     if (isApplying()) return;
     const txn = popUndo();
     if (!txn) return;
@@ -51,8 +50,7 @@ export const useUndoRedoControls = (): UndoRedoControls => {
   };
 
   const doRedo = async (): Promise<void> => {
-    // Undo/Redo は Edit モードのみ（design §8.4）。Preview 中は no-op
-    if (getGlobal().mode !== 'Edit') return;
+    // Undo/Redo は Edit/Preview の両タブで有効（Preview のセリフ/尺編集も履歴記録済み）
     if (isApplying()) return;
     const txn = popRedo();
     if (!txn) return;
