@@ -3,6 +3,7 @@ import { Slider, ActionButton, TooltipTrigger, Tooltip } from '@adobe/react-spec
 import Switch from '@spectrum-icons/workflow/Switch';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
+import { useEditingEnabled } from 'hooks/editingEnabled';
 import { cutCanvas } from 'project/scene';
 import { cameraRanges, posBound, clampNum } from 'project/camera';
 import { useT } from 'i18n';
@@ -127,12 +128,13 @@ export const CameraWork: React.FC = () => {
   const index = useGlobal('selectedCutIndex')[0];
   const { project, frame } = useProject();
   const { setCameraWork } = useProjectActions();
+  const editingEnabled = useEditingEnabled();
   const cut = project.cuts[index];
   const canvas = cut ? cutCanvas(cut) : frame;
   const { ratioW, ratioH, scaleMin, scaleMax } = cameraRanges(canvas, frame);
   // canvas が frame と両軸で等しい（ネイティブ解像度）= カメラ可動域ゼロ → 編集不可
   const noCameraRoom = canvas.width <= frame.width && canvas.height <= frame.height;
-  const disabled = !cut || noCameraRoom;
+  const disabled = !cut || noCameraRoom || !editingEnabled;
   // 片軸のみ拡張されたキャンバスは scale 固定（=1）でパンのみ可能 → Scale 編集は無効
   const scaleLocked = scaleMin >= scaleMax;
   const cw = cut?.cameraWork;
