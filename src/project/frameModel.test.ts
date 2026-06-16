@@ -27,23 +27,29 @@ describe('deriveFrameModel', () => {
     expect(m.units[0].layers.length).toBe(1);
     expect(m.units[1].layers.length).toBe(2);
   });
-  it('hidden レイヤーはスキップ（ユニット化されない）', () => {
+  it('最上位の hidden レイヤーもフレーム枠は維持（後方互換: レガシーは hidden も1フレーム）', () => {
     const m = deriveFrameModel(psd([leaf(), leaf({ hidden: true }), leaf()]));
+    expect(m.units.length).toBe(2); // children.length - 1（hidden も数える）
+    expect(m.units[0].layers.length).toBe(1); // hidden 最上位も描画される
+  });
+  it('グループ内の hidden leaf は合成から除外される', () => {
+    const m = deriveFrameModel(psd([leaf(), group([leaf(), leaf({ hidden: true }), leaf()])]));
     expect(m.units.length).toBe(1);
+    expect(m.units[0].layers.length).toBe(2); // 3枚中 hidden 1枚を除外
   });
   it('入れ子グループは再帰展開', () => {
     const m = deriveFrameModel(psd([leaf(), group([leaf(), group([leaf(), leaf()])])]));
     expect(m.units.length).toBe(1);
     expect(m.units[0].layers.length).toBe(3);
   });
-  it('blendMode/opacity がマップ・正規化される', () => {
-    const m = deriveFrameModel(psd([leaf(), leaf({ blendMode: 'multiply', opacity: 128 })]));
+  it('blendMode がマップされる', () => {
+    const m = deriveFrameModel(psd([leaf(), leaf({ blendMode: 'multiply' })]));
     expect(m.units[0].layers[0].blendMode).toBe('multiply');
-    expect(m.units[0].layers[0].opacity).toBeCloseTo(128 / 255, 3);
   });
-  it('opacity が 0..1 で来た場合はそのまま', () => {
-    const m = deriveFrameModel(psd([leaf(), leaf({ opacity: 0.5 })]));
-    expect(m.units[0].layers[0].opacity).toBeCloseTo(0.5, 3);
+  it('opacity は 0..1 をそのまま・範囲外はクランプ（ag-psd は常に 0..1）', () => {
+    expect(deriveFrameModel(psd([leaf(), leaf({ opacity: 0.5 })])).units[0].layers[0].opacity).toBeCloseTo(0.5, 3);
+    expect(deriveFrameModel(psd([leaf(), leaf({ opacity: 1.5 })])).units[0].layers[0].opacity).toBe(1);
+    expect(deriveFrameModel(psd([leaf(), leaf({ opacity: -0.2 })])).units[0].layers[0].opacity).toBe(0);
   });
   it('clipping フラグを保持', () => {
     const m = deriveFrameModel(psd([leaf(), leaf({ clipping: true })]));

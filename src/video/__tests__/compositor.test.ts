@@ -86,4 +86,25 @@ describe('compositeFrame (frameModel + 3バッファ)', () => {
     const outDraw = out.ops.find((o) => o.type === 'drawImage' && o.src === 'scratch');
     expect(outDraw?.alpha).toBeCloseTo(0.5, 6);
   });
+
+  it('doc 寸 > frame 寸: frameBuffer/unitScratch を doc 寸へリサイズする（クロップ防止）', () => {
+    // 実プロジェクトは canvas(doc)=frame×1.25 等で frame より大きい。バッファをフレーム寸で
+    // 渡しても compositeFrame が doc 寸へ合わせ、レイヤーをクロップせず full doc を合成する。
+    const bigCut = {
+      time: 24,
+      picture: { width: 200, height: 150, children: [{ name: 'bg', canvas: fakeLayer() }, { name: 'l', canvas: fakeLayer() }] },
+    } as unknown as Cut;
+    const out = makeCanvas('out', 100, 100);
+    const scratch = makeCanvas('scratch', 100, 100);
+    const fb = makeCanvas('fb', 100, 100); // わざとフレーム寸で渡す
+    const us = makeCanvas('us', 100, 100);
+    compositeFrame(state(), [bigCut], { width: 100, height: 100 }, out.canvas as never, scratch.canvas as never, fb.canvas as never, us.canvas as never);
+    // frameBuffer / unitScratch は doc 寸（200x150）へリサイズされている
+    expect(fb.canvas.width).toBe(200);
+    expect(fb.canvas.height).toBe(150);
+    expect(us.canvas.width).toBe(200);
+    expect(us.canvas.height).toBe(150);
+    // 背景 + ユニットの 2 枚が frameBuffer に full で描かれる
+    expect(fb.ops.filter((o) => o.type === 'drawImage').length).toBe(2);
+  });
 });

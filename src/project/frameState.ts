@@ -4,7 +4,8 @@
  * Preview と動画書き出しで同一の見た目を保証するための単一の数式ソース。
  *
  * NOTE: 値は表示フィット率 `ratio` に非依存（scale/pos/opacity/layerIndex のみ）。
- *       ピクセル幾何（描画座標・寸法）は video/geometry.ts の layerDrawRect が担当する。
+ *       （scale/pos/opacity/unitIndex のみ）。ピクセル幾何（描画座標・寸法）は
+ *       video/geometry.ts の layerDrawRect が担当する。
  */
 import { getFrameModel } from 'project/frameModel';
 
@@ -37,7 +38,7 @@ export const frameState = (frame: number, cuts: Cut[]): ActiveCutState | null =>
       // フレームユニット数（単独レイヤー or グループ）。フラットPSDでは従来の children.length-1 と一致。
       const pictureNumber = cut.picture ? getFrameModel(cut.picture).units.length : 0;
       const pictureShowDuration = pictureNumber ? time / pictureNumber : 0;
-      const unitIndex = pictureShowDuration ? Math.trunc((localRaw / pictureShowDuration) | 0) : 0;
+      const unitIndex = pictureShowDuration ? Math.trunc(localRaw / pictureShowDuration) : 0;
 
       const scaleIn = cut.cameraWork?.scale?.in || 1;
       const scaleOut = cut.cameraWork?.scale?.out || 1;

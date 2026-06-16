@@ -20,8 +20,8 @@ export interface FrameModel {
 }
 
 const isGroup = (l: Layer): boolean => Array.isArray(l.children);
-// ag-psd の opacity は版により 0..1 / 0..255 の両方を取りうるため防御的に正規化
-const toOpacity = (o: number | undefined): number => (o == null ? 1 : o > 1 ? o / 255 : o);
+// ag-psd の opacity は常に 0..1（reader が uint8/255 済み）。範囲外は安全側へクランプ。
+const toOpacity = (o: number | undefined): number => (o == null ? 1 : Math.min(1, Math.max(0, o)));
 
 const toDrawLayer = (l: Layer): DrawLayer => ({
   canvas: l.canvas as HTMLCanvasElement,
@@ -37,10 +37,11 @@ const flattenLeaves = (l: Layer): DrawLayer[] => {
   return l.canvas ? [toDrawLayer(l)] : [];
 };
 
-// 最上位 children[1..] の1要素 → 1ユニット（hidden は null）。
-// canvas 有無に依らずユニット枠を作り、フレーム数（= children.length-1）を保つ。
-const toUnit = (l: Layer): FrameUnit | null => {
-  if (l.hidden) return null;
+// 最上位 children[1..] の1要素 → 1フレームユニット。
+// 後方互換: 最上位は hidden でも 1 フレーム枠を維持（レガシーは children.length-1 で hidden も
+// 数え描画した）。canvas 有無にも依らず枠を作り、フレーム数（= children.length-1）を保つ。
+// グループ内 leaf の hidden は flattenLeaves で除外する（新機能・互換影響なし）。
+const toUnit = (l: Layer): FrameUnit => {
   if (isGroup(l)) {
     return { layers: (l.children ?? []).flatMap(flattenLeaves), blendMode: mapBlendMode(l.blendMode), opacity: toOpacity(l.opacity) };
   }
@@ -56,10 +57,7 @@ const toBackground = (l: Layer | undefined): DrawLayer[] => {
 export const deriveFrameModel = (psd: Psd): FrameModel => {
   const children: Layer[] = psd.children ?? [];
   const background = toBackground(children[0]);
-  const units = children
-    .slice(1)
-    .map(toUnit)
-    .filter((u): u is FrameUnit => u !== null);
+  const units = children.slice(1).map(toUnit);
   return { width: psd.width ?? 0, height: psd.height ?? 0, background, units };
 };
 

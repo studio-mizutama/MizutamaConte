@@ -38,6 +38,19 @@ export const compositeFrame = (
   const cut = cuts[state.cutIndex];
   if (!cut.picture) return;
   const model = getFrameModel(cut.picture);
+  if (!model.width || !model.height) return;
+
+  // frameBuffer/unitScratch は doc（model）寸でなければならない（レイヤー canvas は doc 寸＝
+  // 作品フレームの 1.25 倍やクロップで frame より大きい）。呼び出し側がフレーム寸で確保していても
+  // ここで doc 寸へ合わせる＝関数が自分のバッファ幾何を所有する（カット毎の doc 差にも自動対応）。
+  if (frameBuffer.width !== model.width || frameBuffer.height !== model.height) {
+    frameBuffer.width = model.width;
+    frameBuffer.height = model.height;
+  }
+  if (unitScratch.width !== model.width || unitScratch.height !== model.height) {
+    unitScratch.width = model.width;
+    unitScratch.height = model.height;
+  }
 
   // frameBuffer: 背景 + active ユニットを平坦化（カメラ非適用）
   const fctx = frameBuffer.getContext('2d');
