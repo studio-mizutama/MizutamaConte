@@ -27,6 +27,7 @@ export const ja: Record<TranslationKey, string> = {
   'header.share.video': '動画エクスポート',
 
   // ヘッダーメニュー（ウインドウ上部メニューバー / ハンバーガー用）
+  'header.recentProjects': '最近開いたプロジェクト',
   'header.menu.file': 'ファイル',
   'header.menu.edit': '編集',
   'header.menu.help': 'ヘルプ',

@@ -28,6 +28,8 @@ export const en = {
   'header.share.video': 'Export Video',
 
   // ヘッダーメニュー（ウインドウ上部メニューバー / ハンバーガー用）
+  'header.recentProjects': 'Open Recent',
+
   'header.menu.file': 'File',
   'header.menu.edit': 'Edit',
   'header.menu.help': 'Help',

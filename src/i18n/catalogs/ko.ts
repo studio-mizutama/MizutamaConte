@@ -27,6 +27,7 @@ export const ko: Record<TranslationKey, string> = {
   'header.share.video': '동영상 내보내기',
 
   // 헤더 메뉴(윈도 상단 메뉴바 / 햄버거용)
+  'header.recentProjects': '최근 프로젝트',
   'header.menu.file': '파일',
   'header.menu.edit': '편집',
   'header.menu.help': '도움말',
