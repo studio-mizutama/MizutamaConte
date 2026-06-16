@@ -1,4 +1,4 @@
-import React, { useGlobal } from 'reactn';
+import React, { useGlobal, useEffect } from 'reactn';
 import { ActionButton, ActionGroup, Flex, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
@@ -20,6 +20,12 @@ const AlignCenter = styled.div`
 export const ToolGroup: React.FC = () => {
   const t = useT();
   const [mode, setMode] = useEditorMode();
+  const tab = useGlobal('mode')[0];
+  const isPreview = tab === 'Preview';
+  // Preview タブから編集タブへ戻ったら選択ツールを V(edit) にリセット
+  useEffect(() => {
+    if (tab === 'Edit') setMode('edit');
+  }, [tab, setMode]);
   const { doUndo, doRedo, canUndo, canRedo } = useUndoRedoControls();
   const fileName = useGlobal('globalFileName')[0];
 
@@ -52,8 +58,8 @@ export const ToolGroup: React.FC = () => {
           selectionMode="single"
           isQuiet
           isEmphasized
-          isDisabled={!fileName}
-          selectedKeys={fileName ? new Set([mode]) : new Set()}
+          isDisabled={!fileName || isPreview}
+          selectedKeys={fileName && !isPreview ? new Set([mode]) : new Set()}
           onSelectionChange={(keys) => {
             const k = (keys instanceof Set ? [...keys][0] : undefined) as EditorMode | undefined;
             if (k) setMode(k);
