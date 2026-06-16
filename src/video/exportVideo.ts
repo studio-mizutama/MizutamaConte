@@ -36,6 +36,8 @@ export const exportVideo = async (
 
   const out = new OffscreenCanvas(size.width, size.height);
   const scratch = new OffscreenCanvas(size.width, size.height);
+  const frameBuffer = new OffscreenCanvas(size.width, size.height);
+  const unitScratch = new OffscreenCanvas(size.width, size.height);
 
   try {
     for (let f = 0; f < total; f++) {
@@ -44,7 +46,7 @@ export const exportVideo = async (
         return null;
       }
       const state = frameState(f, cuts);
-      compositeFrame(state, cuts, size, out, scratch);
+      compositeFrame(state, cuts, size, out, scratch, frameBuffer, unitScratch);
       const vf = new VideoFrame(out, {
         timestamp: Math.round((f * 1_000_000) / fps),
         duration: Math.round(1_000_000 / fps),
