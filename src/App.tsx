@@ -1,4 +1,4 @@
-import React, { useGlobal } from 'reactn';
+import React, { useGlobal, useEffect } from 'reactn';
 import { Grid, Provider, defaultTheme, View } from '@adobe/react-spectrum';
 import { localeTag } from 'i18n';
 import { GlobalStyle } from 'styles/Index';
@@ -57,6 +57,29 @@ const GlobalGrid: React.FC = ({ children }) => {
 const App: React.FC = () => {
   const mode = useGlobal('mode')[0];
   useUndoRedo();
+
+  // 一発アクションのボタン/アイコンは押下後にフォーカスを残さない。フォーカスを保持すると
+  // react-aria が Space/Enter を stopPropagation で消費し、Preview のショートカット等が効かなくなるため。
+  // 機能上フォーカスが必要なもの＝テキスト入力(input/textarea)・スライダー・オーバーレイのトリガ
+  // (aria-haspopup) とオーバーレイ内(dialog/menu/listbox/grid)は除外する（矢印選択/Esc/フォーカストラップ）。
+  // マウスホバー(Tooltip 等)はフォーカスと無関係なので影響しない。
+  useEffect(() => {
+    const onPointerUp = () => {
+      // press 処理でフォーカスが確定した後に判定するため次フレームへ送る
+      requestAnimationFrame(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el) return;
+        const isButton = el.tagName === 'BUTTON' || el.getAttribute('role') === 'button';
+        if (!isButton) return;
+        if (el.getAttribute('aria-haspopup') || el.getAttribute('aria-expanded') === 'true') return;
+        if (el.closest('[role="dialog"],[role="alertdialog"],[role="menu"],[role="listbox"],[role="grid"]')) return;
+        el.blur();
+      });
+    };
+    document.addEventListener('pointerup', onPointerUp);
+    return () => document.removeEventListener('pointerup', onPointerUp);
+  }, []);
+
   return (
     <>
       <PrintStyle />
