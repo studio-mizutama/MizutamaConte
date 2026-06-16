@@ -258,7 +258,7 @@ export const Header: React.FC = () => {
   const t = useT();
   const print = usePrint();
   const startVideoExport = useVideoExport();
-  const { doUndo, doRedo } = useUndoRedoControls();
+  const { doUndo, doRedo, canUndo, canRedo } = useUndoRedoControls();
   const [aboutOpen, setAboutOpen] = useState(false);
   const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
@@ -472,6 +472,13 @@ export const Header: React.FC = () => {
 
   useTitleEffects(setMaximized, setBlur);
 
+  // Web ハンバーガーメニューの無効化キー（Undo/Redo は可否、印刷/動画はプロジェクト未オープンで無効）
+  const hamburgerDisabled = [
+    ...(!canUndo ? ['undo'] : []),
+    ...(!canRedo ? ['redo'] : []),
+    ...(!fileName ? ['print', 'video'] : []),
+  ];
+
   return (
     <DragArea>
       <HeaderLeft>
@@ -482,6 +489,7 @@ export const Header: React.FC = () => {
                 <ShowMenu />
               </ActionButton>
               <Menu
+                disabledKeys={hamburgerDisabled}
                 onAction={(k) => {
                   if (k === 'new') setNewProjectOpen(true);
                   else if (k === 'open') openProject();

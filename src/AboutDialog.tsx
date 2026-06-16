@@ -3,7 +3,7 @@ import { DialogContainer, Dialog, Heading, Content, Divider, Text, Flex, ButtonG
 import { useT } from 'i18n';
 
 /** アプリ情報ダイアログ。アプリ名・バージョン（+短縮 SHA）・著作権・同梱ライセンス表記を表示する。
- *  ライセンスは public の third-party-notices.txt を BASE_URL 経由で取得（Web の /MizutamaConte/ と Electron の / 双方に対応）。
+ *  ライセンスは public の third-party-notices.txt を相対パスで取得（Web の /MizutamaConte/ と Electron の file:// 双方に対応）。
  *  ファイルが無い場合は about.licenses.empty にフォールバックする。 */
 export const AboutDialog: React.FC<{ isOpen: boolean; onOpenChange: (v: boolean) => void }> = ({ isOpen, onOpenChange }) => {
   const t = useT();
@@ -11,7 +11,7 @@ export const AboutDialog: React.FC<{ isOpen: boolean; onOpenChange: (v: boolean)
 
   useEffect(() => {
     if (!isOpen) return;
-    fetch(`${import.meta.env.BASE_URL}third-party-notices.txt`)
+    fetch('./third-party-notices.txt')
       .then((r) => (r.ok ? r.text() : ''))
       .then(setNotices)
       .catch(() => setNotices(''));
