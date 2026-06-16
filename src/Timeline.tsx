@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, useGlobal } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useViewportSize } from 'hooks/useViewportSize';
 import { thumbnailScale } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
-import { canvasToDataURL } from 'psd/thumbnail';
+import { frameUnitToDataURL } from 'psd/thumbnail';
 import { useT } from 'i18n';
 
 
@@ -99,37 +98,24 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
                 style={{ left: `${preTimeSum * scale}px`, top: '40px', width: `${time * scale}px`, overflow: 'hidden' }}
                 key={index}
               >
-                {cut.picture?.children
-                  ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
-                  .map((child: Layer) => {
-                    const src = canvasToDataURL(child.canvas);
-                    return (
-                      <div
-                        style={{
-                          height: `${child.canvas && child.canvas.height * thumbScale}px`,
-                          width: `${child.canvas && child.canvas.width * thumbScale}px`,
-                          position: 'relative',
-                        }}
-                        key={`CCC${index + 1}PPP${child.name}`}
-                      >
-                        <div
-                          style={{
-                            height: `${child.canvas && child.canvas.height * thumbScale}px`,
-                            width: `${child.canvas && child.canvas.width * thumbScale}px`,
-                            position: 'relative',
-                            background: '#FFF',
-                          }}
-                          id={`CCC${index + 1}PPP${child.name}`}
-                        >
-                          <img
-                            style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
-                            src={src}
-                            alt="cut"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                {(() => {
+                  // 各カット = 先頭ユニット（時系列の最前フレーム）を実背景込みで1枚だけ合成する。
+                  // 共有コンポジタ（Editor/Preview/動画/印刷と同一経路）経由でグループ/ブレンド/背景を
+                  // 正しく解釈し、複数ユニットでも先頭のみ描く（旧来「最前レイヤーのみ」挙動の踏襲）。
+                  const thumbSrc = frameUnitToDataURL(cut.picture, 0);
+                  if (!thumbSrc) return null;
+                  const docW = (cut.picture?.width || 0) * thumbScale;
+                  const docH = (cut.picture?.height || 0) * thumbScale;
+                  return (
+                    <div style={{ height: `${docH}px`, width: `${docW}px`, position: 'relative' }}>
+                      <img
+                        style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
+                        src={thumbSrc}
+                        alt="cut"
+                      />
+                    </div>
+                  );
+                })()}
                 <CutNumber>
                   <Heading level={4} margin="size-25">
                     {`Cut${('00' + (index + 1)).slice(-3)}`}
