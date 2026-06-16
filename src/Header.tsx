@@ -270,7 +270,7 @@ export const Header: React.FC = () => {
   const { project, setProject } = useProject();
 
   // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）
-  const { loadFile, loadFromPayload, dirPathRef } = useOpenFolder();
+  const { loadFile, loadFromPayload, reloadCurrentProject, dirPathRef } = useOpenFolder();
 
   useEffect(() => {
     const inputDirectory = document.getElementById('inputDirectory');
@@ -421,11 +421,11 @@ export const Header: React.FC = () => {
 
   useTitleEffects(setMaximized, setBlur);
 
-  // Web ハンバーガーメニューの無効化キー（Undo/Redo は可否、印刷/動画はプロジェクト未オープンで無効）
+  // Web ハンバーガーメニューの無効化キー（Undo/Redo は可否、再読込/印刷/動画はプロジェクト未オープンで無効）
   const hamburgerDisabled = [
     ...(!canUndo ? ['undo'] : []),
     ...(!canRedo ? ['redo'] : []),
-    ...(!fileName ? ['print', 'video'] : []),
+    ...(!fileName ? ['reload', 'print', 'video'] : []),
   ];
 
   return (
@@ -442,6 +442,7 @@ export const Header: React.FC = () => {
                 onAction={(k) => {
                   if (k === 'new') setNewProjectOpen(true);
                   else if (k === 'open') openProject();
+                  else if (k === 'reload') void reloadCurrentProject();
                   else if (k === 'print') print();
                   else if (k === 'video') startVideoExport();
                   else if (k === 'undo') void doUndo();

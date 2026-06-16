@@ -19,6 +19,7 @@ export const ko: Record<TranslationKey, string> = {
   'header.menu.ariaLabel': '메뉴',
   'header.menu.new': '새로 만들기',
   'header.menu.open': '열기',
+  'header.menu.reload': '새로고침',
   'header.share.ariaLabel': '공유',
   'header.settings.ariaLabel': '설정',
   'header.share.pdf': '콘티 인쇄',

@@ -20,6 +20,7 @@ export const en = {
   'header.menu.ariaLabel': 'Menu',
   'header.menu.new': 'New',
   'header.menu.open': 'Open',
+  'header.menu.reload': 'Reload',
   'header.share.ariaLabel': 'Share',
   'header.settings.ariaLabel': 'Settings',
   'header.share.pdf': 'Print Storyboard',

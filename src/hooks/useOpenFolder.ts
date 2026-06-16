@@ -5,7 +5,7 @@ import { buildProject, sortPsdNames, LoadedPsd } from 'project/load';
 import { useProject } from 'hooks/useProject';
 import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } from 'project/save';
 import { getStorage, StorageOpenResult } from 'storage';
-import { openFromHandle } from 'storage/web';
+import { openFromHandle, getCurrentDirHandle } from 'storage/web';
 import { clearHistory } from 'history/undoManager';
 
 const { api } = window;
@@ -23,6 +23,7 @@ const sharedDirPathRef: React.MutableRefObject<string | null> = { current: null 
  * - loadFile: Web の <input webkitdirectory> 用ハンドラ
  * - openFolderFromPath: Electron の絶対パスから開く（D&D 用）
  * - openFolderFromHandle: Web FSA のディレクトリハンドルから開く（D&D 用）
+ * - reloadCurrentProject: Web FSA で保持中のハンドルを再列挙して再読込する（再読み込みメニュー用）
  * - dirPathRef: Electron のフォルダパス（外部編集の再読込で参照）
  */
 export interface UseOpenFolder {
@@ -31,6 +32,7 @@ export interface UseOpenFolder {
   loadFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   openFolderFromPath: (dirPath: string) => Promise<void>;
   openFolderFromHandle: (handle: FileSystemDirectoryHandle) => Promise<void>;
+  reloadCurrentProject: () => Promise<void>;
   dirPathRef: React.MutableRefObject<string | null>;
 }
 
@@ -130,5 +132,22 @@ export const useOpenFolder = (): UseOpenFolder => {
     loadFromPayload(await openFromHandle(handle));
   };
 
-  return { applyProject, loadFromPayload, loadFile, openFolderFromPath, openFolderFromHandle, dirPathRef };
+  // Web FSA: 現在保持しているハンドルをそのまま再列挙して再読込する（再読み込みメニュー用）。
+  // openFolderFromHandle と同じ Open 経路（読み直し→loadFromPayload→applyProject）を通すので履歴もクリアされる。
+  // 許可済みハンドルの再列挙は再プロンプトを出さない。保持ハンドルが無ければ no-op（生ページ reload を避ける）。
+  const reloadCurrentProject = async () => {
+    const handle = getCurrentDirHandle();
+    if (!handle) return;
+    await openFolderFromHandle(handle);
+  };
+
+  return {
+    applyProject,
+    loadFromPayload,
+    loadFile,
+    openFolderFromPath,
+    openFolderFromHandle,
+    reloadCurrentProject,
+    dirPathRef,
+  };
 };

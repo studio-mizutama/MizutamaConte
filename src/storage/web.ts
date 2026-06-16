@@ -4,6 +4,9 @@ import { ProjectStorage, StorageOpenResult } from './types';
 /** 開いている（または作成した）プロジェクトフォルダのハンドル */
 let dirHandle: FileSystemDirectoryHandle | null = null;
 
+/** 現在開いているプロジェクトフォルダのハンドルを返す（再読み込み等で再列挙に使う）。 */
+export const getCurrentDirHandle = (): FileSystemDirectoryHandle | null => dirHandle;
+
 export const isFsaSupported = (): boolean => typeof window.showDirectoryPicker === 'function';
 
 /** ディレクトリハンドルからプロジェクト一式を読み込む（picker / D&D 共通の中核）。
