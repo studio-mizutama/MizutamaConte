@@ -33,7 +33,8 @@ import { useProject } from 'hooks/useProject';
 import { useAutoSave } from 'hooks/useAutoSave';
 import { useOpenFolder } from 'hooks/useOpenFolder';
 import { deriveFrame } from 'project/dimensions';
-import { AspectKey, ResolutionKey } from 'project/types';
+import { AspectKey, ResolutionKey, RecentProject } from 'project/types';
+import { loadRecents } from 'storage/recentStore';
 import { getStorage } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
@@ -198,23 +199,61 @@ const Tab: React.FC = () => {
 };
 
 const FilePicker: React.FC = () => {
-  const [selected, setSelected] = useState('');
+  const t = useT();
   const globalFileName = useGlobal('globalFileName')[0];
+  const [recents, setRecents] = useState<RecentProject[]>([]);
+  const { openRecent } = useOpenFolder();
+
+  // globalFileName が変わるたびに最近リストを再取得する
   useEffect(() => {
-    setSelected(globalFileName);
-  }, [globalFileName, setSelected]);
+    void loadRecents().then(setRecents);
+  }, [globalFileName]);
+
+  // 現在開いているファイル以外の最近プロジェクトを絞り込む
+  const others = recents.filter((r) => r.name !== globalFileName);
+
+  // react-spectrum Picker は条件付き Section を許容しないため、
+  // 最近リストがある場合とない場合で children を切り替える
+  const pickerChildren = others.length > 0 ? (
+    <>
+      <Section>
+        <Item key={globalFileName || '__none__'} textValue={globalFileName}>
+          <DocumentOutline />
+          <Text>{globalFileName || ''}</Text>
+        </Item>
+      </Section>
+      <Section title={t('header.recentProjects')}>
+        {others.map((r) => (
+          <Item key={r.id} textValue={r.name}>
+            <DocumentOutline />
+            <Text>{r.name}</Text>
+          </Item>
+        ))}
+      </Section>
+    </>
+  ) : (
+    <Section>
+      <Item key={globalFileName || '__none__'} textValue={globalFileName}>
+        <DocumentOutline />
+        <Text>{globalFileName || ''}</Text>
+      </Item>
+    </Section>
+  );
+
   return (
     <Picker
       isQuiet
       menuWidth="size-3400"
       max-width="fit-content"
-      selectedKey={selected}
-      onSelectionChange={setSelected as (keys: Key) => any}
+      selectedKey={globalFileName || '__none__'}
+      onSelectionChange={(key) => {
+        const id = String(key);
+        if (id === globalFileName || id === '__none__') return;
+        const entry = recents.find((r) => r.id === id);
+        if (entry) void openRecent(entry);
+      }}
     >
-      <Item key={selected}>
-        <DocumentOutline />
-        <Text>{selected}</Text>
-      </Item>
+      {pickerChildren}
     </Picker>
   );
 };
