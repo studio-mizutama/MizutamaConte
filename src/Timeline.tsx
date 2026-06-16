@@ -209,6 +209,10 @@ export const Timeline: React.FC<{
         min="0"
         max={timeTotal}
         onChange={setCurrentFrame}
+        // ドラッグ/クリック後はフォーカスを残さない（input にフォーカスが残ると
+        // react-hotkeys-hook がフォーム要素内とみなし Space/矢印等のショートカットを発火させないため）。
+        // マウス操作時のみ＝キーボードでの focus には不介入。
+        onPointerUp={(e) => e.currentTarget.blur()}
         style={{ width: `${width}px` }}
       />
     </ToolArea>
