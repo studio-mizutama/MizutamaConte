@@ -16,7 +16,9 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-hotkeys-hook": "^3.3.2",
+    "react-markdown": "^8",
     "reactn": "^2.2.7",
+    "remark-gfm": "^3",
     "styled-components": "^5.3.0"
   },
   "scripts": {
@@ -24,12 +26,13 @@
     "dev:web": "vite",
     "build": "electron-vite build",
     "build:web": "vite build",
+    "build:docs": "vite build --config vite.docs.config.mts",
     "dist:dir": "electron-vite build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p electron --noEmit",
     "preview:web": "vite preview",
-    "deploy": "yarn build:web && gh-pages -d build",
+    "deploy": "yarn build:web && yarn build:docs && gh-pages -d build",
     "notices": "node scripts/generate-notices.mjs"
   },
   "build": {
