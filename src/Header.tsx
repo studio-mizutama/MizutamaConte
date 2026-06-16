@@ -317,6 +317,21 @@ export const Header: React.FC = () => {
     [setSettingsOpen],
   );
 
+  // Cmd+Opt+R / Ctrl+Alt+R で現在のプロジェクトを再読込（Web/Electron 両対応）。
+  // Electron ネイティブ View>Reload は Cmd/Ctrl+R のみのバインドなので衝突しない。
+  // ブラウザのハードリロード(Cmd+Shift+R)とも別。reloadCurrentProject がプラットフォーム差を吸収する。
+  // react-hotkeys-hook 3.x は 'mod' 非対応のため command/ctrl を明示（useUndoRedo と同じ流儀）。
+  // プロジェクト未オープン時は no-op（生ページ reload を避ける）。
+  useHotkeys(
+    'command+alt+r,ctrl+alt+r',
+    (event) => {
+      event.preventDefault();
+      if (!fileName) return;
+      void reloadCurrentProject();
+    },
+    [fileName, reloadCurrentProject],
+  );
+
   const openProject = async () => {
     if (storage.kind === 'web-readonly') {
       // File System Access API 非対応ブラウザは webkitdirectory で読み取り専用

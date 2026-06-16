@@ -32,7 +32,7 @@ export const setSharedDirPath = (dirPath: string | null): void => {
  * - openFolderFromHandle: Web FSA のディレクトリハンドルから開く（D&D 用）
  * - openFromPicker: ストレージの picker（File→Open）から開く
  * - reloadFromDirPath: Electron の保持パスを再読込する（外部編集/再読込メニュー用）
- * - reloadCurrentProject: Web FSA で保持中のハンドルを再列挙して再読込する（再読み込みメニュー用）
+ * - reloadCurrentProject: 現在のプロジェクトを再読込する（Web=保持ハンドル / Electron=保持パス。再読込ショートカット/メニュー用）
  * - dirPathRef: Electron のフォルダパス（外部編集の再読込で参照）
  *
  * すべての開く経路は runOpen() に集約し、不正プロジェクト（読込/パース失敗・形不一致）を
@@ -173,10 +173,18 @@ export const useOpenFolder = (): UseOpenFolder => {
     await runOpen(() => api.readProject(dirPath));
   };
 
-  // Web FSA: 現在保持しているハンドルをそのまま再列挙して再読込する（再読み込みメニュー用）。
-  // openFolderFromHandle と同じ Open 経路（読み直し→検証→applyProject）を通すので履歴もクリアされる。
-  // 許可済みハンドルの再列挙は再プロンプトを出さない。保持ハンドルが無ければ no-op（生ページ reload を避ける）。
+  // 現在開いているプロジェクトをディスクから再読込する（Web/Electron 共通・再読み込みショートカット/メニュー用）。
+  // - Electron(api あり): 保持パス sharedDirPathRef.current を reloadFromDirPath で再読込（メニューと同一ヘルパ）。
+  // - Web(api なし): 保持中の FSA ハンドルを openFolderFromHandle で再列挙して再読込。
+  // いずれも Open と同じ runOpen 経路を通すので、検証・エラー化・履歴クリアが効く。
+  // 保持パス/ハンドルが無ければ no-op（生ページ reload を避ける）。
   const reloadCurrentProject = async () => {
+    if (api) {
+      // Electron: 保持パスが無ければ no-op
+      if (sharedDirPathRef.current) await reloadFromDirPath(sharedDirPathRef.current);
+      return;
+    }
+    // Web FSA: 許可済みハンドルの再列挙は再プロンプトを出さない
     const handle = getCurrentDirHandle();
     if (!handle) return;
     await openFolderFromHandle(handle);
