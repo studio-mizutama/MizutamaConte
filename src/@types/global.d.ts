@@ -100,6 +100,8 @@ export interface Sandbox {
   removeUndoRequest: () => void;
   onRedoRequest: (listener: () => void) => void;
   removeRedoRequest: () => void;
+  onAboutRequest: (listener: () => void) => void;
+  removeAboutRequest: () => void;
   saveVideo: (fileName: string, data: Uint8Array) => Promise<boolean>;
 
   createProject: (defaultName: string) => Promise<{ name: string } | null>;

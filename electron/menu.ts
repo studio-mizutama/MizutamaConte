@@ -1,4 +1,4 @@
-import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow } from 'electron';
+import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow, shell } from 'electron';
 import { mt, resolveLocale, MenuLocale } from './i18n';
 
 /** アプリケーションメニューを構築する。ラベルは locale（未指定時は settings から解決）でローカライズ。 */
@@ -9,7 +9,8 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
       submenu: [
         {
           label: mt(locale, 'menu.about'),
-          role: 'about',
+          // ネイティブパネルではなくレンダラのクロスプラットフォーム About ダイアログへ
+          click: () => win.webContents.send('menu:about'),
         },
         {
           label: mt(locale, 'menu.preferences'),
@@ -22,21 +23,6 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
           label: mt(locale, 'menu.quit'),
           accelerator: 'CmdOrCtrl+Q',
           click: () => app.quit(),
-        },
-      ],
-    },
-    {
-      label: mt(locale, 'menu.edit'),
-      submenu: [
-        {
-          label: mt(locale, 'menu.undo'),
-          accelerator: 'CmdOrCtrl+Z',
-          click: () => win.webContents.send('menu:undo'),
-        },
-        {
-          label: mt(locale, 'menu.redo'),
-          accelerator: 'CmdOrCtrl+Shift+Z',
-          click: () => win.webContents.send('menu:redo'),
         },
       ],
     },
@@ -75,12 +61,49 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
       ],
     },
     {
+      label: mt(locale, 'menu.edit'),
+      submenu: [
+        {
+          label: mt(locale, 'menu.undo'),
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => win.webContents.send('menu:undo'),
+        },
+        {
+          label: mt(locale, 'menu.redo'),
+          accelerator: 'CmdOrCtrl+Shift+Z',
+          click: () => win.webContents.send('menu:redo'),
+        },
+      ],
+    },
+    {
       label: mt(locale, 'menu.view'),
       submenu: [
         {
           label: mt(locale, 'menu.reload'),
           accelerator: 'CmdOrCtrl+R',
           click: () => win.reload(),
+        },
+      ],
+    },
+    {
+      label: mt(locale, 'menu.window'),
+      submenu: [{ role: 'minimize' }, { role: 'zoom' }, { type: 'separator' }, { role: 'close' }],
+    },
+    {
+      label: mt(locale, 'menu.help'),
+      submenu: [
+        {
+          label: mt(locale, 'menu.documentation'),
+          click: () => shell.openExternal('https://studio-mizutama.github.io/MizutamaConte/docs/'),
+        },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.about'),
+          click: () => win.webContents.send('menu:about'),
+        },
+        {
+          label: mt(locale, 'menu.licenses'),
+          click: () => win.webContents.send('menu:about'),
         },
       ],
     },

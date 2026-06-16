@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('api', {
   removeUndoRequest: () => ipcRenderer.removeAllListeners('menu:undo'),
   onRedoRequest: (listener: () => void) => ipcRenderer.on('menu:redo', listener),
   removeRedoRequest: () => ipcRenderer.removeAllListeners('menu:redo'),
+  // メニューの About / Help からの About ダイアログ表示要求
+  onAboutRequest: (listener: () => void) => ipcRenderer.on('menu:about', listener),
+  removeAboutRequest: () => ipcRenderer.removeAllListeners('menu:about'),
   // 書き出した MP4 を保存ダイアログでディスクへ書き込む
   saveVideo: (fileName: string, data: Uint8Array) => ipcRenderer.invoke('video:save', fileName, data),
 
