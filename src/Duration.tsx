@@ -27,11 +27,8 @@ export const Duration: React.FC = () => {
     setDraft(null);
   };
 
-  const seconds = ((cut?.time ?? 0) / fps).toFixed(2);
-
   return (
     <TextField
-      label={cut ? t('duration.label', { cut: ('00' + (index + 1)).slice(-3), sec: seconds, fps }) : undefined}
       aria-label={t('duration.ariaLabel')}
       width="100%"
       marginTop="size-100"

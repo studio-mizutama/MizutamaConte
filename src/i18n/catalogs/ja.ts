@@ -71,8 +71,8 @@ export const ja: Record<TranslationKey, string> = {
   'panels.transition': 'トランジション',
   'panels.cameraWork': 'カメラワーク',
   'panels.outline': 'アウトライン',
-  'panels.duration': '尺',
-  'panels.dialogue': '台詞',
+  'panels.duration': 'デュレーション',
+  'panels.dialogue': 'セリフ',
 
   // ツール（タブの「編集」と被らないよう既定ツールのラベルは「選択」にする）
   'toolGroup.edit': '選択 (V)',
@@ -94,7 +94,7 @@ export const ja: Record<TranslationKey, string> = {
 
   // Duration パネル
   'duration.label': 'Cut{cut} 尺 · {sec}秒 @ {fps}fps',
-  'duration.ariaLabel': '尺',
+  'duration.ariaLabel': 'デュレーション',
 
   // 設定ダイアログ
   'settings.title': '設定',
