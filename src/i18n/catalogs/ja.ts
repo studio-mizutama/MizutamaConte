@@ -21,8 +21,15 @@ export const ja: Record<TranslationKey, string> = {
   'header.menu.open': '開く',
   'header.share.ariaLabel': '共有',
   'header.settings.ariaLabel': '設定',
-  'header.share.pdf': 'PDF エクスポート',
+  'header.share.pdf': '絵コンテ印刷',
   'header.share.video': '動画エクスポート',
+
+  // ヘッダーメニュー（ウインドウ上部メニューバー / ハンバーガー用）
+  'header.menu.file': 'ファイル',
+  'header.menu.edit': '編集',
+  'header.menu.help': 'ヘルプ',
+  'header.menu.documentation': 'ドキュメント',
+  'header.menu.about': 'Mizutama Conte について',
 
   // 絵コンテ本体
   'conte.scene.expand': 'シーンを展開',
@@ -71,6 +78,8 @@ export const ja: Record<TranslationKey, string> = {
   'toolGroup.edit': '選択 (V)',
   'toolGroup.resize': 'リサイズ (C)',
   'toolGroup.reorder': '並べ替え (R)',
+  'toolGroup.undo': '取り消す',
+  'toolGroup.redo': 'やり直す',
 
   // トランジション（全ロケール英語固定。パネル見出しは別キー panels.* で日本語のまま）
   'transition.fadeIn': 'Fade In',
@@ -145,4 +154,14 @@ export const ja: Record<TranslationKey, string> = {
   'videoExport.encoding': '動画を書き出し中…',
   'videoExport.frameCount': 'フレーム {frame} / {total}',
   'videoExport.error': '書き出しに失敗しました。この環境は動画エンコード（H.264）に未対応の可能性があります。',
+
+  // About ダイアログ
+  'about.tab.about': '概要',
+  'about.tab.licenses': 'ライセンス',
+  'about.licenses.empty': 'このビルドにはライセンス表記が同梱されていません。',
+  'about.close': '閉じる',
+
+  // 空状態（プロジェクト未オープン）
+  'empty.title': 'プロジェクトが開かれていません',
+  'empty.body': '新規に絵コンテを作成するか、既存ファイルを開いてください。',
 };

@@ -18,6 +18,10 @@ type MenuStrings = {
   'menu.reload': string;
   'menu.print': string;
   'menu.exportVideo': string;
+  'menu.window': string;
+  'menu.help': string;
+  'menu.documentation': string;
+  'menu.licenses': string;
   'dialog.create.title': string;
   'dialog.create.button': string;
   'dialog.selectPaintApp.title': string;
@@ -37,8 +41,12 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.undo': '取り消す',
     'menu.redo': 'やり直す',
     'menu.reload': '再読み込み',
-    'menu.print': 'PDF書き出し…',
+    'menu.print': '絵コンテ印刷…',
     'menu.exportVideo': '動画書き出し…',
+    'menu.window': 'ウインドウ',
+    'menu.help': 'ヘルプ',
+    'menu.documentation': 'ドキュメント',
+    'menu.licenses': 'ライセンス',
     'dialog.create.title': '保存先フォルダを選択',
     'dialog.create.button': 'ここに作成',
     'dialog.selectPaintApp.title': 'お絵描きアプリを選択',
@@ -56,8 +64,12 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.undo': '실행 취소',
     'menu.redo': '다시 실행',
     'menu.reload': '새로고침',
-    'menu.print': 'PDF로 내보내기…',
+    'menu.print': '콘티 인쇄…',
     'menu.exportVideo': '동영상 내보내기…',
+    'menu.window': '창',
+    'menu.help': '도움말',
+    'menu.documentation': '문서',
+    'menu.licenses': '라이선스',
     'dialog.create.title': '저장할 폴더 선택',
     'dialog.create.button': '여기에 만들기',
     'dialog.selectPaintApp.title': '페인트 앱 선택',
@@ -75,8 +87,12 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.undo': 'Undo',
     'menu.redo': 'Redo',
     'menu.reload': 'Reload',
-    'menu.print': 'Export PDF…',
+    'menu.print': 'Print Storyboard…',
     'menu.exportVideo': 'Export Video…',
+    'menu.window': 'Window',
+    'menu.help': 'Help',
+    'menu.documentation': 'Documentation',
+    'menu.licenses': 'Licenses',
     'dialog.create.title': 'Select destination folder',
     'dialog.create.button': 'Create here',
     'dialog.selectPaintApp.title': 'Select paint app',

@@ -21,8 +21,15 @@ export const ko: Record<TranslationKey, string> = {
   'header.menu.open': '열기',
   'header.share.ariaLabel': '공유',
   'header.settings.ariaLabel': '설정',
-  'header.share.pdf': 'PDF 내보내기',
+  'header.share.pdf': '콘티 인쇄',
   'header.share.video': '동영상 내보내기',
+
+  // 헤더 메뉴(윈도 상단 메뉴바 / 햄버거용)
+  'header.menu.file': '파일',
+  'header.menu.edit': '편집',
+  'header.menu.help': '도움말',
+  'header.menu.documentation': '문서',
+  'header.menu.about': 'Mizutama Conte 정보',
 
   // 콘티 본문
   'conte.scene.expand': '씬 펼치기',
@@ -71,6 +78,8 @@ export const ko: Record<TranslationKey, string> = {
   'toolGroup.edit': '선택 (V)',
   'toolGroup.resize': '크기 조정 (C)',
   'toolGroup.reorder': '재정렬 (R)',
+  'toolGroup.undo': '실행 취소',
+  'toolGroup.redo': '다시 실행',
 
   // 트랜지션（全ロケール英語固定）
   'transition.fadeIn': 'Fade In',
@@ -145,4 +154,14 @@ export const ko: Record<TranslationKey, string> = {
   'videoExport.encoding': '동영상 내보내는 중…',
   'videoExport.frameCount': '프레임 {frame} / {total}',
   'videoExport.error': '내보내기에 실패했습니다. 이 환경은 비디오 인코딩(H.264)을 지원하지 않을 수 있습니다.',
+
+  // About 다이얼로그
+  'about.tab.about': '정보',
+  'about.tab.licenses': '라이선스',
+  'about.licenses.empty': '이 빌드에는 라이선스 고지가 포함되어 있지 않습니다.',
+  'about.close': '닫기',
+
+  // 빈 상태(프로젝트 미오픈)
+  'empty.title': '열린 프로젝트가 없습니다',
+  'empty.body': '새 콘티를 만들거나 기존 파일을 여세요.',
 };

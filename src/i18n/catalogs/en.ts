@@ -22,8 +22,15 @@ export const en = {
   'header.menu.open': 'Open',
   'header.share.ariaLabel': 'Share',
   'header.settings.ariaLabel': 'Settings',
-  'header.share.pdf': 'Export PDF',
+  'header.share.pdf': 'Print Storyboard',
   'header.share.video': 'Export Video',
+
+  // ヘッダーメニュー（ウインドウ上部メニューバー / ハンバーガー用）
+  'header.menu.file': 'File',
+  'header.menu.edit': 'Edit',
+  'header.menu.help': 'Help',
+  'header.menu.documentation': 'Documentation',
+  'header.menu.about': 'About Mizutama Conte',
 
   // 絵コンテ本体（シーン帯・行挿入・行追加）
   'conte.scene.expand': 'Expand scene',
@@ -73,6 +80,8 @@ export const en = {
   'toolGroup.edit': 'Select (V)',
   'toolGroup.resize': 'Resize (C)',
   'toolGroup.reorder': 'Reorder (R)',
+  'toolGroup.undo': 'Undo',
+  'toolGroup.redo': 'Redo',
 
   // トランジション（Picker の key='None'|'White In'... は保存データなので英語固定。表示のみ翻訳）
   'transition.fadeIn': 'Fade In',
@@ -147,6 +156,16 @@ export const en = {
   'videoExport.encoding': 'Exporting video…',
   'videoExport.frameCount': '{frame} / {total} frames',
   'videoExport.error': 'Export failed. This environment may not support H.264 video encoding.',
+
+  // About ダイアログ
+  'about.tab.about': 'About',
+  'about.tab.licenses': 'Licenses',
+  'about.licenses.empty': 'License notices are not bundled in this build.',
+  'about.close': 'Close',
+
+  // 空状態（プロジェクト未オープン）
+  'empty.title': 'No project open',
+  'empty.body': 'Create a new storyboard or open an existing one.',
 } as const;
 
 export type TranslationKey = keyof typeof en;
