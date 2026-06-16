@@ -6,6 +6,7 @@ import Crop from '@spectrum-icons/workflow/Crop';
 import Reorder from '@spectrum-icons/workflow/Reorder';
 import Undo from '@spectrum-icons/workflow/Undo';
 import Redo from '@spectrum-icons/workflow/Redo';
+import Clock from '@spectrum-icons/workflow/Clock';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { EditorMode, useEditorMode } from 'hooks/editorMode';
 import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
@@ -50,6 +51,11 @@ export const ToolGroup: React.FC = () => {
     keyDown();
   });
 
+  useHotkeys('t', () => {
+    setMode('stopwatch');
+    keyDown();
+  });
+
   return (
     <Flex direction="column" alignItems="center" height="100%">
       <AlignCenter>
@@ -82,6 +88,12 @@ export const ToolGroup: React.FC = () => {
               <Reorder />
             </Item>
             <Tooltip>{t('toolGroup.reorder')}</Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger placement="end">
+            <Item key="stopwatch">
+              <Clock />
+            </Item>
+            <Tooltip>{t('toolGroup.stopwatch')}</Tooltip>
           </TooltipTrigger>
         </ActionGroup>
       </AlignCenter>
