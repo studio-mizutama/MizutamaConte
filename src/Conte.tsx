@@ -6,6 +6,7 @@ import {
   View,
   Flex,
   ProgressCircle,
+  Text,
   TextField,
   TooltipTrigger,
   Tooltip,
@@ -381,8 +382,9 @@ const CutContainer: React.FC = () => {
                 </DraggableRow>
               )}
               {/* CUT 間のシーン区切りガター。次CUTが既にシーン開始（SceneBand 表示済み）の位置では出さない。
-                  最終行の下では addSceneCut で末尾に新シーンを追加する。並べ替え中は誤爆防止のため非表示。 */}
-              {!isCollapsed && !isReorder && !sceneByStart.has(index + 1) && (
+                  最終行の下では addSceneCut で末尾に新シーンを追加する。
+                  編集モード(edit)のときだけ表示し、リサイズ/並べ替え中は誤爆防止のため非表示。 */}
+              {!isCollapsed && editorMode === 'edit' && !sceneByStart.has(index + 1) && (
                 <SceneGutter index={index} onAdd={addSceneBreakBelow} label={t('cutRow.sceneBreakAria', { n: index + 1 })} />
               )}
             </React.Fragment>
@@ -429,6 +431,20 @@ const AddCutRow: React.FC = () => {
 };
 
 export const Conte: React.FC = React.memo(() => {
+  const t = useT();
+  const fileName = useGlobal('globalFileName')[0];
+
+  // プロジェクト未オープン時はカラムヘッダ/CUT 一覧を出さず、中央寄せの空状態ガイドのみを表示する。
+  // New/Open は Header ローカル（storage 依存）で Conte から安全に呼べないため、ボタンは置かずテキスト誘導に留める。
+  if (!fileName) {
+    return (
+      <Flex direction="column" alignItems="center" justifyContent="center" gap="size-100" height="size-3000">
+        <Heading level={3}>{t('empty.title')}</Heading>
+        <Text>{t('empty.body')}</Text>
+      </Flex>
+    );
+  }
+
   return (
     <>
       <Grid columns={['72px', '288px', 'auto', 'auto', '128px']} rows={['size-500']} height="size-500" gap="size-200">
