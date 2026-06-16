@@ -5,9 +5,11 @@ Please refer to [here](README.en.md) for English readme file.
 
 ![screenshot](./screenshot.png)
 
-React + Electron製の絵コンテエディタ&ビューアです。現在はビューアとしての機能のみ実装済みです。
+React + Electron 製の絵コンテエディタです。解像度・アスペクト比設定、カメラワーク付きのビデオコンテプレビュー、PSD + JSON での保存、PDF / 動画書き出し、Undo / Redo などを備えた実用レベルの絵コンテ制作・管理アプリです。
 
-## Usage
+> このREADMEは開発者向けです。エンドユーザー向けのドキュメント（インストール手順や使い方）は[ドキュメントサイト](https://studio-mizutama.github.io/MizutamaConte/docs/)を参照してください。
+
+## Usage（開発者向け）
 
 ### Install
 
@@ -18,13 +20,15 @@ $ yarn
 ### Development
 
 ```sh
-$ yarn electron:dev
+$ yarn dev      # Electron 版（Mac / Win / Linux）
+$ yarn dev:web  # Web 版（http://localhost:3000）
 ```
 
 ### Build
 
 ```sh
-$ yarn electron:build
+$ yarn build      # Electron 版
+$ yarn build:web  # Web 版（build/ に出力）
 ```
 
 ### Deploy GitHub Pages
@@ -33,15 +37,18 @@ $ yarn electron:build
 $ yarn deploy
 ```
 
+> **配布ビルドは未署名**: このリポジトリで生成される配布ビルドはコード署名・公証を行っていません。macOS の quarantine 回避などエンドユーザー向けのインストール案内はドキュメントサイトに記載します。
+
 ## Feature
 
 - [x] 絵コンテファイル表示
-- [ ] ファイル編集・保存・上書き保存
-- [ ] 新規プロジェクト作成
-- [ ] 外部ペイントアプリ連携
-- [x] ビデオコンテプレビュー
-- [ ] ビデオコンテ書き出し
-- [ ] `setting.json`ファイルによるユーザー設定カスタマイズ
+- [x] ファイル編集・保存・上書き保存（PSD + JSON、自動保存）
+- [x] 新規プロジェクト作成（解像度・アスペクト比選択）
+- [x] 外部ペイントアプリ連携（CSP / PS / Affinity / GIMP / Krita）
+- [x] カメラワーク編集・カメラワーク付きビデオコンテプレビュー
+- [x] ビデオコンテ書き出し（PDF / 動画）
+- [x] Undo / Redo
+- [x] `settings.json` によるユーザー設定カスタマイズ
 
 ## 絵コンテファイル
 

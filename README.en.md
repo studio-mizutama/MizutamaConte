@@ -5,10 +5,11 @@ Welcome to MizutamaConte by Studio Mizutama.
 
 ![screenshot](./screenshot.png)
 
-This is the storyboard management app build with React + Electron.
-Currently only viewer part is available.
+This is a storyboard editor built with React + Electron. It is a practical storyboard authoring/management app featuring resolution & aspect ratio settings, camera-work video preview, PSD + JSON saving, PDF / video export, Undo / Redo, and more.
 
-## Usage
+> This README is developer-facing. End-user documentation (install steps and usage) lives on the [docs site](https://studio-mizutama.github.io/MizutamaConte/docs/).
+
+## Usage (for developers)
 
 ### Install
 
@@ -19,13 +20,15 @@ $ yarn
 ### Development
 
 ```sh
-$ yarn electron:dev
+$ yarn dev      # Electron edition (Mac / Win / Linux)
+$ yarn dev:web  # Web edition (http://localhost:3000)
 ```
 
 ### Build
 
 ```sh
-$ yarn electron:build
+$ yarn build      # Electron edition
+$ yarn build:web  # Web edition (output to build/)
 ```
 
 ### Deploy GitHub Pages
@@ -34,15 +37,18 @@ $ yarn electron:build
 $ yarn deploy
 ```
 
+> **Distributed builds are unsigned**: builds produced from this repository are not code-signed or notarized. End-user install guidance (such as the macOS quarantine workaround) is documented on the docs site.
+
 ## Feature
 
-- [x] Display Storyboard file
-- [ ] Edit/Save/Overwrite
-- [ ] Open new project
-- [ ] Interact with external drawing apps
-- [x] Play the storyboard
-- [ ] Export storybord to the video
-- [ ] Setup user preference with `setting.json`
+- [x] Display storyboard file
+- [x] Edit / Save / Overwrite (PSD + JSON, auto-save)
+- [x] Open new project (resolution & aspect ratio selection)
+- [x] Interact with external drawing apps (CSP / PS / Affinity / GIMP / Krita)
+- [x] Camera-work editing & camera-work video preview
+- [x] Export storyboard to PDF / video
+- [x] Undo / Redo
+- [x] Setup user preferences with `settings.json`
 
 ## storyboard file 
 

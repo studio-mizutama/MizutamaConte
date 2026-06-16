@@ -14,7 +14,7 @@ const buildSha = (() => {
   }
 })();
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react(), tsconfigPaths()],
   define: {
     __APP_VERSION__: JSON.stringify(pkgVersion),
@@ -26,4 +26,6 @@ export default defineConfig({
   build: {
     outDir: 'build',
   },
-});
+  // 本番ビルド（gh-pages）はサブパス配信、開発（dev:web）はルート配信
+  base: command === 'build' ? '/MizutamaConte/' : '/',
+}));
