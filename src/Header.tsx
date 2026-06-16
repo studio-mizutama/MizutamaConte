@@ -25,16 +25,14 @@ import Branch2 from '@spectrum-icons/workflow/Branch2';
 import Settings from '@spectrum-icons/workflow/Settings';
 import DocumentOutline from '@spectrum-icons/workflow/DocumentOutline';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
-import { readPsd } from 'ag-psd';
 import { useTitle } from 'hooks/useTitle';
 import { useTitleEffects } from 'hooks/useTitleEffects';
-import { buildProject, sortPsdNames, LoadedPsd } from 'project/load';
 import { useProject } from 'hooks/useProject';
 import { useAutoSave } from 'hooks/useAutoSave';
+import { useOpenFolder } from 'hooks/useOpenFolder';
 import { deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey } from 'project/types';
-import { serializeProject, setLastPersisted, setPendingV1Backup, v1BackupName } from 'project/save';
-import { getStorage, StorageOpenResult } from 'storage';
+import { getStorage } from 'storage';
 import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
 import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
@@ -42,7 +40,6 @@ import { useT } from 'i18n';
 import { TranslationKey } from 'i18n/catalogs/en';
 import { usePrint } from 'print/usePrint';
 import { useVideoExport } from 'hooks/useVideoExport';
-import { clearHistory } from 'history/undoManager';
 import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
 import { AboutDialog } from 'AboutDialog';
 import { WEB_MENU } from 'menuStructure';
@@ -271,69 +268,9 @@ export const Header: React.FC = () => {
   const [aboutOpen, setAboutOpen] = useState(false);
   const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
-  const setPsdCache = useGlobal('psdCache')[1];
-  const setFileName = useGlobal('globalFileName')[1];
-  const setIsLoading = useGlobal('isLoading')[1];
 
-  // スピナーを描画させてから重い PSD パースに入るための1フレーム譲歩
-  const yieldToPaint = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-  // 構築済みプロジェクトをグローバル状態へ反映する（Web/Electron 共通）
-  const applyProject = (jsonText: string, psds: LoadedPsd[], jsonFileName: string) => {
-    const { project: loaded, cache, wasV1 } = buildProject(jsonText, psds, jsonFileName);
-    // 読み込み直後は「保存済み」扱い。v1 は初回保存時に元 JSON を退避する
-    setLastPersisted(serializeProject(loaded));
-    setPendingV1Backup(wasV1 ? { name: v1BackupName(jsonFileName), text: jsonText } : null);
-    // fileName は最後に設定する（autoSave が古い project と新 fileName の組で誤発火しないように）
-    setProject(loaded);
-    setPsdCache(cache);
-    setFileName(jsonFileName);
-    // プロジェクト差し替え（Open/外部リロード）で履歴は無効化する
-    clearHistory();
-    getStorage().purgeTrash().catch(() => undefined);
-  };
-
-  // Web: <input webkitdirectory> からの読み込み
-  const loadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const filelist = e.target.files;
-    if (!filelist) return;
-    const files = Array.from(filelist);
-    const psdFiles = files.filter((file) => file.name.toLowerCase().endsWith('.psd'));
-    const jsonFile = files.find((file) => file.name.toLowerCase().endsWith('.json'));
-    if (!jsonFile) return;
-    const sortedNames = sortPsdNames(psdFiles.map((file) => file.name));
-    const sortedPsdFiles = sortedNames.map((name) => psdFiles.find((file) => file.name === name)!);
-
-    const readAsArrayBuffer = (file: File) =>
-      new Promise<ArrayBuffer>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as ArrayBuffer);
-        reader.readAsArrayBuffer(file);
-      });
-    const readAsText = (file: File) =>
-      new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsText(file, 'utf8');
-      });
-
-    (async () => {
-      try {
-        await setIsLoading(true);
-        await yieldToPaint();
-        const jsonText = await readAsText(jsonFile);
-        const psds: LoadedPsd[] = [];
-        for (const file of sortedPsdFiles) {
-          psds.push({ name: file.name, psd: readPsd(await readAsArrayBuffer(file)) });
-        }
-        applyProject(jsonText, psds, jsonFile.name);
-      } catch (err) {
-        alert(err);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  };
+  // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）
+  const { loadFile, loadFromPayload, dirPathRef } = useOpenFolder();
 
   useEffect(() => {
     const inputDirectory = document.getElementById('inputDirectory');
@@ -341,25 +278,6 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('directory', '');
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
-
-  // 外部編集の再読込用に Electron のフォルダパスを保持する
-  const dirPathRef = React.useRef<string | null>(null);
-
-  // フォルダから読み込んだ一式（PSD未パース）をパースして反映する（Web FSA/Electron 共通）
-  const loadFromPayload = async (payload: StorageOpenResult | null) => {
-    if (!payload) return;
-    if (payload.dirPath) dirPathRef.current = payload.dirPath;
-    try {
-      await setIsLoading(true);
-      await yieldToPaint();
-      const psds: LoadedPsd[] = payload.psds.map(({ name, data }) => ({ name, psd: readPsd(data) }));
-      applyProject(payload.jsonText, psds, payload.jsonFileName);
-    } catch (err) {
-      alert(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const storage = getStorage();
   const setNewProjectOpen = useGlobal('newProjectOpen')[1];

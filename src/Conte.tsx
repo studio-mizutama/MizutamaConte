@@ -25,9 +25,12 @@ import { deriveScenes, SceneGroup, canMerge } from 'project/scene';
 import { useEditorMode } from 'hooks/editorMode';
 import { useReorder } from 'hooks/useReorder';
 import { useRowDnd, makeDragHandlers } from 'hooks/useRowDnd';
+import { useOpenFolder } from 'hooks/useOpenFolder';
 import { DraggableRow } from 'styles/DraggableRow';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
+
+const { api } = window;
 
 const Scroll = styled.div`
   height: calc(100vh - 82px);
@@ -45,6 +48,29 @@ const Band = styled(DraggableRow)`
   margin-bottom: var(--spectrum-global-dimension-size-25);
   background: var(--spectrum-global-color-gray-200);
   border-radius: var(--spectrum-alias-border-radius-regular);
+`;
+
+/** 空状態のフォルダ D&D ドロップゾーン。ドラッグ中は accent 色でハイライトする。
+ *  $active=true でアクセントの枠線 + 薄いアクセント背景に切り替える。 */
+const DropZone = styled.div<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 280px;
+  padding: 20px 24px;
+  margin-top: 8px;
+  border-radius: var(--spectrum-alias-border-radius-regular, 4px);
+  border: 2px dashed
+    ${(p) =>
+      p.$active
+        ? 'var(--spectrum-semantic-informative-color-border, #2680eb)'
+        : 'var(--spectrum-global-color-gray-400, #b3b3b3)'};
+  /* アクセント色そのものではなく薄い tint を敷く（ラベルが読める濃度に抑える） */
+  background: ${(p) => (p.$active ? 'rgba(38, 128, 235, 0.12)' : 'transparent')};
+  color: var(--spectrum-alias-text-color);
+  font-size: 13px;
+  text-align: center;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
 `;
 
 /** CUT 間（および最終行下）の行間ガター。CUT 追加(＋)とシーン区切り追加(📁+)を兼ねる。
@@ -457,26 +483,75 @@ const AddCutRow: React.FC = () => {
   );
 };
 
-export const Conte: React.FC = React.memo(() => {
+/** プロジェクト未オープン時の中央寄せ空状態ガイド + フォルダ D&D ドロップゾーン。
+ *  ドロップで Open と同一経路（useOpenFolder）でフォルダを開く＝履歴クリアも共通。 */
+const EmptyState: React.FC = () => {
   const t = useT();
+  const { openFolderFromPath, openFolderFromHandle } = useOpenFolder();
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    if (!isDragging) setIsDragging(true);
+  };
+
+  // 子要素への移動で発火する dragleave のちらつきを避けるため、ドロップゾーン外へ出たときだけ解除する
+  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    void (async () => {
+      try {
+        if (api) {
+          // Electron: ドロップされた File は .path を持つ。フォルダのみ受け付ける
+          const entry = e.dataTransfer.items[0]?.webkitGetAsEntry?.();
+          const file = e.dataTransfer.files[0] as (File & { path?: string }) | undefined;
+          if (entry && !entry.isDirectory) return; // ファイルがドロップされたら無視
+          const dir = file?.path;
+          if (dir) await openFolderFromPath(dir);
+          return;
+        }
+        // Web FSA: ディレクトリハンドルを取得して開く（非対応ブラウザは何もしない＝既存ボタンに任せる）
+        const item = e.dataTransfer.items[0];
+        const handle = await (item as DataTransferItem & {
+          getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
+        })?.getAsFileSystemHandle?.();
+        if (handle?.kind === 'directory') await openFolderFromHandle(handle as FileSystemDirectoryHandle);
+      } catch (err) {
+        alert(err);
+      }
+    })();
+  };
+
+  return (
+    <Flex
+      direction="column"
+      alignItems="center"
+      justifyContent="center"
+      gap="size-100"
+      height="size-3000"
+      UNSAFE_style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+    >
+      <Heading level={3}>{t('empty.title')}</Heading>
+      <Text>{t('empty.body')}</Text>
+      <DropZone $active={isDragging} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+        {t('empty.drop')}
+      </DropZone>
+    </Flex>
+  );
+};
+
+export const Conte: React.FC = React.memo(() => {
   const fileName = useGlobal('globalFileName')[0];
 
-  // プロジェクト未オープン時はカラムヘッダ/CUT 一覧を出さず、中央寄せの空状態ガイドのみを表示する。
-  // New/Open は Header ローカル（storage 依存）で Conte から安全に呼べないため、ボタンは置かずテキスト誘導に留める。
+  // プロジェクト未オープン時はカラムヘッダ/CUT 一覧を出さず、中央寄せの空状態ガイド + D&D ドロップゾーンを表示する。
   if (!fileName) {
-    return (
-      <Flex
-        direction="column"
-        alignItems="center"
-        justifyContent="center"
-        gap="size-100"
-        height="size-3000"
-        UNSAFE_style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-      >
-        <Heading level={3}>{t('empty.title')}</Heading>
-        <Text>{t('empty.body')}</Text>
-      </Flex>
-    );
+    return <EmptyState />;
   }
 
   return (

@@ -166,6 +166,7 @@ export const en = {
   // 空状態（プロジェクト未オープン）
   'empty.title': 'No project open',
   'empty.body': 'Create a new storyboard or open an existing one.',
+  'empty.drop': 'or drag & drop a folder here',
 } as const;
 
 export type TranslationKey = keyof typeof en;

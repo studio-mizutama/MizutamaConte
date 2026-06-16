@@ -164,4 +164,5 @@ export const ko: Record<TranslationKey, string> = {
   // 빈 상태(프로젝트 미오픈)
   'empty.title': '열린 프로젝트가 없습니다',
   'empty.body': '새 콘티를 만들거나 기존 파일을 여세요.',
+  'empty.drop': '또는 폴더를 여기로 드래그 앤 드롭',
 };

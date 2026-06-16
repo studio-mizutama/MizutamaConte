@@ -164,4 +164,5 @@ export const ja: Record<TranslationKey, string> = {
   // 空状態（プロジェクト未オープン）
   'empty.title': 'プロジェクトが開かれていません',
   'empty.body': '新規に絵コンテを作成するか、既存ファイルを開いてください。',
+  'empty.drop': 'またはフォルダをここにドラッグ＆ドロップ',
 };

@@ -6,6 +6,44 @@ let dirHandle: FileSystemDirectoryHandle | null = null;
 
 export const isFsaSupported = (): boolean => typeof window.showDirectoryPicker === 'function';
 
+/** ディレクトリハンドルからプロジェクト一式を読み込む（picker / D&D 共通の中核）。
+ *  読み込みに成功したら以後の書き込み先として dirHandle に保持する。 */
+const readProjectFromHandle = async (handle: FileSystemDirectoryHandle): Promise<StorageOpenResult | null> => {
+  const files = new Map<string, FileSystemFileHandle>();
+  for await (const entry of handle.values()) {
+    if (entry.kind === 'file') files.set(entry.name, entry as FileSystemFileHandle);
+  }
+  const jsonFileName = [...files.keys()].find((name) => name.toLowerCase().endsWith('.json'));
+  if (!jsonFileName) return null;
+  const jsonText = await (await files.get(jsonFileName)!.getFile()).text();
+  const psdNames = sortPsdNames([...files.keys()].filter((name) => name.toLowerCase().endsWith('.psd')));
+  const psds: StorageOpenResult['psds'] = [];
+  for (const name of psdNames) {
+    const file = await files.get(name)!.getFile();
+    psds.push({ name, data: new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer> });
+  }
+  dirHandle = handle;
+  return { jsonFileName, jsonText, psds };
+};
+
+/** D&D でドロップされたディレクトリハンドルを読み込む（picker を経由しない）。
+ *  書き込み権限が無ければ要求し、許可されなければ null（読み取り専用での誤保存を避ける）。 */
+export const openFromHandle = async (handle: FileSystemDirectoryHandle): Promise<StorageOpenResult | null> => {
+  // 保存（autoSave）のため readwrite 権限を確保する。D&D は picker と違い権限が付かないことがある。
+  const queryable = handle as FileSystemDirectoryHandle & {
+    queryPermission?: (d: { mode: 'readwrite' }) => Promise<PermissionState>;
+    requestPermission?: (d: { mode: 'readwrite' }) => Promise<PermissionState>;
+  };
+  try {
+    if (queryable.queryPermission && (await queryable.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+      if ((await queryable.requestPermission?.({ mode: 'readwrite' })) !== 'granted') return null;
+    }
+  } catch {
+    // 権限 API 非対応環境はそのまま読み込みを試みる
+  }
+  return readProjectFromHandle(handle);
+};
+
 /** Web 実装: File System Access API（Chromium 系のみ） */
 export const webFsaStorage: ProjectStorage = {
   kind: 'web-fsa',
@@ -19,21 +57,7 @@ export const webFsaStorage: ProjectStorage = {
     } catch {
       return null; // ユーザーキャンセル
     }
-    const files = new Map<string, FileSystemFileHandle>();
-    for await (const entry of handle.values()) {
-      if (entry.kind === 'file') files.set(entry.name, entry as FileSystemFileHandle);
-    }
-    const jsonFileName = [...files.keys()].find((name) => name.toLowerCase().endsWith('.json'));
-    if (!jsonFileName) return null;
-    const jsonText = await (await files.get(jsonFileName)!.getFile()).text();
-    const psdNames = sortPsdNames([...files.keys()].filter((name) => name.toLowerCase().endsWith('.psd')));
-    const psds: StorageOpenResult['psds'] = [];
-    for (const name of psdNames) {
-      const file = await files.get(name)!.getFile();
-      psds.push({ name, data: new Uint8Array(await file.arrayBuffer()) as Uint8Array<ArrayBuffer> });
-    }
-    dirHandle = handle;
-    return { jsonFileName, jsonText, psds };
+    return readProjectFromHandle(handle);
   },
 
   async createProject(defaultName: string) {
