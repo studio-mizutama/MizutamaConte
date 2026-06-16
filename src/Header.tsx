@@ -10,7 +10,6 @@ import {
   TabList,
   Tabs,
   Text,
-  Picker,
   Flex,
   MenuTrigger,
   Menu,
@@ -215,34 +214,35 @@ const FilePicker: React.FC = () => {
   const currentKey = api ? dirPathRef.current : getCurrentDirHandle()?.name ?? null;
   const others = recents.filter((r) => (api ? r.id : r.name) !== currentKey);
 
-  // 現在ファイル(先頭) ＋ 最近 を1つの動的アイテム配列に。
-  // react-spectrum 3.11.2 の Picker は <Section>/Fragment 入れ子で実行時に壊れやすい（白画面）ため、
-  // 元の実績どおり「フラットな Item 配列（items + 関数 children）」で描く。
-  const items = [
-    { id: globalFileName || '__none__', name: globalFileName || '' },
-    ...others.map((r) => ({ id: r.id, name: r.name })),
-  ];
-
+  // 「現在ファイル名のボタン → 最近を開く」は値選択(Picker)ではなく**コマンド実行**なので MenuTrigger+Menu。
+  // Picker(controlled selectedKey)で onSelectionChange から open すると、オーバーレイ閉鎖の最中に
+  // applyProject の setGlobal 連鎖が走り、react-spectrum が unmount 済みノードに触れて白画面になる。
+  // ハンバーガー(Menu の onAction→open)が同じ open パイプラインを実績どおり安全に呼べているので、同方式に揃える。
+  if (others.length === 0) {
+    // 最近が無ければメニュー化せず現在ファイル名だけ表示（空 Menu を避ける）
+    return (
+      <ActionButton isQuiet isDisabled>
+        <DocumentOutline />
+        <Text>{globalFileName || ''}</Text>
+      </ActionButton>
+    );
+  }
   return (
-    <Picker
-      isQuiet
-      menuWidth="size-3400"
-      selectedKey={globalFileName || '__none__'}
-      items={items}
-      onSelectionChange={(key) => {
-        const id = String(key);
-        if (id === globalFileName || id === '__none__') return;
-        const entry = recents.find((r) => r.id === id);
-        if (entry) void openRecent(entry);
-      }}
-    >
-      {(item) => (
-        <Item key={item.id} textValue={item.name}>
-          <DocumentOutline />
-          <Text>{item.name}</Text>
-        </Item>
-      )}
-    </Picker>
+    <MenuTrigger>
+      <ActionButton isQuiet>
+        <DocumentOutline />
+        <Text>{globalFileName || ''}</Text>
+      </ActionButton>
+      <Menu
+        items={others}
+        onAction={(key) => {
+          const entry = others.find((r) => r.id === String(key));
+          if (entry) void openRecent(entry);
+        }}
+      >
+        {(r) => <Item key={r.id}>{r.name}</Item>}
+      </Menu>
+    </MenuTrigger>
   );
 };
 
