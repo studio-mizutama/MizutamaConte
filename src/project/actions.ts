@@ -228,3 +228,100 @@ export const resizeCutCanvas = (
     ),
   };
 };
+
+// ---- v0.9: fade / Cross ペア同期 ----
+// Action は @types/global.d.ts の `declare global` で定義された ambient 型（import 不要）
+export type FadeSide = 'in' | 'out';
+export type FadeType = NonNullable<Action['fadeIn']> | NonNullable<Action['fadeOut']>;
+
+const FADE_DEFAULT = 12;
+const clampDur = (v: number, max: number): number => Math.max(0, Math.min(v, max));
+const sideFields = (side: FadeSide) =>
+  side === 'in'
+    ? { type: 'fadeIn' as const, dur: 'fadeInDuration' as const }
+    : { type: 'fadeOut' as const, dur: 'fadeOutDuration' as const };
+const partnerOf = (index: number, side: FadeSide): { idx: number; side: FadeSide } =>
+  side === 'out' ? { idx: index + 1, side: 'in' } : { idx: index - 1, side: 'out' };
+
+const applyActionPatches = (
+  project: ProjectFile,
+  patches: Array<{ idx: number; action: Partial<Action> }>,
+): ProjectFile => {
+  const byIdx = new Map<number, Partial<Action>>();
+  for (const p of patches) byIdx.set(p.idx, { ...byIdx.get(p.idx), ...p.action });
+  return {
+    ...project,
+    cuts: project.cuts.map((c, i) => {
+      const patch = byIdx.get(i);
+      return patch ? { ...c, action: { ...c.action, ...patch } } : c;
+    }),
+  };
+};
+
+/** 片側の fade 種別を設定。Cross は相方も同期。種別選択時 duration 既定12（cut尺clamp）。 */
+export const setFadeType = (
+  project: ProjectFile,
+  index: number,
+  side: FadeSide,
+  type: FadeType | undefined,
+): ProjectFile => {
+  const cut = project.cuts[index];
+  if (!cut) return project;
+  const f = sideFields(side);
+  const prevType = cut.action?.[f.type];
+  const partner = partnerOf(index, side);
+  const partnerCut = project.cuts[partner.idx];
+
+  if (type === 'Cross') {
+    if (!partnerCut) return project;
+    const cap = Math.min(cut.time ?? 0, partnerCut.time ?? 0);
+    const dur = clampDur((cut.action?.[f.dur] as number) || FADE_DEFAULT, cap);
+    const pf = sideFields(partner.side);
+    return applyActionPatches(project, [
+      { idx: index, action: { [f.type]: 'Cross', [f.dur]: dur } as Partial<Action> },
+      { idx: partner.idx, action: { [pf.type]: 'Cross', [pf.dur]: dur } as Partial<Action> },
+    ]);
+  }
+
+  const patches: Array<{ idx: number; action: Partial<Action> }> = [];
+  if (type === undefined) {
+    patches.push({ idx: index, action: { [f.type]: undefined } as Partial<Action> });
+  } else {
+    const dur = clampDur((cut.action?.[f.dur] as number) || FADE_DEFAULT, cut.time ?? 0);
+    patches.push({ idx: index, action: { [f.type]: type, [f.dur]: dur } as Partial<Action> });
+  }
+  if (prevType === 'Cross' && partnerCut) {
+    const pf = sideFields(partner.side);
+    if (partnerCut.action?.[pf.type] === 'Cross') {
+      patches.push({ idx: partner.idx, action: { [pf.type]: undefined } as Partial<Action> });
+    }
+  }
+  return applyActionPatches(project, patches);
+};
+
+/** 片側の duration を設定。その側が Cross なら相方も追従。両尺 min で clamp。 */
+export const setFadeDuration = (
+  project: ProjectFile,
+  index: number,
+  side: FadeSide,
+  duration: number,
+): ProjectFile => {
+  const cut = project.cuts[index];
+  if (!cut) return project;
+  const f = sideFields(side);
+  if (cut.action?.[f.type] === 'Cross') {
+    const partner = partnerOf(index, side);
+    const partnerCut = project.cuts[partner.idx];
+    if (partnerCut) {
+      const dur = clampDur(duration, Math.min(cut.time ?? 0, partnerCut.time ?? 0));
+      const pf = sideFields(partner.side);
+      return applyActionPatches(project, [
+        { idx: index, action: { [f.dur]: dur } as Partial<Action> },
+        { idx: partner.idx, action: { [pf.dur]: dur } as Partial<Action> },
+      ]);
+    }
+  }
+  return applyActionPatches(project, [
+    { idx: index, action: { [f.dur]: clampDur(duration, cut.time ?? 0) } as Partial<Action> },
+  ]);
+};
