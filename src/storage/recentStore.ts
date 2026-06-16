@@ -22,8 +22,9 @@ export const recordRecent = async (args: {
     entry = { id: args.electronPath, name: basename(args.electronPath), path: args.electronPath, timestamp: Date.now() };
   } else if (args.webHandle) {
     const existing = await findHandleId(args.webHandle);
-    const id = existing ?? (crypto.randomUUID ? crypto.randomUUID() : `${args.webHandle.name}-${Date.now()}`);
-    if (!existing) await putHandle(id, args.webHandle);
+    const id = existing ?? crypto?.randomUUID?.() ?? `${args.webHandle.name}-${Date.now()}`;
+    // 新規・既存いずれも最新 handle を保存し直す（再オープン時の権限 stale 化を防ぐ）
+    await putHandle(id, args.webHandle);
     entry = { id, name: args.webHandle.name, timestamp: Date.now() };
   } else {
     return prev;

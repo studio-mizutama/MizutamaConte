@@ -15,12 +15,17 @@ const openDb = (): Promise<IDBDatabase> =>
 
 const tx = async <T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest): Promise<T> => {
   const db = await openDb();
-  return new Promise<T>((resolve, reject) => {
-    const store = db.transaction(STORE, mode).objectStore(STORE);
-    const req = fn(store);
-    req.onsuccess = () => resolve(req.result as T);
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    return await new Promise<T>((resolve, reject) => {
+      const store = db.transaction(STORE, mode).objectStore(STORE);
+      const req = fn(store);
+      req.onsuccess = () => resolve(req.result as T);
+      req.onerror = () => reject(req.error);
+    });
+  } finally {
+    // close() は保留中トランザクションの完了を待ってから閉じる（書き込みは中断されない）＝接続リーク防止
+    db.close();
+  }
 };
 
 export const putHandle = (id: string, handle: FileSystemDirectoryHandle): Promise<void> =>
@@ -35,20 +40,32 @@ export const deleteHandle = (id: string): Promise<void> =>
 /** 既存ストア内の同一フォルダ handle を探し、その id を返す（dedupe 用）。無ければ null。 */
 export const findHandleId = async (handle: FileSystemDirectoryHandle): Promise<string | null> => {
   const db = await openDb();
-  return new Promise<string | null>((resolve) => {
-    const store = db.transaction(STORE, 'readonly').objectStore(STORE);
-    const cursorReq = store.openCursor();
-    cursorReq.onerror = () => resolve(null);
-    cursorReq.onsuccess = async () => {
-      const cursor = cursorReq.result;
-      if (!cursor) return resolve(null);
-      try {
-        const stored = cursor.value as FileSystemDirectoryHandle;
-        if (await handle.isSameEntry(stored)) return resolve(String(cursor.key));
-      } catch {
-        // isSameEntry 不能時はスキップ
-      }
-      cursor.continue();
-    };
-  });
+  // カーソルで全エントリ(key+handle)を「同期的に」収集する。
+  // onsuccess を async にして isSameEntry を await すると、その間に readonly トランザクションが
+  // autocommit され、再開後の cursor.continue() が "transaction has finished" で失敗しうる（仕様違反）。
+  // → トランザクション内では収集のみ、isSameEntry の比較はトランザクション外で行う。
+  let entries: Array<{ id: string; stored: FileSystemDirectoryHandle }>;
+  try {
+    entries = await new Promise((resolve) => {
+      const out: Array<{ id: string; stored: FileSystemDirectoryHandle }> = [];
+      const cursorReq = db.transaction(STORE, 'readonly').objectStore(STORE).openCursor();
+      cursorReq.onerror = () => resolve(out);
+      cursorReq.onsuccess = () => {
+        const cursor = cursorReq.result;
+        if (!cursor) return resolve(out);
+        out.push({ id: String(cursor.key), stored: cursor.value as FileSystemDirectoryHandle });
+        cursor.continue();
+      };
+    });
+  } finally {
+    db.close();
+  }
+  for (const e of entries) {
+    try {
+      if (await handle.isSameEntry(e.stored)) return e.id;
+    } catch {
+      // isSameEntry 不能時はスキップ
+    }
+  }
+  return null;
 };
