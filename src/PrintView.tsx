@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
-import { Layer } from 'ag-psd';
 import { FrameSize } from 'project/types';
 import { SceneGroup } from 'project/scene';
 import { thumbnailScale } from 'project/dimensions';
-import { canvasToDataURL } from 'psd/thumbnail';
+import { frameModelToDataURL } from 'psd/thumbnail';
 import { frameToTimecode } from 'project/time';
 import { cameraFrames, Rect } from 'print/cameraFrame';
 import { Page } from 'print/paginate';
@@ -63,41 +62,36 @@ const PrintCutRow: React.FC<{
   const frameW = frame.width * thumbScale;
   const frameH = frame.height * thumbScale;
   const action = cut.action;
-  // children[0] はベース（フレーム枠）なので除外。children[1..] が時系列フリップブックのレイヤー
-  const children = (cut.picture?.children ?? []) as Layer[];
-  const layers = children.filter((_child, i) => i !== 0);
+  // 旧: children[1..] の各レイヤーを <img> 列挙。新: 背景＋全フレームユニットを 1 枚に
+  // 合成した単一 PNG（frameModelToDataURL）を描画する。合成キャンバスはドキュメント実寸
+  // （= cut.picture.width × height）なので、表示寸法は従来どおり picture 実寸 × thumbScale。
+  const src = frameModelToDataURL(cut.picture);
+  const dispW = (cut.picture?.width ?? 0) * thumbScale;
+  const dispH = (cut.picture?.height ?? 0) * thumbScale;
+  const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
   return (
     <div className={`print-block${lastOnPage ? ' print-block-last' : ''}`} data-cut-index={index}>
       <div className="print-cut">
         <div className="print-col-cut">{index + 1}</div>
         <div className="print-col-picture">
-          {layers.map((child, layerI, arr) => {
-            const src = canvasToDataURL(child.canvas);
-            const dispW = (child.canvas?.width ?? 0) * thumbScale;
-            const dispH = (child.canvas?.height ?? 0) * thumbScale;
-            const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
-            return (
-              <div
-                key={`p${index}-${layerI}`}
-                style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px`, background: '#fff' }}
-              >
-                {/* transform:scale ではなく実寸 width/height で描画する。transform だと img の
-                    レイアウトボックスが原寸のままになり、印刷のページ分割で各カットが原寸高に
-                    膨らんで「改ページされまくる」。実寸でレイアウトさせ計測＝印刷高を一致させる。 */}
-                <img src={src} alt="cut" style={{ width: `${dispW}px`, height: `${dispH}px`, display: 'block' }} />
-                {layerI === 0 && frames.in && (
-                  <div className="print-frame-in" style={rectStyle(frames.in)}>
-                    IN
-                  </div>
-                )}
-                {layerI === arr.length - 1 && frames.out && (
-                  <div className="print-frame-out" style={rectStyle(frames.out)}>
-                    OUT
-                  </div>
-                )}
+          <div
+            style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px`, background: '#fff' }}
+          >
+            {/* transform:scale ではなく実寸 width/height で描画する。transform だと img の
+                レイアウトボックスが原寸のままになり、印刷のページ分割で各カットが原寸高に
+                膨らんで「改ページされまくる」。実寸でレイアウトさせ計測＝印刷高を一致させる。 */}
+            <img src={src} alt="cut" style={{ width: `${dispW}px`, height: `${dispH}px`, display: 'block' }} />
+            {frames.in && (
+              <div className="print-frame-in" style={rectStyle(frames.in)}>
+                IN
               </div>
-            );
-          })}
+            )}
+            {frames.out && (
+              <div className="print-frame-out" style={rectStyle(frames.out)}>
+                OUT
+              </div>
+            )}
+          </div>
         </div>
         <div className="print-col-action">
           {action?.fadeIn && (
