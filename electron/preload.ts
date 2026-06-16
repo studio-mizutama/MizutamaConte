@@ -34,6 +34,9 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの View > 再読み込み からの要求（現在のプロジェクトフォルダをディスクから再読込）
   onReloadProjectRequest: (listener: () => void) => ipcRenderer.on('menu:reload-project', listener),
   removeReloadProjectRequest: () => ipcRenderer.removeAllListeners('menu:reload-project'),
+  // メニューの View > 編集タブ / プレビュータブ からのタブ切替要求
+  onSelectTab: (cb: (tab: string) => void) => ipcRenderer.on('menu:select-tab', (_e, tab: string) => cb(tab)),
+  removeSelectTab: () => ipcRenderer.removeAllListeners('menu:select-tab'),
   // メニューの Edit > 取り消す / やり直す からの要求
   onUndoRequest: (listener: () => void) => ipcRenderer.on('menu:undo', listener),
   removeUndoRequest: () => ipcRenderer.removeAllListeners('menu:undo'),

@@ -108,6 +108,8 @@ export interface Sandbox {
   removeExportVideoRequest: () => void;
   onReloadProjectRequest: (listener: () => void) => void;
   removeReloadProjectRequest: () => void;
+  onSelectTab: (cb: (tab: string) => void) => void;
+  removeSelectTab: () => void;
   onUndoRequest: (listener: () => void) => void;
   removeUndoRequest: () => void;
   onRedoRequest: (listener: () => void) => void;

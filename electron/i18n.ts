@@ -15,6 +15,8 @@ type MenuStrings = {
   'menu.edit': string;
   'menu.undo': string;
   'menu.redo': string;
+  'menu.editTab': string;
+  'menu.previewTab': string;
   'menu.reload': string;
   'menu.print': string;
   'menu.exportVideo': string;
@@ -40,6 +42,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.edit': '編集',
     'menu.undo': '元に戻す',
     'menu.redo': 'やり直す',
+    'menu.editTab': '編集タブ',
+    'menu.previewTab': 'プレビュータブ',
     'menu.reload': '再読み込み',
     'menu.print': '絵コンテ印刷…',
     'menu.exportVideo': '動画書き出し…',
@@ -63,6 +67,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.edit': '편집',
     'menu.undo': '실행 취소',
     'menu.redo': '다시 실행',
+    'menu.editTab': '편집 탭',
+    'menu.previewTab': '미리보기 탭',
     'menu.reload': '새로고침',
     'menu.print': '콘티 인쇄…',
     'menu.exportVideo': '동영상 내보내기…',
@@ -86,6 +92,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.edit': 'Edit',
     'menu.undo': 'Undo',
     'menu.redo': 'Redo',
+    'menu.editTab': 'Edit Tab',
+    'menu.previewTab': 'Preview Tab',
     'menu.reload': 'Reload',
     'menu.print': 'Print Storyboard…',
     'menu.exportVideo': 'Export Video…',

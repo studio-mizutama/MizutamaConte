@@ -79,6 +79,17 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
       label: mt(locale, 'menu.view'),
       submenu: [
         {
+          label: mt(locale, 'menu.editTab'),
+          accelerator: 'CmdOrCtrl+1',
+          click: () => win.webContents.send('menu:select-tab', 'Edit'),
+        },
+        {
+          label: mt(locale, 'menu.previewTab'),
+          accelerator: 'CmdOrCtrl+2',
+          click: () => win.webContents.send('menu:select-tab', 'Preview'),
+        },
+        { type: 'separator' },
+        {
           label: mt(locale, 'menu.reload'),
           accelerator: 'CmdOrCtrl+R',
           // プロジェクトを開いている時は現在のフォルダをディスクから再読込（レンダラ起点）。

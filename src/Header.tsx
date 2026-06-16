@@ -169,6 +169,18 @@ const Tab: React.FC = () => {
     keyDown();
   });
 
+  // Web のみ: ⌘/Ctrl+1=編集 / ⌘/Ctrl+2=プレビュー（Electron は View メニューの accelerator が担う＝二重発火回避）。
+  // ブラウザは ⌘+数字 をタブ切替に取られ得るため best-effort。確実な切替は e/p（上）。
+  useHotkeys('command+1,ctrl+1', (e) => { if (api) return; e.preventDefault(); setSelected('Edit'); keyDown(); }, [setSelected]);
+  useHotkeys('command+2,ctrl+2', (e) => { if (api) return; e.preventDefault(); setSelected('Preview'); keyDown(); }, [setSelected]);
+  // Electron: View メニュー → menu:select-tab IPC
+  useEffect(() => {
+    if (!api?.onSelectTab) return;
+    api.onSelectTab((tab) => setSelected(tab as 'Edit' | 'Preview'));
+    return () => api.removeSelectTab?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Tabs width="fit-content" selectedKey={selected} onSelectionChange={setSelected as (keys: Key) => any}>
       <TabList maxHeight="size-500">
