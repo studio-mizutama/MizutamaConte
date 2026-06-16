@@ -14,6 +14,7 @@ import { useViewportSize } from 'hooks/useViewportSize';
 import { defaultCanvasSize } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 import { frameState } from 'project/frameState';
+import { clampFrame } from 'project/frameNav';
 import { compositeFrame } from 'video/compositor';
 import { useGlobal } from 'reactn';
 import { useT } from 'i18n';
@@ -105,8 +106,7 @@ export const Preview: React.FC = React.memo(() => {
       cancelAnimationFrame(animationRef.current);
       setIsPlay(false);
       if (!timeTotal) return;
-      if (time >= timeTotal) time = timeTotal - 1;
-      setFrame(time);
+      setFrame(clampFrame(time, timeTotal));
     },
     [timeTotal],
   );
