@@ -58,7 +58,7 @@ const App: React.FC = () => {
   const mode = useGlobal('mode')[0];
   useUndoRedo();
 
-  // 一発アクションのボタン/アイコンは押下後にフォーカスを残さない。フォーカスを保持すると
+  // ボタン/アイコン/タブ/ツール等の操作要素は押下後にフォーカスを残さない。フォーカスを保持すると
   // react-aria が Space/Enter を stopPropagation で消費し、Preview のショートカット等が効かなくなるため。
   // 機能上フォーカスが必要なもの＝テキスト入力(input/textarea)・スライダー・オーバーレイのトリガ
   // (aria-haspopup) とオーバーレイ内(dialog/menu/listbox/grid)は除外する（矢印選択/Esc/フォーカストラップ）。
@@ -68,11 +68,17 @@ const App: React.FC = () => {
       // press 処理でフォーカスが確定した後に判定するため次フレームへ送る
       requestAnimationFrame(() => {
         const el = document.activeElement as HTMLElement | null;
-        if (!el) return;
-        const isButton = el.tagName === 'BUTTON' || el.getAttribute('role') === 'button';
-        if (!isButton) return;
+        if (!el || el === document.body) return;
+        const tag = el.tagName;
+        // テキスト入力はフォーカス必須
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return;
+        const role = el.getAttribute('role');
+        // スライダー・数値スピナー・テキストボックス系もフォーカス必須
+        if (role === 'slider' || role === 'spinbutton' || role === 'textbox' || role === 'searchbox') return;
+        // オーバーレイのトリガ(開閉)とオーバーレイ内(矢印選択/Esc/フォーカストラップ)は除外
         if (el.getAttribute('aria-haspopup') || el.getAttribute('aria-expanded') === 'true') return;
         if (el.closest('[role="dialog"],[role="alertdialog"],[role="menu"],[role="listbox"],[role="grid"]')) return;
+        // それ以外(ボタン/アイコン/タブ/ツール等)はフォーカスを残さない＝ショートカットを奪わせない
         el.blur();
       });
     };
