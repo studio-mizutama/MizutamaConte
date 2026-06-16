@@ -8,6 +8,7 @@ import { thumbnailScale } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
 import { frameUnitToDataURL } from 'psd/thumbnail';
 import { useT } from 'i18n';
+import { totalFrames, cutOffsets } from 'project/cutOffsets';
 
 
 const CutNumber = styled.div`
@@ -55,7 +56,8 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
   const viewport = useViewportSize();
   const width = viewport.width - 340;
 
-  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+  const timeTotal = totalFrames(cuts ?? []);
+  const cutSpans = cutOffsets(cuts ?? []);
   const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
 
   return (
@@ -91,7 +93,7 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
 
         {cuts.length > 0 &&
           cuts.map((cut, index) => {
-            const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+            const preTimeSum = cutSpans[index]?.start ?? 0;
             const time = cut?.time || 0;
             return (
               <CutArea
