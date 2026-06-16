@@ -8,6 +8,7 @@ import { frameToTimecode } from 'project/time';
 import { cameraFrames, Rect } from 'print/cameraFrame';
 import { Page } from 'print/paginate';
 import { useT, TranslationKey } from 'i18n';
+import { cutOffsets } from 'project/cutOffsets';
 
 const rectStyle = (r: Rect): React.CSSProperties => ({
   position: 'absolute',
@@ -154,11 +155,8 @@ export interface PrintViewProps {
 }
 
 export const PrintView: React.FC<PrintViewProps> = ({ title, cuts, scenes, frame, fps, pages }) => {
-  // 累積尺（各 CUT までの合計フレーム数）
-  const timeSums = useMemo(() => {
-    let acc = 0;
-    return cuts.map((c) => (acc += c.time ?? 0));
-  }, [cuts]);
+  // 累積尺（各 CUT までの合計フレーム数）。Cross の重なりを差し引いた走計＝末尾が総尺。
+  const timeSums = useMemo(() => cutOffsets(cuts).map((s) => s.end), [cuts]);
   // 各 CUT index → 所属シーン（ページ見出しに出す SCENE N の判定）
   const sceneByCut = useMemo(() => {
     const m = new Map<number, SceneGroup>();

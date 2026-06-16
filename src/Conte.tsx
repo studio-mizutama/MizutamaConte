@@ -29,6 +29,7 @@ import { useOpenFolder } from 'hooks/useOpenFolder';
 import { DraggableRow } from 'styles/DraggableRow';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
+import { cutOffsets } from 'project/cutOffsets';
 
 const { api } = window;
 
@@ -260,6 +261,7 @@ const CutContainer: React.FC = () => {
 
   const scenes = deriveScenes(project.cuts);
   const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
+  const cutSpans = cutOffsets(cuts);
   const sceneOfIndex = new Map<number, number>();
   scenes.forEach((s) => s.cutIndices.forEach((i) => sceneOfIndex.set(i, s.startIndex)));
 
@@ -371,7 +373,7 @@ const CutContainer: React.FC = () => {
           const band = sceneByStart.get(index);
           const sceneStart = sceneOfIndex.get(index) ?? 0;
           const isCollapsed = collapsed.has(sceneStart);
-          const timeSum = cuts.slice(0, index + 1).reduce<number>((sum, c) => sum + (c.time ?? 0), 0);
+          const timeSum = cutSpans[index]?.end ?? 0;
           return (
             <React.Fragment key={index}>
               {band && (
