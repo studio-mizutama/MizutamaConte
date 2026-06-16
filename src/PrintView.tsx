@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { FrameSize } from 'project/types';
 import { SceneGroup } from 'project/scene';
 import { thumbnailScale } from 'project/dimensions';
-import { frameModelToDataURL } from 'psd/thumbnail';
+import { frameUnitToDataURL } from 'psd/thumbnail';
+import { getFrameModel } from 'project/frameModel';
 import { frameToTimecode } from 'project/time';
 import { cameraFrames, Rect } from 'print/cameraFrame';
 import { Page } from 'print/paginate';
@@ -62,36 +63,40 @@ const PrintCutRow: React.FC<{
   const frameW = frame.width * thumbScale;
   const frameH = frame.height * thumbScale;
   const action = cut.action;
-  // 旧: children[1..] の各レイヤーを <img> 列挙。新: 背景＋全フレームユニットを 1 枚に
-  // 合成した単一 PNG（frameModelToDataURL）を描画する。合成キャンバスはドキュメント実寸
-  // （= cut.picture.width × height）なので、表示寸法は従来どおり picture 実寸 × thumbScale。
-  const src = frameModelToDataURL(cut.picture);
+  // 「1ユニット(単独レイヤー or グループ)=1フレーム」を別 <img> として縦に並べる（フィルムストリップ）。
+  // 各 <img>=「背景 + そのユニット」を合成。実寸 width/height で描画（transform:scale だと印刷の
+  // ページ分割で img の原寸高に膨らみ改ページ過多になる）。IN 枠=先頭ユニット / OUT 枠=末尾ユニット。
   const dispW = (cut.picture?.width ?? 0) * thumbScale;
   const dispH = (cut.picture?.height ?? 0) * thumbScale;
   const frames = cameraFrames({ frameW, frameH, displayW: dispW, displayH: dispH, cameraWork: cut.cameraWork });
+  const units = cut.picture ? getFrameModel(cut.picture).units : [];
   return (
     <div className={`print-block${lastOnPage ? ' print-block-last' : ''}`} data-cut-index={index}>
       <div className="print-cut">
         <div className="print-col-cut">{index + 1}</div>
         <div className="print-col-picture">
-          <div
-            style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px`, background: '#fff' }}
-          >
-            {/* transform:scale ではなく実寸 width/height で描画する。transform だと img の
-                レイアウトボックスが原寸のままになり、印刷のページ分割で各カットが原寸高に
-                膨らんで「改ページされまくる」。実寸でレイアウトさせ計測＝印刷高を一致させる。 */}
-            <img src={src} alt="cut" style={{ width: `${dispW}px`, height: `${dispH}px`, display: 'block' }} />
-            {frames.in && (
-              <div className="print-frame-in" style={rectStyle(frames.in)}>
-                IN
-              </div>
-            )}
-            {frames.out && (
-              <div className="print-frame-out" style={rectStyle(frames.out)}>
-                OUT
-              </div>
-            )}
-          </div>
+          {units.map((_unit, unitI, unitArr) => (
+            <div
+              key={unitI}
+              style={{ position: 'relative', width: `${dispW}px`, height: `${dispH}px`, background: '#fff' }}
+            >
+              <img
+                src={frameUnitToDataURL(cut.picture, unitI)}
+                alt="cut"
+                style={{ width: `${dispW}px`, height: `${dispH}px`, display: 'block' }}
+              />
+              {unitI === 0 && frames.in && (
+                <div className="print-frame-in" style={rectStyle(frames.in)}>
+                  IN
+                </div>
+              )}
+              {unitI === unitArr.length - 1 && frames.out && (
+                <div className="print-frame-out" style={rectStyle(frames.out)}>
+                  OUT
+                </div>
+              )}
+            </div>
+          ))}
         </div>
         <div className="print-col-action">
           {action?.fadeIn && (

@@ -16,13 +16,18 @@ export const canvasToDataURL = (canvas: HTMLCanvasElement | undefined): string |
   return url;
 };
 
-const modelUrlCache = new WeakMap<Psd, string>();
-/** 背景 + 全フレームユニット（グループ/ブレンド/clipping 適用）を1枚に合成した dataURL。
- *  Editor/印刷の静止表示（全フレーム重畳）用。Psd 同一性でキャッシュ（再パースで自動失効）。 */
-export const frameModelToDataURL = (psd: Psd | undefined): string | undefined => {
+const unitUrlCache = new WeakMap<Psd, (string | undefined)[]>();
+/** 背景 + 指定フレームユニット1個（グループ/ブレンド/clipping 適用）を合成した dataURL。
+ *  Editor/印刷は「1ユニット=1フレーム」を別サムネイルとして並べる（フィルムストリップ）。
+ *  全ユニットを重畳しない（重畳は仕様外）。Psd 同一性＋unitIndex でキャッシュ（再パースで自動失効）。 */
+export const frameUnitToDataURL = (psd: Psd | undefined, unitIndex: number): string | undefined => {
   if (!psd) return undefined;
-  const cached = modelUrlCache.get(psd);
-  if (cached !== undefined) return cached;
+  let arr = unitUrlCache.get(psd);
+  if (!arr) {
+    arr = [];
+    unitUrlCache.set(psd, arr);
+  }
+  if (arr[unitIndex] !== undefined) return arr[unitIndex];
   const model = getFrameModel(psd);
   const canvas = document.createElement('canvas');
   canvas.width = model.width;
@@ -31,8 +36,8 @@ export const frameModelToDataURL = (psd: Psd | undefined): string | undefined =>
   const scratch = document.createElement('canvas');
   scratch.width = model.width;
   scratch.height = model.height;
-  if (ctx) drawModel(ctx, model, scratch, 'all');
+  if (ctx) drawModel(ctx, model, scratch, unitIndex);
   const url = canvas.toDataURL('image/png', 0.4);
-  modelUrlCache.set(psd, url);
+  arr[unitIndex] = url;
   return url;
 };

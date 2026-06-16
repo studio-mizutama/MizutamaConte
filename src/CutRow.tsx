@@ -24,7 +24,8 @@ import { ProjectCut, FrameSize } from 'project/types';
 import { EditorMode } from 'hooks/editorMode';
 import { useEditingEnabled } from 'hooks/editingEnabled';
 import { useProjectActions } from 'hooks/useProjectActions';
-import { frameModelToDataURL } from 'psd/thumbnail';
+import { frameUnitToDataURL } from 'psd/thumbnail';
+import { getFrameModel } from 'project/frameModel';
 import { frameToTimecode, parseTimecode } from 'project/time';
 import { useT, TranslationKey } from 'i18n';
 
@@ -475,93 +476,94 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                 {editorMode === 'resize' && cut.psdName && (
                   <ResizeHandle cutIndex={index} canvas={cutCanvas(projectCut)} frame={frame} thumbScale={thumbScale} />
                 )}
-                {/* 背景 + 全フレームユニット（グループ/ブレンド/不透明度/クリッピング適用済み）を
-                    frameModelToDataURL で 1 枚に合成して表示する。合成画像はドキュメントサイズ
-                    (cut.picture.width × cut.picture.height)＝従来の正規化レイヤーキャンバスと同寸。 */}
-                {cut.picture && (
-                  <div
-                    style={{
-                      height: `${cut.picture.height * thumbScale}px`,
-                      width: `${cut.picture.width * thumbScale}px`,
-                      position: 'relative',
-                      cursor: editorMode === 'resize' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
-                    }}
-                    title={cut.psdName ? t('cutRow.openHint', { name: cut.psdName }) : undefined}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      if (!cut.psdName) return;
-                      if (window.api) {
-                        window.api.openInPaint(cut.psdName).then((result) => {
-                          if (!result.ok) alert(t('cutRow.launchFailed', { error: result.error ?? '' }));
-                        });
-                      } else {
-                        alert(t('cutRow.webEditHint', { name: cut.psdName }));
-                      }
-                    }}
-                  >
+                {/* 「1ユニット(単独レイヤー or グループ)=1フレーム」を別サムネイルとして縦に並べる
+                    （フィルムストリップ）。各サムネイル=「背景 + そのユニット」を合成（グループ/ブレンド/
+                    不透明度/clipping 適用）。全ユニットの重畳はしない（仕様外）。空ユニットは背景のみの
+                    サムネイルになる。IN 枠=先頭ユニット / OUT 枠=末尾ユニット。 */}
+                {cut.picture &&
+                  getFrameModel(cut.picture).units.map((_unit, unitI, unitArr) => (
                     <div
+                      key={`CC${index + 1}U${unitI}`}
                       style={{
-                        height: `${cut.picture.height * thumbScale}px`,
-                        width: `${cut.picture.width * thumbScale}px`,
+                        height: `${cut.picture!.height * thumbScale}px`,
+                        width: `${cut.picture!.width * thumbScale}px`,
                         position: 'relative',
-                        background: '#FFF',
+                        cursor: editorMode === 'resize' ? 'crosshair' : cut.psdName ? 'pointer' : 'default',
                       }}
-                      id={`CC${index + 1}PP`}
+                      title={cut.psdName ? t('cutRow.openHint', { name: cut.psdName }) : undefined}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (!cut.psdName) return;
+                        if (window.api) {
+                          window.api.openInPaint(cut.psdName).then((result) => {
+                            if (!result.ok) alert(t('cutRow.launchFailed', { error: result.error ?? '' }));
+                          });
+                        } else {
+                          alert(t('cutRow.webEditHint', { name: cut.psdName }));
+                        }
+                      }}
                     >
-                      <img
-                        style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
-                        src={frameModelToDataURL(cut.picture)}
-                        alt="cut"
-                      />
+                      <div
+                        style={{
+                          height: `${cut.picture!.height * thumbScale}px`,
+                          width: `${cut.picture!.width * thumbScale}px`,
+                          position: 'relative',
+                          background: '#FFF',
+                        }}
+                        id={`CC${index + 1}PP${unitI}`}
+                      >
+                        <img
+                          style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
+                          src={frameUnitToDataURL(cut.picture, unitI)}
+                          alt="cut"
+                        />
+                      </div>
+                      {unitI === 0 && cut.cameraWork && (
+                        <In
+                          style={{
+                            height: `${frameThumbHeight * cut.cameraWork.scale!.in}px`,
+                            width: `${frameThumbWidth * cut.cameraWork.scale!.in}px`,
+                            top: `${
+                              (cut.picture!.height * thumbScale -
+                                frameThumbHeight * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.y!)) /
+                              2
+                            }px`,
+                            left: `${
+                              (cut.picture!.width * thumbScale -
+                                frameThumbWidth * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.x!)) /
+                              2
+                            }px`,
+                          }}
+                        >
+                          <Heading level={4} margin="size-25">
+                            IN
+                          </Heading>
+                        </In>
+                      )}
+                      {unitI === unitArr.length - 1 && cut.cameraWork && (
+                        <Out
+                          style={{
+                            height: `${frameThumbHeight * cut.cameraWork.scale!.out}px`,
+                            width: `${frameThumbWidth * cut.cameraWork.scale!.out}px`,
+                            top: `${
+                              (cut.picture!.height * thumbScale -
+                                frameThumbHeight * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.y!)) /
+                              2
+                            }px`,
+                            left: `${
+                              (cut.picture!.width * thumbScale -
+                                frameThumbWidth * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.x!)) /
+                              2
+                            }px`,
+                          }}
+                        >
+                          <Heading level={4} margin="size-25">
+                            OUT
+                          </Heading>
+                        </Out>
+                      )}
                     </div>
-                    {/* IN/OUT カメラ枠は 1 枚の合成画像の上に各 1 回だけ重ねる。
-                        位置計算はレイヤーではなく cameraWork とドキュメントサイズに依存する。 */}
-                    {cut.cameraWork && (
-                      <In
-                        style={{
-                          height: `${frameThumbHeight * cut.cameraWork.scale!.in}px`,
-                          width: `${frameThumbWidth * cut.cameraWork.scale!.in}px`,
-                          top: `${
-                            (cut.picture.height * thumbScale -
-                              frameThumbHeight * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.y!)) /
-                            2
-                          }px`,
-                          left: `${
-                            (cut.picture.width * thumbScale -
-                              frameThumbWidth * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.x!)) /
-                            2
-                          }px`,
-                        }}
-                      >
-                        <Heading level={4} margin="size-25">
-                          IN
-                        </Heading>
-                      </In>
-                    )}
-                    {cut.cameraWork && (
-                      <Out
-                        style={{
-                          height: `${frameThumbHeight * cut.cameraWork.scale!.out}px`,
-                          width: `${frameThumbWidth * cut.cameraWork.scale!.out}px`,
-                          top: `${
-                            (cut.picture.height * thumbScale -
-                              frameThumbHeight * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.y!)) /
-                            2
-                          }px`,
-                          left: `${
-                            (cut.picture.width * thumbScale -
-                              frameThumbWidth * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.x!)) /
-                            2
-                          }px`,
-                        }}
-                      >
-                        <Heading level={4} margin="size-25">
-                          OUT
-                        </Heading>
-                      </Out>
-                    )}
-                  </div>
-                )}
+                  ))}
               </div>
             </View>
             <TextContainer
