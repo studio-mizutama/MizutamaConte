@@ -70,7 +70,9 @@ export const PrintStyle = createGlobalStyle`
 
   .print-time-sum { opacity: 0.6; }
 
-  .print-col-action { display: flex; flex-direction: column; gap: 2px; }
+  /* align-self:stretch で PICTURE 列と同じ高さに引き伸ばし、justify-content:space-between で
+     上端=fadeIn・下端=fadeOut を固定（CutRow の absolute top/bottom と同じ意味合い）。 */
+  .print-col-action { display: flex; flex-direction: column; gap: 2px; align-self: stretch; justify-content: space-between; }
   .print-action-text { flex: 1 1 auto; white-space: pre-wrap; word-break: break-word; }
   .print-col-dialogue { white-space: pre-wrap; word-break: break-word; }
 
