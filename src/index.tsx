@@ -8,6 +8,12 @@ import { Locale, ColorScheme } from 'i18n/types';
 const DEFAULT_LOCALE: Locale = 'ja';
 const DEFAULT_COLOR_SCHEME: ColorScheme = 'system';
 
+// 迷子のファイル/フォルダ ドロップでブラウザが既定でそのファイルを開く（ナビゲートする）のを防ぐ安全網。
+// ドロップゾーン自身の React onDrop は引き続き発火する（ここはブラウザ既定動作だけを止める）。
+// 将来のウインドウ全体ドロップ受付を妨げないよう、純粋に preventDefault のみ行う。
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => e.preventDefault());
+
 const isLocale = (v: unknown): v is Locale => v === 'ja' || v === 'ko' || v === 'en';
 const isColorScheme = (v: unknown): v is ColorScheme => v === 'light' || v === 'dark' || v === 'system';
 
@@ -45,7 +51,14 @@ const boot = async (): Promise<void> => {
     videoExportRequested: false,
     canUndo: false,
     canRedo: false,
+    loadError: null,
   });
+
+  // 開発時の検証用: 不正プロジェクト読込のエラーダイアログを手動で起こす（Web の smoke 用。本番では無効）
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__setLoadError = (msg: string) => setGlobal({ loadError: msg });
+  }
 
   ReactDOM.render(
     <React.StrictMode>

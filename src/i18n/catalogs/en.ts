@@ -5,6 +5,7 @@
 export const en = {
   // 共通
   'common.cancel': 'Cancel',
+  'common.ok': 'OK',
   'common.save': 'Save',
   'common.loading.heading': 'Now Loading...',
   'common.loading.ariaLabel': 'Loading…',
@@ -168,6 +169,11 @@ export const en = {
   'empty.title': 'No project open',
   'empty.body': 'Create a new storyboard or open an existing one.',
   'empty.drop': 'or drag & drop a folder here',
+
+  // 読み込みエラー（不正プロジェクト）
+  'error.openTitle': "Couldn't open",
+  'error.openBody':
+    "This folder couldn't be loaded as a storyboard project. Please choose a valid project folder.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

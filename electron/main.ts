@@ -133,7 +133,8 @@ const registerIpcHandlers = () => {
     currentProjectDir = projectDir;
     // 新規プロジェクト作成で File→Print を有効化
     if (mainWindow) createMenu(mainWindow, locale, true);
-    return { name: safeName };
+    // dirPath も返してレンダラの再読込 ref（sharedDirPathRef）を更新できるようにする（New 後の View→Reload/外部編集再読込を有効化）
+    return { name: safeName, dirPath: projectDir };
   });
 
   // atomic write (tmp + rename)。書き込み先は現在のプロジェクトフォルダ内に限定する
@@ -304,6 +305,12 @@ const createWindow = () => {
     },
   });
   mainWindow = win;
+
+  // 迷子のファイル/フォルダ ドロップで Chromium が file:// へナビゲートし、アプリが壊れるのを防ぐ。
+  // 本アプリは単一 index.html のみで内部ナビゲーションを使わないため、全ナビゲーションを拒否してよい。
+  // レンダラ側のロジックに依らない確実なバックストップ。
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // electron-vite: dev 時はレンダラの dev サーバ URL が渡される
   const rendererUrl = process.env['ELECTRON_RENDERER_URL'];

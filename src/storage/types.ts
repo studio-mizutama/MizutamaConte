@@ -24,8 +24,9 @@ export interface ProjectStorage {
   readonly capabilities: StorageCapabilities;
   /** フォルダ選択 → 読み込み。キャンセル時は null */
   openProject(): Promise<StorageOpenResult | null>;
-  /** 新規プロジェクトフォルダ作成。実際に作成されたフォルダ名を返す。キャンセル時は null */
-  createProject(defaultName: string): Promise<{ name: string } | null>;
+  /** 新規プロジェクトフォルダ作成。実際に作成されたフォルダ名（Electron は dirPath も）を返す。キャンセル時は null。
+   *  dirPath は Electron のみ。レンダラの再読込 ref を更新して New 後の再読込を有効化するのに使う。 */
+  createProject(defaultName: string): Promise<{ name: string; dirPath?: string } | null>;
   /** 現在のプロジェクトフォルダへ書き込む（atomic） */
   writeFile(name: string, data: string | Uint8Array): Promise<void>;
   /** 現在のプロジェクトフォルダからファイルを削除する（孤立 PSD の掃除）。存在しなければ無視 */

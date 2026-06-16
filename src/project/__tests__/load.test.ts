@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Psd } from 'ag-psd';
-import { buildProject, migrateV1, sortPsdNames, emptyProject } from '../load';
+import { buildProject, migrateV1, sortPsdNames, emptyProject, isValidProjectJson } from '../load';
 import { ProjectFile } from '../types';
 
 const psdMeta = [
@@ -108,5 +108,28 @@ describe('buildProject', () => {
     });
     const { project } = buildProject(JSON.stringify(v2), loadedPsds, 'Legacy.json');
     expect(project.cuts[0].sceneStart).toBeUndefined();
+  });
+});
+
+describe('isValidProjectJson', () => {
+  it('accepts a v2 project object (version 2 + cuts array)', () => {
+    expect(isValidProjectJson(JSON.stringify(emptyProject('P')))).toBe(true);
+    expect(isValidProjectJson('{"version":2,"cuts":[]}')).toBe(true);
+  });
+
+  it('accepts a v1 top-level array', () => {
+    expect(isValidProjectJson('[]')).toBe(true);
+    expect(isValidProjectJson(JSON.stringify(v1Cuts))).toBe(true);
+  });
+
+  it('rejects malformed / non-project JSON', () => {
+    expect(isValidProjectJson('not json at all')).toBe(false); // パース失敗
+    expect(isValidProjectJson('')).toBe(false); // 空文字
+    expect(isValidProjectJson('null')).toBe(false); // null
+    expect(isValidProjectJson('123')).toBe(false); // 数値
+    expect(isValidProjectJson('{}')).toBe(false); // version/cuts なし
+    expect(isValidProjectJson('{"version":2}')).toBe(false); // cuts なし
+    expect(isValidProjectJson('{"version":1,"cuts":[]}')).toBe(false); // 未対応 version
+    expect(isValidProjectJson('{"version":2,"cuts":"x"}')).toBe(false); // cuts が配列でない
   });
 });

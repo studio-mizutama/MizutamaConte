@@ -3,6 +3,8 @@ import { Key } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
   ActionButton,
+  AlertDialog,
+  DialogContainer,
   Item,
   Section,
   TabList,
@@ -260,6 +262,27 @@ const GitBranchButton: React.FC = () => {
   );
 };
 
+/** 不正プロジェクト読込時のエラーダイアログ。loadError が立つと表示し、OK で消す。
+ *  Header は常時マウントされるため、Open/D&D/再読込のどの経路の失敗もここで拾える。 */
+const LoadErrorDialog: React.FC = () => {
+  const t = useT();
+  const [loadError, setLoadError] = useGlobal('loadError');
+  return (
+    <DialogContainer onDismiss={() => setLoadError(null)}>
+      {loadError && (
+        <AlertDialog
+          variant="error"
+          title={t('error.openTitle')}
+          primaryActionLabel={t('common.ok')}
+          onPrimaryAction={() => setLoadError(null)}
+        >
+          {loadError}
+        </AlertDialog>
+      )}
+    </DialogContainer>
+  );
+};
+
 export const Header: React.FC = () => {
   const t = useT();
   const print = usePrint();
@@ -269,8 +292,9 @@ export const Header: React.FC = () => {
   const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
 
-  // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）
-  const { loadFile, loadFromPayload, reloadCurrentProject, dirPathRef } = useOpenFolder();
+  // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）。
+  // 読込/検証/エラー化はすべてフック側に集約しているため、ここでは経路を呼ぶだけにする。
+  const { loadFile, openFromPicker, reloadFromDirPath, reloadCurrentProject, dirPathRef } = useOpenFolder();
 
   useEffect(() => {
     const inputDirectory = document.getElementById('inputDirectory');
@@ -299,14 +323,15 @@ export const Header: React.FC = () => {
       document.getElementById('inputDirectory')?.click();
       return;
     }
-    loadFromPayload(await storage.openProject());
+    // picker キャンセルは null を返すので openFromPicker（runOpen）が no-op、不正フォルダはエラー化する
+    await openFromPicker(storage.openProject());
   };
 
   // メニューの File > Open からの読み込み要求
   useEffect(() => {
     if (!api) return;
     const listener = () => {
-      api.openProject().then(loadFromPayload);
+      void openFromPicker(api.openProject());
     };
     api.onOpenProjectRequest(listener);
     return () => api.removeOpenProjectRequest();
@@ -344,7 +369,7 @@ export const Header: React.FC = () => {
     if (!api) return;
     const listener = () => {
       if (dirPathRef.current) {
-        api.readProject(dirPathRef.current).then(loadFromPayload);
+        void reloadFromDirPath(dirPathRef.current);
       }
     };
     api.onProjectFilesChanged(listener);
@@ -361,12 +386,9 @@ export const Header: React.FC = () => {
       if (dirPathRef.current) {
         // Cmd/Ctrl+R はキーボード操作なので react-spectrum がキーボードモダリティになり、
         // 再読込後に編集タブへ focus リングが乗ってしまう。読込完了後にフォーカスを外して回避する。
-        api
-          .readProject(dirPathRef.current)
-          .then(loadFromPayload)
-          .then(() => {
-            (document.activeElement as HTMLElement | null)?.blur();
-          });
+        void reloadFromDirPath(dirPathRef.current).then(() => {
+          (document.activeElement as HTMLElement | null)?.blur();
+        });
       }
     };
     api.onReloadProjectRequest(listener);
@@ -378,8 +400,7 @@ export const Header: React.FC = () => {
   useEffect(() => {
     if (api && import.meta.env.DEV) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).__loadProjectByPath = async (dirPath: string) =>
-        loadFromPayload(await api.readProject(dirPath));
+      (window as any).__loadProjectByPath = async (dirPath: string) => reloadFromDirPath(dirPath);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -469,6 +490,7 @@ export const Header: React.FC = () => {
           <SettingsDialog />
         </NoDragArea>
         <AboutDialog isOpen={aboutOpen} onOpenChange={setAboutOpen} />
+        <LoadErrorDialog />
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />

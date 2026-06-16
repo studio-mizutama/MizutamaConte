@@ -4,6 +4,7 @@ import { TranslationKey } from './en';
 export const ja: Record<TranslationKey, string> = {
   // 共通
   'common.cancel': 'キャンセル',
+  'common.ok': 'OK',
   'common.save': '保存',
   'common.loading.heading': '読み込み中...',
   'common.loading.ariaLabel': '読み込み中…',
@@ -166,4 +167,9 @@ export const ja: Record<TranslationKey, string> = {
   'empty.title': 'プロジェクトが開かれていません',
   'empty.body': '新規に絵コンテを作成するか、既存ファイルを開いてください。',
   'empty.drop': 'またはフォルダをここにドラッグ＆ドロップ',
+
+  // 読み込みエラー（不正プロジェクト）
+  'error.openTitle': '開けませんでした',
+  'error.openBody':
+    'このフォルダは絵コンテプロジェクトとして読み込めませんでした。正しいプロジェクトフォルダを選んでください。',
 };

@@ -37,6 +37,9 @@ declare module 'reactn/default' {
     canUndo: boolean;
     /** Redo 可能か */
     canRedo: boolean;
+    /** 不正プロジェクト読込時のユーザー向けエラー本文。null なら非表示。
+     *  Open/D&D/再読込の全経路で useOpenFolder が設定し、Header がダイアログ表示する。 */
+    loadError: string | null;
   }
 }
 
@@ -110,7 +113,7 @@ export interface Sandbox {
   removeAboutRequest: () => void;
   saveVideo: (fileName: string, data: Uint8Array) => Promise<boolean>;
 
-  createProject: (defaultName: string) => Promise<{ name: string } | null>;
+  createProject: (defaultName: string) => Promise<{ name: string; dirPath?: string } | null>;
   writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
   deleteFile: (name: string) => Promise<void>;
   renameFile: (from: string, to: string) => Promise<void>;

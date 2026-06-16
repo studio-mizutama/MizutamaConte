@@ -4,6 +4,7 @@ import { TranslationKey } from './en';
 export const ko: Record<TranslationKey, string> = {
   // 공통
   'common.cancel': '취소',
+  'common.ok': '확인',
   'common.save': '저장',
   'common.loading.heading': '로딩 중...',
   'common.loading.ariaLabel': '로딩 중…',
@@ -166,4 +167,8 @@ export const ko: Record<TranslationKey, string> = {
   'empty.title': '열린 프로젝트가 없습니다',
   'empty.body': '새 콘티를 만들거나 기존 파일을 여세요.',
   'empty.drop': '또는 폴더를 여기로 드래그 앤 드롭',
+
+  // 읽기 오류(잘못된 프로젝트)
+  'error.openTitle': '열 수 없습니다',
+  'error.openBody': '이 폴더는 스토리보드 프로젝트로 불러올 수 없습니다. 올바른 프로젝트 폴더를 선택하세요.',
 };

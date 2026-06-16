@@ -488,6 +488,7 @@ const AddCutRow: React.FC = () => {
 const EmptyState: React.FC = () => {
   const t = useT();
   const { openFolderFromPath, openFolderFromHandle } = useOpenFolder();
+  const setLoadError = useGlobal('loadError')[1];
   const [isDragging, setIsDragging] = useState(false);
 
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -522,8 +523,10 @@ const EmptyState: React.FC = () => {
           getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
         })?.getAsFileSystemHandle?.();
         if (handle?.kind === 'directory') await openFolderFromHandle(handle as FileSystemDirectoryHandle);
-      } catch (err) {
-        alert(err);
+      } catch {
+        // ハンドル取得や読込の失敗は AlertDialog で通知（不正フォルダで落とさない）。
+        // openFolderFrom* 内の失敗は既に loadError を立てるので、ここはその手前の例外用の保険。
+        setLoadError(t('error.openBody'));
       }
     })();
   };

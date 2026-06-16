@@ -25,6 +25,28 @@ export const sortPsdNames = (names: string[]): string[] =>
   [...names].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
 /**
+ * JSON テキストが Conte プロジェクトとして読み込める形か判定する（純粋関数）。
+ * buildProject の受理条件と一致させる:
+ * - v1: トップレベルが配列（Cut の配列）
+ * - v2: version===2 のオブジェクトで cuts が配列
+ * パース失敗・形不一致はすべて false（applyProject 前のガードに使う）。
+ */
+export const isValidProjectJson = (jsonText: string): boolean => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    return false;
+  }
+  // v1: トップレベル配列
+  if (Array.isArray(parsed)) return true;
+  // v2: { version: 2, cuts: [...] }
+  if (typeof parsed !== 'object' || parsed === null) return false;
+  const file = parsed as { version?: unknown; cuts?: unknown };
+  return file.version === 2 && Array.isArray(file.cuts);
+};
+
+/**
  * v1 スキーマ（Cut の配列）を v2 へ移行する。
  * - 各カットへソート済み PSD ファイル名を index 対応で割り当てる
  * - dialogue はカット単位 → 先頭行へ移す（v1 は 1カット=1行）

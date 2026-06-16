@@ -24,6 +24,7 @@ import { useT } from 'i18n';
 import { gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
 import { clearHistory } from 'history/undoManager';
+import { setSharedDirPath } from 'hooks/useOpenFolder';
 
 const FPS_OPTIONS = ['12', '24', '30'];
 
@@ -60,6 +61,9 @@ export const NewProjectDialog: React.FC = () => {
     // 名前はここで決定。保存先フォルダのみネイティブ/FSA で選ぶ（名前の二重入力なし）
     const created = await storage.createProject(title.trim() || 'NewConte');
     if (!created) return;
+    // Electron: 作成フォルダの絶対パスをレンダラの再読込 ref に反映し、New 直後でも
+    // View→Reload / 外部編集の自動再読込を有効化する（Web は getCurrentDirHandle() が非null なので不要）。
+    if (created.dirPath) setSharedDirPath(created.dirPath);
     const project = emptyProject(created.name);
     project.settings = {
       resolution,
