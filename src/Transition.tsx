@@ -3,6 +3,8 @@ import { Flex, Slider, Picker, Item, Text } from '@adobe/react-spectrum';
 import { LabelLL } from 'Label';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
+import { useEditingEnabled } from 'hooks/editingEnabled';
+import { FadeType } from 'project/actions';
 import { useT } from 'i18n';
 
 /** 選択中カットのトランジション（フェード種別・尺）を編集するパネル */
@@ -10,13 +12,12 @@ export const Transition: React.FC = () => {
   const t = useT();
   const index = useGlobal('selectedCutIndex')[0];
   const { project } = useProject();
-  const { setAction } = useProjectActions();
+  const { setFadeTypeAt, setFadeDurationAt } = useProjectActions();
+  const editingEnabled = useEditingEnabled();
   const cut = project.cuts[index];
   const action = cut?.action;
-  const disabled = !cut;
-
-  // 'None' は「フェード無し」= undefined として保存する（表示判定が truthy のため）
-  const update = (patch: Partial<Action>) => setAction(index, { ...action, ...patch });
+  const total = project.cuts.length;
+  const disabled = !cut || !editingEnabled;
 
   // フェード尺はカット尺(time)を超えない
   const maxDuration = cut?.time ?? 0;
@@ -27,8 +28,9 @@ export const Transition: React.FC = () => {
       <Picker
         width="184px"
         isDisabled={disabled}
+        disabledKeys={index === 0 ? ['Cross'] : []}
         selectedKey={action?.fadeIn ?? 'None'}
-        onSelectionChange={(k) => update({ fadeIn: k === 'None' ? undefined : (k as Action['fadeIn']) })}
+        onSelectionChange={(k) => setFadeTypeAt(index, 'in', k === 'None' ? undefined : (k as FadeType))}
       >
         <Item key="None">
           <Text>{t('transition.fade.none')}</Text>
@@ -49,14 +51,15 @@ export const Transition: React.FC = () => {
         width="256px"
         isDisabled={disabled || maxDuration === 0}
         value={Math.min(action?.fadeInDuration ?? 0, maxDuration)}
-        onChange={(v) => update({ fadeInDuration: v })}
+        onChange={(v) => setFadeDurationAt(index, 'in', v)}
       />
       <LabelLL>{t('transition.fadeOut')}</LabelLL>
       <Picker
         width="184px"
         isDisabled={disabled}
+        disabledKeys={index === total - 1 ? ['Cross'] : []}
         selectedKey={action?.fadeOut ?? 'None'}
-        onSelectionChange={(k) => update({ fadeOut: k === 'None' ? undefined : (k as Action['fadeOut']) })}
+        onSelectionChange={(k) => setFadeTypeAt(index, 'out', k === 'None' ? undefined : (k as FadeType))}
       >
         <Item key="None">
           <Text>{t('transition.fade.none')}</Text>
@@ -77,7 +80,7 @@ export const Transition: React.FC = () => {
         width="256px"
         isDisabled={disabled || maxDuration === 0}
         value={Math.min(action?.fadeOutDuration ?? 0, maxDuration)}
-        onChange={(v) => update({ fadeOutDuration: v })}
+        onChange={(v) => setFadeDurationAt(index, 'out', v)}
       />
     </Flex>
   );
