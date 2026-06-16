@@ -100,6 +100,8 @@ export interface Sandbox {
   removePrintRequest: () => void;
   onExportVideoRequest: (listener: () => void) => void;
   removeExportVideoRequest: () => void;
+  onReloadProjectRequest: (listener: () => void) => void;
+  removeReloadProjectRequest: () => void;
   onUndoRequest: (listener: () => void) => void;
   removeUndoRequest: () => void;
   onRedoRequest: (listener: () => void) => void;

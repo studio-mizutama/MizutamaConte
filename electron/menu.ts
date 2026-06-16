@@ -81,7 +81,9 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
         {
           label: mt(locale, 'menu.reload'),
           accelerator: 'CmdOrCtrl+R',
-          click: () => win.reload(),
+          // プロジェクトを開いている時は現在のフォルダをディスクから再読込（レンダラ起点）。
+          // 未オープン時はレンダラ側で no-op（生ページreloadは唐突なので避ける）。
+          click: () => win.webContents.send('menu:reload-project'),
         },
       ],
     },

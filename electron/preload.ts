@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの File > 動画書き出し からの要求
   onExportVideoRequest: (listener: () => void) => ipcRenderer.on('menu:export-video', listener),
   removeExportVideoRequest: () => ipcRenderer.removeAllListeners('menu:export-video'),
+  // メニューの View > 再読み込み からの要求（現在のプロジェクトフォルダをディスクから再読込）
+  onReloadProjectRequest: (listener: () => void) => ipcRenderer.on('menu:reload-project', listener),
+  removeReloadProjectRequest: () => ipcRenderer.removeAllListeners('menu:reload-project'),
   // メニューの Edit > 取り消す / やり直す からの要求
   onUndoRequest: (listener: () => void) => ipcRenderer.on('menu:undo', listener),
   removeUndoRequest: () => ipcRenderer.removeAllListeners('menu:undo'),

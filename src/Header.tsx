@@ -434,6 +434,21 @@ export const Header: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // メニューの View > 再読み込み（Cmd/Ctrl+R）: 現在のフォルダをディスクから再読込し Open と同じ経路で反映。
+  // 外部編集の再読込（project:files-changed）と同一パスで、applyProject 内で履歴もクリアされる。
+  // プロジェクト未オープン時は no-op（生ページ reload を避ける）。
+  useEffect(() => {
+    if (!api?.onReloadProjectRequest) return;
+    const listener = () => {
+      if (dirPathRef.current) {
+        api.readProject(dirPathRef.current).then(loadFromPayload);
+      }
+    };
+    api.onReloadProjectRequest(listener);
+    return () => api.removeReloadProjectRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 開発時の回帰テスト用: ダイアログなしでプロジェクトを開く
   useEffect(() => {
     if (api && import.meta.env.DEV) {
