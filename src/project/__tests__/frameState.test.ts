@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { frameState } from '../frameState';
+import { frameState, frameStates } from '../frameState';
 
 // children[0] は白背景（捨てる）。children[1..] が描画レイヤー。
 // NOTE: global.d.ts は Psd を import しておらず Cut.picture は実質 any 扱いのため、
@@ -72,5 +72,35 @@ describe('frameState', () => {
   it('描画ユニットが無い(pictureShowDuration=0)場合は unitIndex=0 にフォールバック', () => {
     const cuts: Cut[] = [{ time: 24, picture: { children: [{ name: 'bg' }] } as unknown as Cut['picture'] }];
     expect(frameState(10, cuts)!.unitIndex).toBe(0);
+  });
+});
+
+// クロス: A=48f(2u, fadeOut Cross12) / B=36f(1u, fadeIn Cross12) → 重なり [36,48)
+const crossCuts = (): Cut[] => [
+  { time: 48, picture: psd(2), action: { fadeOut: 'Cross', fadeOutDuration: 12 } },
+  { time: 36, picture: psd(1), action: { fadeIn: 'Cross', fadeInDuration: 12 } },
+];
+
+describe('frameStates（クロス重なり）', () => {
+  it('非クロス区間 frame=20 は1件（先発カットのみ）', () => {
+    const ss = frameStates(20, crossCuts());
+    expect(ss.length).toBe(1);
+    expect(ss[0].cutIndex).toBe(0);
+  });
+
+  it('重なり区間 frame=42 は2件（start 昇順・先発 canvasOpacity=1・後発=fadeIn ランプ）', () => {
+    const ss = frameStates(42, crossCuts());
+    expect(ss.length).toBe(2);
+    // 下＝先発 A: ランプ非適用で full（重ねで消えるため）
+    expect(ss[0].cutIndex).toBe(0);
+    expect(ss[0].canvasOpacity).toBe(1);
+    // 上＝後発 B: local=42-36=6, fadeIn12 → 6/12 = 0.5、Cross は非 Black → divOpacity=1
+    expect(ss[1].cutIndex).toBe(1);
+    expect(ss[1].canvasOpacity).toBeCloseTo(0.5, 6);
+    expect(ss[1].divOpacity).toBe(1);
+  });
+
+  it('frameState は choice B（後発カット B）を返す', () => {
+    expect(frameState(42, crossCuts())!.cutIndex).toBe(1);
   });
 });
