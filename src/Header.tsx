@@ -200,7 +200,6 @@ const Tab: React.FC = () => {
 };
 
 const FilePicker: React.FC = () => {
-  const t = useT();
   const globalFileName = useGlobal('globalFileName')[0];
   const [recents, setRecents] = useState<RecentProject[]>([]);
   const { openRecent, dirPathRef } = useOpenFolder();
@@ -216,40 +215,20 @@ const FilePicker: React.FC = () => {
   const currentKey = api ? dirPathRef.current : getCurrentDirHandle()?.name ?? null;
   const others = recents.filter((r) => (api ? r.id : r.name) !== currentKey);
 
-  // react-spectrum Picker は条件付き Section を許容しないため、
-  // 最近リストがある場合とない場合で children を切り替える
-  const pickerChildren = others.length > 0 ? (
-    <>
-      <Section>
-        <Item key={globalFileName || '__none__'} textValue={globalFileName}>
-          <DocumentOutline />
-          <Text>{globalFileName || ''}</Text>
-        </Item>
-      </Section>
-      <Section title={t('header.recentProjects')}>
-        {others.map((r) => (
-          <Item key={r.id} textValue={r.name}>
-            <DocumentOutline />
-            <Text>{r.name}</Text>
-          </Item>
-        ))}
-      </Section>
-    </>
-  ) : (
-    <Section>
-      <Item key={globalFileName || '__none__'} textValue={globalFileName}>
-        <DocumentOutline />
-        <Text>{globalFileName || ''}</Text>
-      </Item>
-    </Section>
-  );
+  // 現在ファイル(先頭) ＋ 最近 を1つの動的アイテム配列に。
+  // react-spectrum 3.11.2 の Picker は <Section>/Fragment 入れ子で実行時に壊れやすい（白画面）ため、
+  // 元の実績どおり「フラットな Item 配列（items + 関数 children）」で描く。
+  const items = [
+    { id: globalFileName || '__none__', name: globalFileName || '' },
+    ...others.map((r) => ({ id: r.id, name: r.name })),
+  ];
 
   return (
     <Picker
       isQuiet
       menuWidth="size-3400"
-      max-width="fit-content"
       selectedKey={globalFileName || '__none__'}
+      items={items}
       onSelectionChange={(key) => {
         const id = String(key);
         if (id === globalFileName || id === '__none__') return;
@@ -257,7 +236,12 @@ const FilePicker: React.FC = () => {
         if (entry) void openRecent(entry);
       }}
     >
-      {pickerChildren}
+      {(item) => (
+        <Item key={item.id} textValue={item.name}>
+          <DocumentOutline />
+          <Text>{item.name}</Text>
+        </Item>
+      )}
     </Picker>
   );
 };
@@ -563,8 +547,8 @@ export const Header: React.FC = () => {
                   }
                 }}
               >
-                {/* react-spectrum Menu は静的 Section と動的 Section を混在できないため
-                    単一の children 配列として構築する */}
+                {/* 全 Section を「items + 関数 children」の動的パターンに統一する
+                    （静的 children Section と混在させると react-spectrum の collection が実行時に壊れる）。 */}
                 {[
                   ...WEB_MENU.map((s) => (
                     <Section key={s.key} title={t(s.titleKey as TranslationKey)} items={s.items}>
@@ -573,10 +557,12 @@ export const Header: React.FC = () => {
                   )),
                   ...(hamburgerRecents.length > 0
                     ? [
-                        <Section key="recent" title={t('header.recentProjects')}>
-                          {hamburgerRecents.map((r) => (
-                            <Item key={`recent:${r.id}`}>{r.name}</Item>
-                          ))}
+                        <Section
+                          key="recent"
+                          title={t('header.recentProjects')}
+                          items={hamburgerRecents.map((r) => ({ key: `recent:${r.id}`, label: r.name }))}
+                        >
+                          {(it: { key: string; label: string }) => <Item key={it.key}>{it.label}</Item>}
                         </Section>,
                       ]
                     : []),
