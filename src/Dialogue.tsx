@@ -19,6 +19,10 @@ export const Dialogue: React.FC = () => {
       marginTop="size-100"
       value={cut?.dialogue ?? ''}
       onChange={(value) => setDialogue(index, value)}
+      onKeyDown={(e) => {
+        // Esc でフォーカスを外し、プレイヤーのショートカット（Space/矢印）へ復帰させる
+        if (e.key === 'Escape') (e.target as HTMLElement).blur();
+      }}
       isDisabled={!cut}
     />
   );
