@@ -16,7 +16,6 @@ import {
 import styled from 'styled-components';
 import { Psd, Layer } from 'ag-psd';
 import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
-import Add from '@spectrum-icons/workflow/Add';
 import Layers from '@spectrum-icons/workflow/Layers';
 import Delete from '@spectrum-icons/workflow/Delete';
 import Link from '@spectrum-icons/workflow/Link';
@@ -77,7 +76,7 @@ const Fade = styled.svg`
 `;
 
 /** CUT 列下端の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列グリッドに収める。
- *  ＋(挿入)を上段に単独で全幅表示し、残り 4 つを 2×2 に並べる。
+ *  4 つ（レイヤー追加・削除・結合・分離）を 2×2 に並べる（＋挿入は行間ホバーガターへ移設）。
  *  margin-top:auto で列の下端へ押し下げる（CUT 番号は上端・クラスタは下端）。
  *  通常はうっすら表示し、CUT 行(.hover)ホバー時に不透明にして誤クリックを防ぐ。 */
 const CutActions = styled.div`
@@ -333,8 +332,6 @@ export interface CutRowProps {
   /** この CUT を削除できるか（CUT が複数あるとき真。最後の1CUTは残す） */
   canDelete: boolean;
   onSplitLast: (index: number) => void;
-  /** この CUT の下に新規 CUT を挿入 */
-  onInsertCut: (index: number) => void;
   /** この CUT にレイヤーを追加 */
   onAddLayer: (index: number) => void;
   /** この CUT を削除 */
@@ -363,7 +360,6 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     canMergeNext,
     canDelete,
     onSplitLast,
-    onInsertCut,
     onAddLayer,
     onDeleteCut,
     onMergeNext,
@@ -372,7 +368,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     setTime,
   }) => {
     const t = useT();
-    // 編集操作が可能か（プロジェクト未オープン or edit 以外のモードでは 5 アイコンをロック）
+    // 編集操作が可能か（プロジェクト未オープン or edit 以外のモードでは 4 アイコンをロック）
     const editingEnabled = useEditingEnabled();
     // 削除確認ダイアログの開閉。確認時のみ onDeleteCut を呼ぶ（誤削除防止）
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -396,24 +392,10 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               {/* CUT 番号は上端・アイコンクラスタは下端（CutActions の margin-top:auto で押し下げ） */}
               <Flex direction="column" alignItems="center" gap="size-50" height="100%">
                 <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
-                {/* per-cut 操作クラスタ。72px に収めるため 2 列グリッド（＋は上段全幅・残り 4 つは 2×2）。
+                {/* per-cut 操作クラスタ。72px に収めるため 2 列グリッドに 4 つを 2×2 で並べる
+                    （＋の CUT 挿入は行間ホバーガターへ移設）。
                     使えないアイコンは消さず isDisabled でグレーアウトし、配置を固定する */}
                 <CutActions>
-                  {/* この下に CUT 挿入。TooltipTrigger は DOM を生まないので、上段全幅の
-                      グリッドアイテムにするため span する div でラップする */}
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
-                    <TooltipTrigger delay={300}>
-                      <ActionButton
-                        isQuiet
-                        isDisabled={inserting || !editingEnabled}
-                        onPress={() => onInsertCut(index)}
-                        aria-label={t('cutRow.insertAria', { n: index + 1 })}
-                      >
-                        <Add />
-                      </ActionButton>
-                      <Tooltip>{t('cutRow.insertTooltip')}</Tooltip>
-                    </TooltipTrigger>
-                  </div>
                   {/* レイヤー追加 */}
                   <TooltipTrigger delay={300}>
                     <ActionButton

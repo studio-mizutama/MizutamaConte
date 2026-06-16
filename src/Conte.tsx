@@ -47,18 +47,19 @@ const Band = styled(DraggableRow)`
   border-radius: var(--spectrum-alias-border-radius-regular);
 `;
 
-/** CUT 間（および最終行下）のシーン区切り追加アフォーダンス。
- *  普段は薄い帯で、ホバー時にだけ FolderAdd アイコンと挿入線を浮かび上がらせる。 */
+/** CUT 間（および最終行下）の行間ガター。CUT 追加(＋)とシーン区切り追加(📁+)を兼ねる。
+ *  普段は薄く、ホバー時にだけアイコンと挿入線を浮かび上がらせる。 */
 /* レイアウトに高さを足さないアンカー（CUT 間の余白を一切変えない）。
- * 当たり判定/表示は SceneGutterHit が境界線上に absolute で重なる。 */
-const SceneGutterBar = styled.div`
+ * 当たり判定/表示は InterRowGutterHit が境界線上に absolute で重なる。 */
+const InterRowGutterBar = styled.div`
   position: relative;
   height: 0;
   z-index: 2;
 `;
 
-/* CUT 境界をまたぐホバー当たり判定。行送りには影響しない（absolute・親は高さ0）。 */
-const SceneGutterHit = styled.div`
+/* CUT 境界をまたぐホバー当たり判定。行送りには影響しない（absolute・親は高さ0）。
+ * ボタンを横並びに中央寄せで重ねる。 */
+const InterRowGutterHit = styled.div`
   position: absolute;
   left: 0;
   right: 0;
@@ -67,7 +68,7 @@ const SceneGutterHit = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  gap: 6px;
   opacity: 0;
   transition: opacity 0.12s ease;
 
@@ -75,7 +76,7 @@ const SceneGutterHit = styled.div`
     opacity: 1;
   }
 
-  /* ホバー時に CUT 間へ入るシーン境界を示す挿入線 */
+  /* ホバー時に CUT 間へ入る挿入線 */
   &::before {
     content: '';
     position: absolute;
@@ -90,7 +91,8 @@ const SceneGutterHit = styled.div`
   }
 `;
 
-const SceneGutterIcon = styled.div`
+/* 円形アイコンボタン。挿入線の上に z-index で重ねる。 */
+const GutterIconButton = styled.button`
   position: relative;
   z-index: 1;
   display: flex;
@@ -98,7 +100,10 @@ const SceneGutterIcon = styled.div`
   justify-content: center;
   width: 22px;
   height: 22px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
+  cursor: pointer;
   color: var(--spectrum-global-color-gray-50, #fff);
   background: var(--spectrum-semantic-informative-color-border, #2680eb);
 
@@ -108,20 +113,33 @@ const SceneGutterIcon = styled.div`
   }
 `;
 
-/** CUT i の下のガター。クリックでシーン区切りを「下に追加」する。
- *  最終行(i+1 が無い)では addSceneCut（末尾に新シーンCUT）を呼ぶ。 */
-const SceneGutter: React.FC<{ index: number; onAdd: (index: number) => void; label: string }> = ({
-  index,
-  onAdd,
-  label,
-}) => (
-  <SceneGutterBar>
-    <SceneGutterHit role="button" aria-label={label} onClick={() => onAdd(index)}>
-      <SceneGutterIcon>
-        <FolderAdd />
-      </SceneGutterIcon>
-    </SceneGutterHit>
-  </SceneGutterBar>
+/** CUT i の下の行間ガター。
+ *  ＋: 直下に CUT を挿入（常時表示）。最終行下では末尾に CUT 追加。
+ *  📁+: 直下にシーン区切りを追加（次CUTがまだシーン開始でないときだけ表示）。 */
+const InterRowGutter: React.FC<{
+  index: number;
+  onAddCut: (index: number) => void;
+  onAddScene: (index: number) => void;
+  showScene: boolean;
+  cutLabel: string;
+  cutTooltip: string;
+  sceneLabel: string;
+  sceneTooltip: string;
+}> = ({ index, onAddCut, onAddScene, showScene, cutLabel, cutTooltip, sceneLabel, sceneTooltip }) => (
+  <InterRowGutterBar>
+    <InterRowGutterHit>
+      {/* CUT 追加（常時）。custom overlay ボタンなのでネイティブ title でホバー説明を出す */}
+      <GutterIconButton type="button" aria-label={cutLabel} title={cutTooltip} onClick={() => onAddCut(index)}>
+        <Add />
+      </GutterIconButton>
+      {/* シーン区切り追加（次CUTがまだシーン開始でないときだけ） */}
+      {showScene && (
+        <GutterIconButton type="button" aria-label={sceneLabel} title={sceneTooltip} onClick={() => onAddScene(index)}>
+          <FolderAdd />
+        </GutterIconButton>
+      )}
+    </InterRowGutterHit>
+  </InterRowGutterBar>
 );
 
 const SceneBand: React.FC<{
@@ -371,7 +389,6 @@ const CutContainer: React.FC = () => {
                     }
                     canDelete={project.cuts.length > 1}
                     onSplitLast={splitLast}
-                    onInsertCut={insertCutCb}
                     onAddLayer={addLayerCb}
                     onDeleteCut={deleteCutCb}
                     onMergeNext={mergeNext}
@@ -381,11 +398,21 @@ const CutContainer: React.FC = () => {
                   />
                 </DraggableRow>
               )}
-              {/* CUT 間のシーン区切りガター。次CUTが既にシーン開始（SceneBand 表示済み）の位置では出さない。
-                  最終行の下では addSceneCut で末尾に新シーンを追加する。
+              {/* CUT 間の行間ガター。＋=直下に CUT 挿入（常時）、📁+=シーン区切り追加。
+                  最終行の下では ＋ が末尾に CUT 追加、📁+ が末尾に新シーンを追加する。
+                  📁+ は次CUTが既にシーン開始（SceneBand 表示済み）の位置では出さない。
                   編集モード(edit)のときだけ表示し、リサイズ/並べ替え中は誤爆防止のため非表示。 */}
-              {!isCollapsed && editorMode === 'edit' && !sceneByStart.has(index + 1) && (
-                <SceneGutter index={index} onAdd={addSceneBreakBelow} label={t('cutRow.sceneBreakAria', { n: index + 1 })} />
+              {!isCollapsed && editorMode === 'edit' && (
+                <InterRowGutter
+                  index={index}
+                  onAddCut={insertCutCb}
+                  onAddScene={addSceneBreakBelow}
+                  showScene={!sceneByStart.has(index + 1)}
+                  cutLabel={t('cutRow.insertAria', { n: index + 1 })}
+                  cutTooltip={t('cutRow.insertTooltip')}
+                  sceneLabel={t('cutRow.sceneBreakAria', { n: index + 1 })}
+                  sceneTooltip={t('cutRow.sceneBreakTooltip')}
+                />
               )}
             </React.Fragment>
           );
@@ -438,7 +465,14 @@ export const Conte: React.FC = React.memo(() => {
   // New/Open は Header ローカル（storage 依存）で Conte から安全に呼べないため、ボタンは置かずテキスト誘導に留める。
   if (!fileName) {
     return (
-      <Flex direction="column" alignItems="center" justifyContent="center" gap="size-100" height="size-3000">
+      <Flex
+        direction="column"
+        alignItems="center"
+        justifyContent="center"
+        gap="size-100"
+        height="size-3000"
+        UNSAFE_style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+      >
         <Heading level={3}>{t('empty.title')}</Heading>
         <Text>{t('empty.body')}</Text>
       </Flex>
