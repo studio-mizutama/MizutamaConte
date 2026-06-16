@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type { AppSettings } from './settings';
 
 contextBridge.exposeInMainWorld('api', {
@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld('api', {
       .invoke('load-platform')
       .then((result) => result)
       .catch((err) => console.log(err)),
+
+  // Electron 32+ は File.path を廃止。ドロップ/選択された File の絶対パスは webUtils 経由で取得する
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
 
   // フォルダ選択ダイアログ → プロジェクト読み込み
   openProject: () => ipcRenderer.invoke('project:open'),

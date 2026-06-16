@@ -312,6 +312,12 @@ const createWindow = () => {
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
+  // 本アプリはネイティブ通知を一切使わない。万一レンダラ/依存が通知許可を要求しても
+  // macOS の通知許可ダイアログを出さないよう、'notifications' のみ拒否（他の権限は素通し）。
+  const ses = win.webContents.session;
+  ses.setPermissionRequestHandler((_wc, permission, callback) => callback(permission !== 'notifications'));
+  ses.setPermissionCheckHandler((_wc, permission) => permission !== 'notifications');
+
   // electron-vite: dev 時はレンダラの dev サーバ URL が渡される
   const rendererUrl = process.env['ELECTRON_RENDERER_URL'];
   if (rendererUrl) {

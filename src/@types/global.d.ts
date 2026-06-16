@@ -91,6 +91,9 @@ declare global {
 export interface Sandbox {
   loadPlatform: () => Promise<void | string>;
 
+  // ドロップ/選択された File の絶対パス（Electron 32+ で File.path 廃止のため webUtils 経由）
+  getPathForFile: (file: File) => string;
+
   openProject: () => Promise<ProjectPayload | null>;
   readProject: (dirPath: string) => Promise<ProjectPayload | null>;
   onOpenProjectRequest: (listener: () => void) => void;

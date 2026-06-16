@@ -544,11 +544,11 @@ const EmptyState: React.FC = () => {
       void (async () => {
         try {
           if (api) {
-            // Electron: ドロップされた File は .path を持つ。フォルダのみ受け付ける
+            // Electron: フォルダのみ受け付ける。Electron 32+ は File.path 廃止のため webUtils 経由でパス取得
             const entry = e.dataTransfer?.items[0]?.webkitGetAsEntry?.();
             const file = e.dataTransfer?.files[0] as (File & { path?: string }) | undefined;
             if (entry && !entry.isDirectory) return; // ファイルがドロップされたら無視
-            const dir = file?.path;
+            const dir = file ? api.getPathForFile?.(file) ?? file.path : undefined;
             if (dir) await openPath(dir);
             return;
           }
