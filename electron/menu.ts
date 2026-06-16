@@ -1,5 +1,6 @@
 import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow, shell } from 'electron';
 import { mt, resolveLocale, MenuLocale } from './i18n';
+import { loadSettings } from './settings';
 
 /** アプリケーションメニューを構築する。ラベルは locale（未指定時は settings から解決）でローカライズ。 */
 export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocale(), hasProject = false) => {
@@ -40,6 +41,17 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
           accelerator: 'CmdOrCtrl+O',
           // フォルダ選択と読み込みはレンダラ起点（project:open）で行う
           click: () => win.webContents.send('menu:open-project'),
+        },
+        {
+          label: mt(locale, 'menu.recentProjects'),
+          submenu: (() => {
+            const recents = loadSettings().recentProjects ?? [];
+            if (recents.length === 0) return [{ label: mt(locale, 'menu.recentEmpty'), enabled: false }] as MenuItemConstructorOptions[];
+            return recents.map((r) => ({
+              label: r.name,
+              click: () => win.webContents.send('menu:open-recent', r.path),
+            })) as MenuItemConstructorOptions[];
+          })(),
         },
         { type: 'separator' },
         {

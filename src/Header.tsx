@@ -469,6 +469,14 @@ export const Header: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // メニュー File > 最近開いたプロジェクト からの再オープン要求（Electron のみ）
+  useEffect(() => {
+    if (!api?.onOpenRecentRequest) return;
+    api.onOpenRecentRequest((path) => void openRecent({ id: path, path }));
+    return () => api.removeOpenRecentRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 開発時の回帰テスト用: ダイアログなしでプロジェクトを開く
   useEffect(() => {
     if (api && import.meta.env.DEV) {

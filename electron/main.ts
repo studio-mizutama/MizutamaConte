@@ -284,6 +284,11 @@ const registerIpcHandlers = () => {
     if (!currentProjectDir) throw new Error('No project directory');
     return logLatest(currentProjectDir);
   });
+
+  // 最近リスト変更直後（=プロジェクトを開いた直後）にメニューを再構築して最近サブメニューを更新する
+  ipcMain.on('menu:refresh-recent', () => {
+    mainWindow && createMenu(mainWindow, resolveLocale(), true);
+  });
 };
 
 const createWindow = () => {

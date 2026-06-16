@@ -11,6 +11,8 @@ type MenuStrings = {
   'menu.file': string;
   'menu.new': string;
   'menu.open': string;
+  'menu.recentProjects': string;
+  'menu.recentEmpty': string;
   'menu.view': string;
   'menu.edit': string;
   'menu.undo': string;
@@ -38,6 +40,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.file': 'ファイル',
     'menu.new': '新規',
     'menu.open': '開く…',
+    'menu.recentProjects': '最近開いたプロジェクト',
+    'menu.recentEmpty': '（履歴なし）',
     'menu.view': '表示',
     'menu.edit': '編集',
     'menu.undo': '元に戻す',
@@ -63,6 +67,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.file': '파일',
     'menu.new': '새로 만들기',
     'menu.open': '열기…',
+    'menu.recentProjects': '최근 프로젝트',
+    'menu.recentEmpty': '(기록 없음)',
     'menu.view': '보기',
     'menu.edit': '편집',
     'menu.undo': '실행 취소',
@@ -88,6 +94,8 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.file': 'File',
     'menu.new': 'New',
     'menu.open': 'Open…',
+    'menu.recentProjects': 'Open Recent',
+    'menu.recentEmpty': '(No recent projects)',
     'menu.view': 'View',
     'menu.edit': 'Edit',
     'menu.undo': 'Undo',

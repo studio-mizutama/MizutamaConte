@@ -34,6 +34,11 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの View > 再読み込み からの要求（現在のプロジェクトフォルダをディスクから再読込）
   onReloadProjectRequest: (listener: () => void) => ipcRenderer.on('menu:reload-project', listener),
   removeReloadProjectRequest: () => ipcRenderer.removeAllListeners('menu:reload-project'),
+  // メニューの File > 最近開いたプロジェクト からの再オープン要求
+  onOpenRecentRequest: (cb: (path: string) => void) => ipcRenderer.on('menu:open-recent', (_e, path: string) => cb(path)),
+  removeOpenRecentRequest: () => ipcRenderer.removeAllListeners('menu:open-recent'),
+  // 最近リスト変更後にメイン側でメニューを再構築するよう通知（引数は無視）
+  refreshRecent: (_list: unknown) => ipcRenderer.send('menu:refresh-recent'),
   // メニューの View > 編集タブ / プレビュータブ からのタブ切替要求
   onSelectTab: (cb: (tab: string) => void) => ipcRenderer.on('menu:select-tab', (_e, tab: string) => cb(tab)),
   removeSelectTab: () => ipcRenderer.removeAllListeners('menu:select-tab'),
