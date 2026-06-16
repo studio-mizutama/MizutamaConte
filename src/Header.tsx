@@ -345,7 +345,14 @@ export const Header: React.FC = () => {
 
   // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）。
   // 読込/検証/エラー化はすべてフック側に集約しているため、ここでは経路を呼ぶだけにする。
-  const { loadFile, openFromPicker, reloadFromDirPath, reloadCurrentProject, dirPathRef } = useOpenFolder();
+  const { loadFile, openFromPicker, reloadFromDirPath, reloadCurrentProject, openRecent, dirPathRef } = useOpenFolder();
+
+  // Web ハンバーガー用の最近リスト（Electron では使用しない）
+  const [hamburgerRecents, setHamburgerRecents] = useState<RecentProject[]>([]);
+  useEffect(() => {
+    if (api) return;
+    void loadRecents().then(setHamburgerRecents);
+  }, [fileName]);
 
   useEffect(() => {
     const inputDirectory = document.getElementById('inputDirectory');
@@ -537,13 +544,31 @@ export const Header: React.FC = () => {
                   else if (k === 'documentation')
                     window.open('https://studio-mizutama.github.io/MizutamaConte/docs/', '_blank');
                   else if (k === 'about') setAboutOpen(true);
+                  else if (k.toString().startsWith('recent:')) {
+                    const id = k.toString().slice('recent:'.length);
+                    const entry = hamburgerRecents.find((r) => r.id === id);
+                    if (entry) void openRecent(entry);
+                  }
                 }}
               >
-                {WEB_MENU.map((s) => (
-                  <Section key={s.key} title={t(s.titleKey as TranslationKey)} items={s.items}>
-                    {(it) => <Item key={it.key}>{t(it.labelKey as TranslationKey)}</Item>}
-                  </Section>
-                ))}
+                {/* react-spectrum Menu は静的 Section と動的 Section を混在できないため
+                    単一の children 配列として構築する */}
+                {[
+                  ...WEB_MENU.map((s) => (
+                    <Section key={s.key} title={t(s.titleKey as TranslationKey)} items={s.items}>
+                      {(it) => <Item key={it.key}>{t(it.labelKey as TranslationKey)}</Item>}
+                    </Section>
+                  )),
+                  ...(hamburgerRecents.length > 0
+                    ? [
+                        <Section key="recent" title={t('header.recentProjects')}>
+                          {hamburgerRecents.map((r) => (
+                            <Item key={`recent:${r.id}`}>{r.name}</Item>
+                          ))}
+                        </Section>,
+                      ]
+                    : []),
+                ]}
               </Menu>
             </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
