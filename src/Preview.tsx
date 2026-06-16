@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'reactn';
 import { ActionButton, Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import { Psd, Layer } from 'ag-psd';
 import Rewind from '@spectrum-icons/workflow/Rewind';
 import StepBackward from '@spectrum-icons/workflow/StepBackward';
 import Play from '@spectrum-icons/workflow/Play';
@@ -14,6 +13,8 @@ import { useProject } from 'hooks/useProject';
 import { useViewportSize } from 'hooks/useViewportSize';
 import { defaultCanvasSize } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
+import { frameState } from 'project/frameState';
+import { compositeFrame } from 'video/compositor';
 import { useGlobal } from 'reactn';
 import { useT } from 'i18n';
 
@@ -37,6 +38,33 @@ const CountOut = styled.div`
   margin-right: 0;
 `;
 
+interface Buffers {
+  w: number;
+  h: number;
+  out: OffscreenCanvas;
+  scratch: OffscreenCanvas;
+  frameBuffer: OffscreenCanvas;
+  unitScratch: OffscreenCanvas;
+}
+
+/** frame に対応するアクティブカット（index / 前後の累積尺）を求める純ヘルパ。 */
+const activeCutInfo = (frame: number, cuts: Cut[], timeTotal: number) => {
+  let pre = 0;
+  for (let i = 0; i < cuts.length; i++) {
+    const time = cuts[i].time || 0;
+    if (frame < pre + time) {
+      const prePre = i >= 1 ? cuts.slice(0, i - 1).reduce((s, c) => s + (c.time || 0), 0) : 0;
+      return { index: i, preTimeSum: pre, timeSum: pre + time, prePreTimeSum: prePre };
+    }
+    pre += time;
+  }
+  // 範囲外（総尺以上）は末尾カットへクランプ
+  const last = Math.max(0, cuts.length - 1);
+  const lastTime = cuts[last]?.time || 0;
+  const prePre = last >= 1 ? cuts.slice(0, last - 1).reduce((s, c) => s + (c.time || 0), 0) : 0;
+  return { index: last, preTimeSum: timeTotal - lastTime, timeSum: timeTotal, prePreTimeSum: prePre };
+};
+
 export const Preview: React.FC = React.memo(() => {
   const t = useT();
   const cuts = usePsd();
@@ -52,10 +80,14 @@ export const Preview: React.FC = React.memo(() => {
 
   const now = window.performance && performance.now;
 
-  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+  const timeTotal = cuts?.reduce((sum, i) => (i.time && sum + i.time) || sum, 0) || 0;
 
   const animationRef: React.MutableRefObject<number> = useRef(0);
   const timeRef: React.MutableRefObject<number> = useRef(0);
+
+  // 共有コンポジタ用のバッファ（ネイティブ寸・1度だけ確保して使い回す＝GC 抑制）
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const buffersRef = useRef<Buffers | null>(null);
 
   const rewind = useCallback(() => {
     cancelAnimationFrame(animationRef.current);
@@ -100,48 +132,42 @@ export const Preview: React.FC = React.memo(() => {
     };
     loop();
     setIsPlay(true);
-  }, [frame, now, timeTotal]);
+  }, [frame, now, timeTotal, fps]);
 
+  // 単一の描画パス: frameState → compositeFrame（共有コンポジタ）→ 可視 canvas へ blit。
+  // カメラワーク・黒/白フェード・背景・グループ・ブレンドはすべて compositeFrame が担う。
+  // 動画書き出しと同一関数を通すため、プレビュー=書き出しがピクセル一致する。
   useEffect(() => {
-    cuts?.length > 1 &&
-      cuts.map((cut, index) => {
-        const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-        const pictureNumber = cut.picture?.children && cut.picture?.children.length - 1;
-        const time = cut.time || 0;
-        const pictureShowDuration = cut.time && cut.time / pictureNumber;
-        const scaleIn = cut.cameraWork?.scale?.in || 1;
-        const scaleOut = cut.cameraWork?.scale?.out || 1;
-        const currentFrame = frame - preTimeSum || 1;
-        const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
-        const fadeInDuration = cut.action?.fadeInDuration || 0;
-        const fadeOutDuration = cut.action?.fadeOutDuration || 0;
-        const fadeOutTime = time - fadeOutDuration;
-        const setOpacity = (currentFrame: number): number => {
-          if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
-          if (time - fadeOutDuration <= currentFrame && currentFrame <= time)
-            return 1 - (currentFrame - fadeOutTime) / fadeOutDuration;
-          return 1;
-        };
-        const opacity = setOpacity(currentFrame);
-        cut.picture?.children
-          ?.filter((child: Psd['children'], layerindex: number) =>
-            pictureShowDuration
-              ? layerindex === Math.trunc(((frame - preTimeSum) / pictureShowDuration) | 0) + 1
-              : layerindex === 1,
-          )
-          .map((child: Layer) => {
-            const element = document.getElementById(`c${index + 1}p${child.name}`) || document.createElement('div');
-            const canvas = child.canvas || document.createElement('canvas');
-            canvas.style.width = `${(canvas.width * ratio) / scale}px`;
-            canvas.style.opacity = opacity.toString();
-            element.innerHTML = '';
-            element.appendChild(canvas);
-            return 0;
-          });
-        return 0;
-      });
-  }, [cuts, frame, ratio]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const w = projectFrame.width;
+    const h = projectFrame.height;
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
+    const b = buffersRef.current;
+    const buffers: Buffers =
+      b && b.w === w && b.h === h
+        ? b
+        : {
+            w,
+            h,
+            out: new OffscreenCanvas(w, h),
+            scratch: new OffscreenCanvas(w, h),
+            frameBuffer: new OffscreenCanvas(w, h),
+            unitScratch: new OffscreenCanvas(w, h),
+          };
+    buffersRef.current = buffers;
+
+    const state = frameState(frame, cuts);
+    compositeFrame(state, cuts, { width: w, height: h }, buffers.out, buffers.scratch, buffers.frameBuffer, buffers.unitScratch);
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(buffers.out, 0, 0);
+  }, [frame, cuts, projectFrame]);
+
+  // 再生終端で停止
   useEffect(() => {
     if (!timeTotal) return;
     if (frame >= timeTotal - 1) {
@@ -168,6 +194,8 @@ export const Preview: React.FC = React.memo(() => {
     }
   }, [frame, cuts, setCurrentCutIndex]);
 
+  const info = activeCutInfo(frame, cuts, timeTotal);
+
   return (
     <Flex direction="column" height="100%">
       <>
@@ -177,116 +205,59 @@ export const Preview: React.FC = React.memo(() => {
             <Heading>{t('common.loading.heading')}</Heading>
           </Flex>
         )}
-        {cuts.length > 0 &&
-          cuts.map((cut, index) => {
-            const prePreTimeSum = cuts.slice(0, index - 1).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-            const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-            const timeSum = cuts.slice(0, index + 1).reduce((sum, i) => i.time && sum + i.time, 0) || timeTotal || 0;
-            const pictureNumber = cut.picture?.children && cut.picture?.children.length - 1;
-            const time = cut?.time || 0;
-            const pictureShowDuration = time / pictureNumber;
-            const scaleIn = cut.cameraWork?.scale?.in || 1;
-            const scaleOut = cut.cameraWork?.scale?.out || 1;
-            const currentFrame = frame - preTimeSum || 1;
-            const scale = scaleIn - ((scaleIn - scaleOut) * currentFrame) / time;
-            const xIn = cut.cameraWork?.position?.in.x || 0;
-            const xOut = cut.cameraWork?.position?.out.x || 0;
-            const yIn = cut.cameraWork?.position?.in.y || 0;
-            const yOut = cut.cameraWork?.position?.out.y || 0;
-            const posX = xIn - ((xIn - xOut) * currentFrame) / time;
-            const posY = yIn - ((yIn - yOut) * currentFrame) / time;
-            const fadeInDuration = cut.action?.fadeInDuration || 0;
-            const fadeOutDuration = cut.action?.fadeOutDuration || 0;
-            const fadeOutTime = time - fadeOutDuration;
-            const setOpacity = (currentFrame: number): number => {
-              if (0 <= currentFrame && currentFrame < fadeInDuration) return currentFrame / fadeInDuration;
-              if (time - fadeOutDuration <= currentFrame && currentFrame <= time)
-                return 1 - (currentFrame - fadeOutTime) / fadeOutDuration;
-              return 1;
-            };
-            const opacity =
-              cut.action?.fadeIn === 'Black In' || cut.action?.fadeOut === 'Black Out' ? setOpacity(currentFrame) : 1;
+        {cuts.length > 0 && (
+          <div>
+            <Flex direction="column" alignItems="center" margin="size-0">
+              <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
+                <CountIn>{frameToTimecode(info.preTimeSum, fps)}</CountIn>
+                <Heading>{`Cut${('00' + (info.index + 1)).slice(-3)}`}</Heading>
+                <CountOut>{frameToTimecode(info.timeSum, fps)}</CountOut>
+              </PreviewHeader>
 
-            return (
-              <div key={index}>
-                {preTimeSum !== undefined &&
-                  timeSum !== undefined &&
-                  preTimeSum <= frame &&
-                  frame < timeSum &&
-                  cut.picture?.children
-                    ?.filter((child: Psd['children'], layerindex: number) =>
-                      pictureShowDuration
-                        ? layerindex === Math.trunc(((frame - preTimeSum) / pictureShowDuration) | 0) + 1
-                        : layerindex === 1,
-                    )
-                    .map((child: Layer) => {
-                      //const src = child.canvas?.toDataURL('image/jxss', 1);
-                      return (
-                        <div key={`c${index + 1}p${child.name}`}>
-                          <Flex direction="column" alignItems="center" margin="size-0">
-                            <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
-                              <CountIn>{frameToTimecode(preTimeSum, fps)}</CountIn>
-                              <Heading>{`Cut${('00' + (index + 1)).slice(-3)}`}</Heading>
-                              <CountOut>{frameToTimecode(timeSum, fps)}</CountOut>
-                            </PreviewHeader>
-
-                            <div
-                              style={{
-                                height: `${projectFrame.height * ratio}px`,
-                                width: `${projectFrame.width * ratio}px`,
-                                backgroundColor: '#000',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              <div
-                                style={{
-                                  height: `${child.canvas && (child.canvas.height * ratio) / scale}px`,
-                                  width: `${child.canvas && (child.canvas.width * ratio) / scale}px`,
-                                  backgroundColor: '#fff',
-                                  opacity: `${opacity}`,
-                                  position: 'relative',
-                                  bottom: `${
-                                    child.canvas &&
-                                    (child.canvas.height * ratio - projectFrame.height * ratio * (scale - posY)) / 2
-                                  }px`,
-                                  right: `${
-                                    child.canvas &&
-                                    (child.canvas.width * ratio - projectFrame.width * ratio * (scale - posX)) / 2
-                                  }px`,
-                                }}
-                                id={`c${index + 1}p${child.name}`}
-                              ></div>
-                            </div>
-                          </Flex>
-                          <Flex direction="column" alignItems="center" marginTop="size-0">
-                            <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
-                              <CountIn>{frameToTimecode(frame, fps)}</CountIn>
-                              <div>
-                                <ActionButton isQuiet onPress={rewind}>
-                                  <Rewind size="M" />
-                                </ActionButton>
-                                <ActionButton isQuiet onPress={() => step(prePreTimeSum)}>
-                                  <StepBackward size="M" />
-                                </ActionButton>
-                                <ActionButton isQuiet onPress={isPlay ? stop : start}>
-                                  {isPlay ? <Pause size="M" /> : <Play size="M" />}
-                                </ActionButton>
-                                <ActionButton isQuiet onPress={() => step(timeSum)}>
-                                  <StepForward size="M" />
-                                </ActionButton>
-                                <ActionButton isQuiet onPress={fastForward}>
-                                  <FastForward size="M" />
-                                </ActionButton>
-                              </div>
-                              <CountOut>{frameToTimecode(timeTotal, fps)}</CountOut>
-                            </PreviewHeader>
-                          </Flex>
-                        </div>
-                      );
-                    })}
+              <div
+                style={{
+                  height: `${projectFrame.height * ratio}px`,
+                  width: `${projectFrame.width * ratio}px`,
+                  backgroundColor: '#000',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* 可視 canvas はネイティブ寸。CSS で ratio 縮小表示（合成は compositeFrame が担う） */}
+                <canvas
+                  ref={canvasRef}
+                  style={{
+                    width: `${projectFrame.width * ratio}px`,
+                    height: `${projectFrame.height * ratio}px`,
+                    display: 'block',
+                  }}
+                />
               </div>
-            );
-          })}
+            </Flex>
+            <Flex direction="column" alignItems="center" marginTop="size-0">
+              <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
+                <CountIn>{frameToTimecode(frame, fps)}</CountIn>
+                <div>
+                  <ActionButton isQuiet onPress={rewind}>
+                    <Rewind size="M" />
+                  </ActionButton>
+                  <ActionButton isQuiet onPress={() => step(info.prePreTimeSum)}>
+                    <StepBackward size="M" />
+                  </ActionButton>
+                  <ActionButton isQuiet onPress={isPlay ? stop : start}>
+                    {isPlay ? <Pause size="M" /> : <Play size="M" />}
+                  </ActionButton>
+                  <ActionButton isQuiet onPress={() => step(info.timeSum)}>
+                    <StepForward size="M" />
+                  </ActionButton>
+                  <ActionButton isQuiet onPress={fastForward}>
+                    <FastForward size="M" />
+                  </ActionButton>
+                </div>
+                <CountOut>{frameToTimecode(timeTotal, fps)}</CountOut>
+              </PreviewHeader>
+            </Flex>
+          </div>
+        )}
         <Flex
           direction="column"
           width="100%"
