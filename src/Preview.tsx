@@ -13,7 +13,8 @@ import { useProject } from 'hooks/useProject';
 import { useViewportSize } from 'hooks/useViewportSize';
 import { defaultCanvasSize } from 'project/dimensions';
 import { frameToTimecode } from 'project/time';
-import { frameState } from 'project/frameState';
+import { frameStates } from 'project/frameState';
+import { totalFrames, currentCutIndex, cutNav } from 'project/cutOffsets';
 import { clampFrame } from 'project/frameNav';
 import { compositeFrame } from 'video/compositor';
 import { useGlobal } from 'reactn';
@@ -49,23 +50,6 @@ interface Buffers {
   unitScratch: OffscreenCanvas;
 }
 
-/** frame に対応するアクティブカット（index / 前後の累積尺）を求める純ヘルパ。 */
-const activeCutInfo = (frame: number, cuts: Cut[], timeTotal: number) => {
-  let pre = 0;
-  for (let i = 0; i < cuts.length; i++) {
-    const time = cuts[i].time || 0;
-    if (frame < pre + time) {
-      const prePre = i >= 1 ? cuts.slice(0, i - 1).reduce((s, c) => s + (c.time || 0), 0) : 0;
-      return { index: i, preTimeSum: pre, timeSum: pre + time, prePreTimeSum: prePre };
-    }
-    pre += time;
-  }
-  // 範囲外（総尺以上）は末尾カットへクランプ
-  const last = Math.max(0, cuts.length - 1);
-  const lastTime = cuts[last]?.time || 0;
-  const prePre = last >= 1 ? cuts.slice(0, last - 1).reduce((s, c) => s + (c.time || 0), 0) : 0;
-  return { index: last, preTimeSum: timeTotal - lastTime, timeSum: timeTotal, prePreTimeSum: prePre };
-};
 
 export const Preview: React.FC = React.memo(() => {
   const t = useT();
@@ -83,7 +67,7 @@ export const Preview: React.FC = React.memo(() => {
 
   const now = window.performance && performance.now;
 
-  const timeTotal = cuts?.reduce((sum, i) => (i.time && sum + i.time) || sum, 0) || 0;
+  const timeTotal = totalFrames(cuts ?? []);
 
   const animationRef: React.MutableRefObject<number> = useRef(0);
   const timeRef: React.MutableRefObject<number> = useRef(0);
@@ -171,8 +155,8 @@ export const Preview: React.FC = React.memo(() => {
           };
     buffersRef.current = buffers;
 
-    const state = frameState(frame, cuts);
-    compositeFrame(state, cuts, { width: w, height: h }, buffers.out, buffers.scratch, buffers.frameBuffer, buffers.unitScratch);
+    const states = frameStates(frame, cuts);
+    compositeFrame(states, cuts, { width: w, height: h }, buffers.out, buffers.scratch, buffers.frameBuffer, buffers.unitScratch);
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(buffers.out, 0, 0);
   }, [frame, cuts, projectFrame]);
@@ -190,21 +174,15 @@ export const Preview: React.FC = React.memo(() => {
   const setCurrentCutIndex = useGlobal('currentCutIndex')[1];
   const lastCutIndexRef = useRef(-1);
   useEffect(() => {
-    let sum = 0;
-    let index = 0;
-    for (let i = 0; i < cuts.length; i++) {
-      const time = cuts[i].time || 0;
-      index = i;
-      if (frame < sum + time) break;
-      sum += time;
-    }
+    // choice B（重なり区間は後発カット）。範囲外は末尾カットへクランプ。
+    const index = currentCutIndex(frame, cuts) ?? Math.max(0, cuts.length - 1);
     if (index !== lastCutIndexRef.current) {
       lastCutIndexRef.current = index;
       setCurrentCutIndex(index);
     }
   }, [frame, cuts, setCurrentCutIndex]);
 
-  const info = activeCutInfo(frame, cuts, timeTotal);
+  const nav = cutNav(frame, cuts);
 
   // Preview タブ限定のプレイヤーショートカット（各ハンドラ先頭で mode ゲート＝編集タブでは素通り）
   useHotkeys(
@@ -219,8 +197,8 @@ export const Preview: React.FC = React.memo(() => {
   );
   useHotkeys('left', (e) => { if (mode !== 'Preview') return; e.preventDefault(); stepFrame(-1); }, [mode, stepFrame]);
   useHotkeys('right', (e) => { if (mode !== 'Preview') return; e.preventDefault(); stepFrame(1); }, [mode, stepFrame]);
-  useHotkeys('up', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(info.prePreTimeSum); }, [mode, step, info]);
-  useHotkeys('down', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(info.timeSum); }, [mode, step, info]);
+  useHotkeys('up', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(nav.prevStart); }, [mode, step, nav]);
+  useHotkeys('down', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(nav.nextStart); }, [mode, step, nav]);
   useHotkeys('command+left,ctrl+left', (e) => { if (mode !== 'Preview') return; e.preventDefault(); rewind(); }, [mode, rewind]);
   useHotkeys('command+right,ctrl+right', (e) => { if (mode !== 'Preview') return; e.preventDefault(); fastForward(); }, [mode, fastForward]);
   useHotkeys('home', (e) => { if (mode !== 'Preview') return; e.preventDefault(); rewind(); }, [mode, rewind]);
@@ -239,9 +217,9 @@ export const Preview: React.FC = React.memo(() => {
           <div>
             <Flex direction="column" alignItems="center" margin="size-0">
               <PreviewHeader style={{ width: `${projectFrame.width * ratio}px` }}>
-                <CountIn>{frameToTimecode(info.preTimeSum, fps)}</CountIn>
-                <Heading>{`Cut${('00' + (info.index + 1)).slice(-3)}`}</Heading>
-                <CountOut>{frameToTimecode(info.timeSum, fps)}</CountOut>
+                <CountIn>{frameToTimecode(nav.start, fps)}</CountIn>
+                <Heading>{`Cut${('00' + (nav.index + 1)).slice(-3)}`}</Heading>
+                <CountOut>{frameToTimecode(nav.hudEnd, fps)}</CountOut>
               </PreviewHeader>
 
               <div
@@ -270,13 +248,13 @@ export const Preview: React.FC = React.memo(() => {
                   <ActionButton isQuiet onPress={rewind}>
                     <Rewind size="M" />
                   </ActionButton>
-                  <ActionButton isQuiet onPress={() => step(info.prePreTimeSum)}>
+                  <ActionButton isQuiet onPress={() => step(nav.prevStart)}>
                     <StepBackward size="M" />
                   </ActionButton>
                   <ActionButton isQuiet onPress={isPlay ? stop : start}>
                     {isPlay ? <Pause size="M" /> : <Play size="M" />}
                   </ActionButton>
-                  <ActionButton isQuiet onPress={() => step(info.timeSum)}>
+                  <ActionButton isQuiet onPress={() => step(nav.nextStart)}>
                     <StepForward size="M" />
                   </ActionButton>
                   <ActionButton isQuiet onPress={fastForward}>
