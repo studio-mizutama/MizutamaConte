@@ -24,6 +24,7 @@ import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
 import { EditorMode } from 'hooks/editorMode';
+import { useEditingEnabled } from 'hooks/editingEnabled';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { canvasToDataURL } from 'psd/thumbnail';
 import { frameToTimecode, parseTimecode } from 'project/time';
@@ -75,16 +76,17 @@ const Fade = styled.svg`
   left: calc((100% - 96px) / 2);
 `;
 
-/** CUT 列下端の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列で折り返す。
+/** CUT 列下端の per-cut 操作アイコンクラスタ。CUT 列は 72px と狭いので 2 列グリッドに収める。
+ *  ＋(挿入)を上段に単独で全幅表示し、残り 4 つを 2×2 に並べる。
  *  margin-top:auto で列の下端へ押し下げる（CUT 番号は上端・クラスタは下端）。
  *  通常はうっすら表示し、CUT 行(.hover)ホバー時に不透明にして誤クリックを防ぐ。 */
 const CutActions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   justify-content: center;
-  gap: 0;
-  max-width: 72px;
+  gap: var(--spectrum-global-dimension-size-50, 4px);
   margin-top: auto;
+  max-width: 72px;
   opacity: 0.25;
   transition: opacity 0.12s ease;
   /* CUT 行（祖先の div.hover）をホバーしたときに表示 */
@@ -370,6 +372,8 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     setTime,
   }) => {
     const t = useT();
+    // 編集操作が可能か（プロジェクト未オープン or edit 以外のモードでは 5 アイコンをロック）
+    const editingEnabled = useEditingEnabled();
     // 削除確認ダイアログの開閉。確認時のみ onDeleteCut を呼ぶ（誤削除防止）
     const [confirmDelete, setConfirmDelete] = useState(false);
     return (
@@ -392,26 +396,29 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               {/* CUT 番号は上端・アイコンクラスタは下端（CutActions の margin-top:auto で押し下げ） */}
               <Flex direction="column" alignItems="center" gap="size-50" height="100%">
                 <Heading>{('00' + (index + 1)).slice(-3)}</Heading>
-                {/* per-cut 操作クラスタ。72px に収めるため小アイコンを 2 列で折り返す。
+                {/* per-cut 操作クラスタ。72px に収めるため 2 列グリッド（＋は上段全幅・残り 4 つは 2×2）。
                     使えないアイコンは消さず isDisabled でグレーアウトし、配置を固定する */}
                 <CutActions>
-                  {/* この下に CUT 挿入（常時有効） */}
+                  {/* この下に CUT 挿入。TooltipTrigger は DOM を生まないので、上段全幅の
+                      グリッドアイテムにするため span する div でラップする */}
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
+                    <TooltipTrigger delay={300}>
+                      <ActionButton
+                        isQuiet
+                        isDisabled={inserting || !editingEnabled}
+                        onPress={() => onInsertCut(index)}
+                        aria-label={t('cutRow.insertAria', { n: index + 1 })}
+                      >
+                        <Add />
+                      </ActionButton>
+                      <Tooltip>{t('cutRow.insertTooltip')}</Tooltip>
+                    </TooltipTrigger>
+                  </div>
+                  {/* レイヤー追加 */}
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
-                      isDisabled={inserting}
-                      onPress={() => onInsertCut(index)}
-                      aria-label={t('cutRow.insertAria', { n: index + 1 })}
-                    >
-                      <Add />
-                    </ActionButton>
-                    <Tooltip>{t('cutRow.insertTooltip')}</Tooltip>
-                  </TooltipTrigger>
-                  {/* レイヤー追加（常時有効） */}
-                  <TooltipTrigger delay={300}>
-                    <ActionButton
-                      isQuiet
-                      isDisabled={inserting}
+                      isDisabled={inserting || !editingEnabled}
                       onPress={() => onAddLayer(index)}
                       aria-label={t('cutRow.addLayerAria', { n: index + 1 })}
                     >
@@ -423,7 +430,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
-                      isDisabled={inserting || !canDelete}
+                      isDisabled={inserting || !canDelete || !editingEnabled}
                       onPress={() => setConfirmDelete(true)}
                       aria-label={t('cutRow.deleteAria', { n: index + 1 })}
                     >
@@ -435,7 +442,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
-                      isDisabled={inserting || !canMergeNext}
+                      isDisabled={inserting || !canMergeNext || !editingEnabled}
                       onPress={() => onMergeNext(index)}
                       aria-label={t('cutRow.mergeAria', { n: index + 1 })}
                     >
@@ -447,7 +454,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                   <TooltipTrigger delay={300}>
                     <ActionButton
                       isQuiet
-                      isDisabled={inserting || projectCut.rows.length <= 1}
+                      isDisabled={inserting || projectCut.rows.length <= 1 || !editingEnabled}
                       onPress={() => onSplitLast(index)}
                       aria-label={t('cutRow.splitAria', { n: index + 1 })}
                     >
