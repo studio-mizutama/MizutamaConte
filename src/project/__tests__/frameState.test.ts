@@ -27,18 +27,18 @@ describe('frameState', () => {
     expect(frameState(72, baseCuts())).toBeNull();
   });
 
-  it('cut0 先頭フレームは cutIndex=0・layer=1・scale は in 寄り（local=1 補正）', () => {
+  it('cut0 先頭フレームは cutIndex=0・unit=0・scale は in 寄り（local=1 補正）', () => {
     const s = frameState(0, baseCuts())!;
     expect(s.cutIndex).toBe(0);
-    expect(s.layerIndex).toBe(1); // localRaw=0 → trunc(0/24)+1 = 1
+    expect(s.unitIndex).toBe(0); // localRaw=0 → trunc(0/24) = 0（0基点）
     // local = (0 || 1) = 1 → scale = 2 - ((2-1)*1)/48 = 2 - 0.020833...
     expect(s.scale).toBeCloseTo(2 - 1 / 48, 6);
   });
 
-  it('cut0 中盤(frame=24)は layer=2・scale 中間・フェード完了(opacity=1)', () => {
+  it('cut0 中盤(frame=24)は unit=1・scale 中間・フェード完了(opacity=1)', () => {
     const s = frameState(24, baseCuts())!;
-    // localRaw=24, pictureShowDuration=48/2=24 → trunc(24/24)+1 = 2
-    expect(s.layerIndex).toBe(2);
+    // localRaw=24, pictureShowDuration=48/2=24 → trunc(24/24) = 1（0基点）
+    expect(s.unitIndex).toBe(1);
     // local=24 → scale = 2 - ((2-1)*24)/48 = 2 - 0.5 = 1.5
     expect(s.scale).toBeCloseTo(1.5, 6);
     // fadeInDuration=12, local=24 >= 12 → opacity=1
@@ -69,8 +69,8 @@ describe('frameState', () => {
     expect(s.posY).toBe(0);
   });
 
-  it('レイヤーが無い(pictureShowDuration=0)場合は layerIndex=1 にフォールバック', () => {
+  it('描画ユニットが無い(pictureShowDuration=0)場合は unitIndex=0 にフォールバック', () => {
     const cuts: Cut[] = [{ time: 24, picture: { children: [{ name: 'bg' }] } as unknown as Cut['picture'] }];
-    expect(frameState(10, cuts)!.layerIndex).toBe(1);
+    expect(frameState(10, cuts)!.unitIndex).toBe(0);
   });
 });

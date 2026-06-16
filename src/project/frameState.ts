@@ -6,11 +6,13 @@
  * NOTE: 値は表示フィット率 `ratio` に非依存（scale/pos/opacity/layerIndex のみ）。
  *       ピクセル幾何（描画座標・寸法）は video/geometry.ts の layerDrawRect が担当する。
  */
+import { getFrameModel } from 'project/frameModel';
+
 export interface ActiveCutState {
   /** cuts 配列上のインデックス */
   cutIndex: number;
-  /** 表示する picture.children のインデックス（children[0]=白背景は使わない） */
-  layerIndex: number;
+  /** 表示するフレームユニットの index（0基点・FrameModel.units 添字。背景は別途毎フレーム描画） */
+  unitIndex: number;
   /** カメラ scale（in→out のリニア補間。1=ネイティブ） */
   scale: number;
   /** カメラ位置 X（フレーム単位のパン量） */
@@ -32,9 +34,10 @@ export const frameState = (frame: number, cuts: Cut[]): ActiveCutState | null =>
     if (preTimeSum <= frame && frame < timeSum) {
       const localRaw = frame - preTimeSum; // レイヤー選択は生の相対フレーム（Preview の effect/JSX と同じ）
       const local = localRaw || 1; // scale/pos/opacity は 0 を 1 に補正（Preview の `currentFrame || 1`）
-      const pictureNumber = cut.picture?.children ? cut.picture.children.length - 1 : 0;
+      // フレームユニット数（単独レイヤー or グループ）。フラットPSDでは従来の children.length-1 と一致。
+      const pictureNumber = cut.picture ? getFrameModel(cut.picture).units.length : 0;
       const pictureShowDuration = pictureNumber ? time / pictureNumber : 0;
-      const layerIndex = pictureShowDuration ? Math.trunc((localRaw / pictureShowDuration) | 0) + 1 : 1;
+      const unitIndex = pictureShowDuration ? Math.trunc((localRaw / pictureShowDuration) | 0) : 0;
 
       const scaleIn = cut.cameraWork?.scale?.in || 1;
       const scaleOut = cut.cameraWork?.scale?.out || 1;
@@ -59,7 +62,7 @@ export const frameState = (frame: number, cuts: Cut[]): ActiveCutState | null =>
       const isBlack = cut.action?.fadeIn === 'Black In' || cut.action?.fadeOut === 'Black Out';
       const divOpacity = isBlack ? setOpacity(local) : 1;
 
-      return { cutIndex: index, layerIndex, scale, posX, posY, divOpacity, canvasOpacity };
+      return { cutIndex: index, unitIndex, scale, posX, posY, divOpacity, canvasOpacity };
     }
     preTimeSum = timeSum;
   }
