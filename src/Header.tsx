@@ -63,9 +63,11 @@ const NoDragArea = styled.div`
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
+  /* Electron(mac) は信号機ボタンのゾーンを避けて左に余白を確保。
+     web/非mac は旧 Home(marginX size-200) 相当の心地よい間隔を空ける */
   ${window.navigator.userAgent.toLowerCase().indexOf('mac') !== -1 && api
-    ? `margin-left: var(--spectrum-global-dimension-size-800, var(--spectrum-alias-size-800));`
-    : `margin-left: var(--spectrum-global-dimension-size-100, var(--spectrum-alias-size-100));`}
+    ? `padding-left: 78px;`
+    : `padding-left: 12px;`}
   margin-right: auto;
 `;
 
@@ -239,18 +241,19 @@ const GitBranchButton: React.FC = () => {
   if (!gitDetect) return null;
   // プロジェクト未オープン時は非表示（git 操作はプロジェクトフォルダが必要なため）
   if (!fileName) return null;
+  // Tooltip は DialogTrigger の外側に置く（内側に挟むと popover が開かない回帰になる）
   return (
-    <DialogTrigger type="popover">
-      <TooltipTrigger delay={300}>
+    <TooltipTrigger delay={300}>
+      <DialogTrigger type="popover">
         <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
           <Branch2 />
         </ActionButton>
-        <Tooltip>{t('git.snapshot.heading')}</Tooltip>
-      </TooltipTrigger>
-      <Dialog size="S">
-        <GitSnapshotPopover gitDetect={gitDetect} />
-      </Dialog>
-    </DialogTrigger>
+        <Dialog size="S">
+          <GitSnapshotPopover gitDetect={gitDetect} />
+        </Dialog>
+      </DialogTrigger>
+      <Tooltip>{t('git.snapshot.heading')}</Tooltip>
+    </TooltipTrigger>
   );
 };
 
@@ -537,20 +540,24 @@ export const Header: React.FC = () => {
       <HeaderRight>
         {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
         <Flex alignItems="center" gap="size-100">
-          <MenuTrigger>
-            <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} isDisabled={!fileName}>
-              <Share />
-            </ActionButton>
-            <Menu
-              onAction={(key) => {
-                if (key === 'pdf') print();
-                else if (key === 'video') startVideoExport();
-              }}
-            >
-              <Item key="pdf">{t('header.share.pdf')}</Item>
-              <Item key="video">{t('header.share.video')}</Item>
-            </Menu>
-          </MenuTrigger>
+          {/* Tooltip は MenuTrigger の外側に置く（react-spectrum の menu/dialog ボタン + tooltip の合成法） */}
+          <TooltipTrigger delay={300}>
+            <MenuTrigger>
+              <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} isDisabled={!fileName}>
+                <Share />
+              </ActionButton>
+              <Menu
+                onAction={(key) => {
+                  if (key === 'pdf') print();
+                  else if (key === 'video') startVideoExport();
+                }}
+              >
+                <Item key="pdf">{t('header.share.pdf')}</Item>
+                <Item key="video">{t('header.share.video')}</Item>
+              </Menu>
+            </MenuTrigger>
+            <Tooltip>{t('header.share.ariaLabel')}</Tooltip>
+          </TooltipTrigger>
           <GitBranchButton />
           <TooltipTrigger delay={300}>
             <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
