@@ -47,7 +47,7 @@ export const ja: Record<TranslationKey, string> = {
   'cutRow.launchFailed': 'ペイントアプリを起動できませんでした: {error}',
   'cutRow.webEditHint': '{name} をローカルのペイントアプリで編集してください。\n保存後にプロジェクトを開き直すと反映されます。',
   // CUT 列下部のアイコンクラスタ（per-cut 操作）
-  'cutRow.insertTooltip': '下に CUT を挿入',
+  'cutRow.insertTooltip': '下にCUTを追加',
   'cutRow.insertAria': 'CUT {n} の下に CUT を挿入',
   'cutRow.addLayerTooltip': '新規レイヤー',
   'cutRow.addLayerAria': 'CUT {n} にレイヤーを追加',
@@ -59,7 +59,7 @@ export const ja: Record<TranslationKey, string> = {
   'cutRow.deleteConfirm.cancel': 'キャンセル',
   'cutRow.mergeTooltip': '下の CUT と結合',
   'cutRow.mergeAria': 'CUT {n} を下と結合',
-  'cutRow.sceneBreakTooltip': 'シーン区切りを切り替え',
+  'cutRow.sceneBreakTooltip': 'シーン区切りを追加',
   'cutRow.sceneBreakAria': 'CUT {n} のシーン区切りを切り替え',
 
   // カメラワーク
@@ -78,7 +78,7 @@ export const ja: Record<TranslationKey, string> = {
   'toolGroup.edit': '選択 (V)',
   'toolGroup.resize': 'リサイズ (C)',
   'toolGroup.reorder': '並べ替え (R)',
-  'toolGroup.undo': '取り消す',
+  'toolGroup.undo': '元に戻す',
   'toolGroup.redo': 'やり直す',
 
   // トランジション（全ロケール英語固定。パネル見出しは別キー panels.* で日本語のまま）

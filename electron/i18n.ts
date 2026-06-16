@@ -38,7 +38,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.open': '開く…',
     'menu.view': '表示',
     'menu.edit': '編集',
-    'menu.undo': '取り消す',
+    'menu.undo': '元に戻す',
     'menu.redo': 'やり直す',
     'menu.reload': '再読み込み',
     'menu.print': '絵コンテ印刷…',

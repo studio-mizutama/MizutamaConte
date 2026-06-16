@@ -60,6 +60,12 @@ const NoDragArea = styled.div`
   -webkit-app-region: no-drag;
 `;
 
+// Web のハンバーガーだけに付ける右マージン。左の padding-left(12px) と対称にして
+// ☰ の左右余白を揃える（Electron にはハンバーガーが無いので影響しない）。
+const HamburgerArea = styled(NoDragArea)`
+  margin-right: 12px;
+`;
+
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
@@ -486,7 +492,7 @@ export const Header: React.FC = () => {
     <DragArea>
       <HeaderLeft>
         {!api && (
-          <NoDragArea>
+          <HamburgerArea>
             <MenuTrigger>
               <ActionButton isQuiet aria-label={t('header.menu.ariaLabel')}>
                 <ShowMenu />
@@ -513,7 +519,7 @@ export const Header: React.FC = () => {
               </Menu>
             </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
-          </NoDragArea>
+          </HamburgerArea>
         )}
         <NoDragArea>
           <NewProjectDialog />
