@@ -17,6 +17,7 @@ import { frameState } from 'project/frameState';
 import { clampFrame } from 'project/frameNav';
 import { compositeFrame } from 'video/compositor';
 import { useGlobal } from 'reactn';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useT } from 'i18n';
 
 const PreviewHeader = styled.div`
@@ -76,6 +77,7 @@ export const Preview: React.FC = React.memo(() => {
 
   const [frame, setFrame] = useState(0);
   const [isPlay, setIsPlay] = useState(false);
+  const mode = useGlobal('mode')[0];
   const viewport = useViewportSize();
   const ratio = Math.min((viewport.width - 340) / fitBase.width, (viewport.height - 419) / fitBase.height);
 
@@ -133,6 +135,14 @@ export const Preview: React.FC = React.memo(() => {
     loop();
     setIsPlay(true);
   }, [frame, now, timeTotal, fps]);
+
+  // 1コマ送り: frame は再生中フロートなので整数スナップしてから ±1（step が clamp/停止を担う）
+  const stepFrame = useCallback(
+    (dir: number) => {
+      step(Math.round(frame) + dir);
+    },
+    [frame, step],
+  );
 
   // 単一の描画パス: frameState → compositeFrame（共有コンポジタ）→ 可視 canvas へ blit。
   // カメラワーク・黒/白フェード・背景・グループ・ブレンドはすべて compositeFrame が担う。
@@ -195,6 +205,26 @@ export const Preview: React.FC = React.memo(() => {
   }, [frame, cuts, setCurrentCutIndex]);
 
   const info = activeCutInfo(frame, cuts, timeTotal);
+
+  // Preview タブ限定のプレイヤーショートカット（各ハンドラ先頭で mode ゲート＝編集タブでは素通り）
+  useHotkeys(
+    'space',
+    (e) => {
+      if (mode !== 'Preview') return;
+      e.preventDefault();
+      if (isPlay) stop();
+      else start();
+    },
+    [mode, isPlay, stop, start],
+  );
+  useHotkeys('left', (e) => { if (mode !== 'Preview') return; e.preventDefault(); stepFrame(-1); }, [mode, stepFrame]);
+  useHotkeys('right', (e) => { if (mode !== 'Preview') return; e.preventDefault(); stepFrame(1); }, [mode, stepFrame]);
+  useHotkeys('up', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(info.prePreTimeSum); }, [mode, step, info]);
+  useHotkeys('down', (e) => { if (mode !== 'Preview') return; e.preventDefault(); step(info.timeSum); }, [mode, step, info]);
+  useHotkeys('command+left,ctrl+left', (e) => { if (mode !== 'Preview') return; e.preventDefault(); rewind(); }, [mode, rewind]);
+  useHotkeys('command+right,ctrl+right', (e) => { if (mode !== 'Preview') return; e.preventDefault(); fastForward(); }, [mode, fastForward]);
+  useHotkeys('home', (e) => { if (mode !== 'Preview') return; e.preventDefault(); rewind(); }, [mode, rewind]);
+  useHotkeys('end', (e) => { if (mode !== 'Preview') return; e.preventDefault(); fastForward(); }, [mode, fastForward]);
 
   return (
     <Flex direction="column" height="100%">
