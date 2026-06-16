@@ -1,4 +1,4 @@
-import React, { useGlobal, useState, useRef, useCallback, useMemo } from 'reactn';
+import React, { useGlobal, useState, useRef, useCallback, useMemo, useEffect } from 'reactn';
 import {
   ActionButton,
   Grid,
@@ -51,7 +51,8 @@ const Band = styled(DraggableRow)`
 `;
 
 /** 空状態のフォルダ D&D ドロップゾーン。ドラッグ中は accent 色でハイライトする。
- *  $active=true でアクセントの枠線 + 薄いアクセント背景に切り替える。 */
+ *  $active=true でアクセントの枠線 + 薄いアクセント背景に切り替える。
+ *  ハイライトはウインドウ全体のドラッグ検知（EmptyState の window リスナ）で駆動する。 */
 const DropZone = styled.div<{ $active: boolean }>`
   display: flex;
   align-items: center;
@@ -71,6 +72,14 @@ const DropZone = styled.div<{ $active: boolean }>`
   font-size: 13px;
   text-align: center;
   transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+`;
+
+/** 空状態のラッパ。ウインドウ全体がドロップを受け付けることを示すため、
+ *  ドラッグ検知中（$active）はごく薄いアクセント tint を全面に敷く（テキストの可読性は維持）。 */
+const EmptyStateWrap = styled(Flex)<{ $active: boolean }>`
+  border-radius: var(--spectrum-alias-border-radius-regular, 4px);
+  background: ${(p) => (p.$active ? 'rgba(38, 128, 235, 0.06)' : 'transparent')};
+  transition: background 0.12s ease;
 `;
 
 /** CUT 間（および最終行下）の行間ガター。CUT 追加(＋)とシーン区切り追加(📁+)を兼ねる。
@@ -483,56 +492,95 @@ const AddCutRow: React.FC = () => {
   );
 };
 
+/** ドラッグ中のデータがファイル（フォルダ含む）かどうか。
+ *  テキスト選択など非ファイルのドラッグでハイライトしないためのガード。 */
+const dragHasFiles = (e: DragEvent): boolean => !!e.dataTransfer?.types?.includes('Files');
+
 /** プロジェクト未オープン時の中央寄せ空状態ガイド + フォルダ D&D ドロップゾーン。
- *  ドロップで Open と同一経路（useOpenFolder）でフォルダを開く＝履歴クリアも共通。 */
+ *  EmptyState は `!fileName` のときだけマウントされるため、ここで window 全体のドラッグ＆
+ *  ドロップを購読すれば「未オープン時のみ・ウインドウ全体で受付」が自動的にスコープされる。
+ *  ドロップは Open と同一経路（useOpenFolder の runOpen）でフォルダを開く＝履歴クリアも共通。
+ *  不正フォルダのエラー表示も runOpen が担うので、ここで個別に握る必要はない。 */
 const EmptyState: React.FC = () => {
   const t = useT();
   const { openFolderFromPath, openFolderFromHandle } = useOpenFolder();
   const setLoadError = useGlobal('loadError')[1];
   const [isDragging, setIsDragging] = useState(false);
 
-  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-    if (!isDragging) setIsDragging(true);
-  };
+  // 開く処理は最新の参照を ref 経由で window リスナから呼ぶ（リスナの再登録を避ける）
+  const openersRef = useRef({ openFolderFromPath, openFolderFromHandle, setLoadError, errorBody: t('error.openBody') });
+  openersRef.current = { openFolderFromPath, openFolderFromHandle, setLoadError, errorBody: t('error.openBody') };
 
-  // 子要素への移動で発火する dragleave のちらつきを避けるため、ドロップゾーン外へ出たときだけ解除する
-  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
-    setIsDragging(false);
-  };
+  // ウインドウ全体でドラッグを検知し、入った瞬間にハイライトする。
+  // 子要素間の移動で dragenter/dragleave が交互に飛ぶため、カウンタで「窓内にいるか」を判定して
+  // ちらつきを防ぐ（dragenter で ++、dragleave で --、drop でリセット）。
+  useEffect(() => {
+    let dragDepth = 0;
 
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    void (async () => {
-      try {
-        if (api) {
-          // Electron: ドロップされた File は .path を持つ。フォルダのみ受け付ける
-          const entry = e.dataTransfer.items[0]?.webkitGetAsEntry?.();
-          const file = e.dataTransfer.files[0] as (File & { path?: string }) | undefined;
-          if (entry && !entry.isDirectory) return; // ファイルがドロップされたら無視
-          const dir = file?.path;
-          if (dir) await openFolderFromPath(dir);
-          return;
+    const onDragEnter = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return; // ファイル以外（テキスト選択等）は無視
+      dragDepth += 1;
+      setIsDragging(dragDepth > 0);
+    };
+
+    const onDragOver = (e: DragEvent) => {
+      // ドロップを許可するため preventDefault。index.tsx の安全網と二重に呼んでも無害。
+      e.preventDefault();
+      if (e.dataTransfer && dragHasFiles(e)) e.dataTransfer.dropEffect = 'copy';
+    };
+
+    const onDragLeave = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      dragDepth = Math.max(0, dragDepth - 1);
+      setIsDragging(dragDepth > 0);
+    };
+
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragDepth = 0;
+      setIsDragging(false);
+      const { openFolderFromPath: openPath, openFolderFromHandle: openHandle, setLoadError: setErr, errorBody } =
+        openersRef.current;
+      void (async () => {
+        try {
+          if (api) {
+            // Electron: ドロップされた File は .path を持つ。フォルダのみ受け付ける
+            const entry = e.dataTransfer?.items[0]?.webkitGetAsEntry?.();
+            const file = e.dataTransfer?.files[0] as (File & { path?: string }) | undefined;
+            if (entry && !entry.isDirectory) return; // ファイルがドロップされたら無視
+            const dir = file?.path;
+            if (dir) await openPath(dir);
+            return;
+          }
+          // Web FSA: ディレクトリハンドルを取得して開く（非対応ブラウザは何もしない＝既存ボタンに任せる）
+          const item = e.dataTransfer?.items[0];
+          const handle = await (item as DataTransferItem & {
+            getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
+          })?.getAsFileSystemHandle?.();
+          if (handle?.kind === 'directory') await openHandle(handle as FileSystemDirectoryHandle);
+        } catch {
+          // ハンドル取得や読込の失敗は AlertDialog で通知（不正フォルダで落とさない）。
+          // openFolderFrom* 内の失敗は既に loadError を立てるので、ここはその手前の例外用の保険。
+          setErr(errorBody);
         }
-        // Web FSA: ディレクトリハンドルを取得して開く（非対応ブラウザは何もしない＝既存ボタンに任せる）
-        const item = e.dataTransfer.items[0];
-        const handle = await (item as DataTransferItem & {
-          getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
-        })?.getAsFileSystemHandle?.();
-        if (handle?.kind === 'directory') await openFolderFromHandle(handle as FileSystemDirectoryHandle);
-      } catch {
-        // ハンドル取得や読込の失敗は AlertDialog で通知（不正フォルダで落とさない）。
-        // openFolderFrom* 内の失敗は既に loadError を立てるので、ここはその手前の例外用の保険。
-        setLoadError(t('error.openBody'));
-      }
-    })();
-  };
+      })();
+    };
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
 
   return (
-    <Flex
+    <EmptyStateWrap
+      $active={isDragging}
       direction="column"
       alignItems="center"
       justifyContent="center"
@@ -542,10 +590,10 @@ const EmptyState: React.FC = () => {
     >
       <Heading level={3}>{t('empty.title')}</Heading>
       <Text>{t('empty.body')}</Text>
-      <DropZone $active={isDragging} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
-        {t('empty.drop')}
-      </DropZone>
-    </Flex>
+      {/* ドロップは window リスナが受けるので box 自身の onDrop は持たない（二重 open を防ぐ）。
+          box はあくまで視覚ヒント。ハイライトは共有の isDragging で駆動する。 */}
+      <DropZone $active={isDragging}>{t('empty.drop')}</DropZone>
+    </EmptyStateWrap>
   );
 };
 
