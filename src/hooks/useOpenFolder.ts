@@ -8,6 +8,7 @@ import { getStorage, StorageOpenResult } from 'storage';
 import { openFromHandle, getCurrentDirHandle } from 'storage/web';
 import { clearHistory } from 'history/undoManager';
 import { translate } from 'i18n';
+import { recordRecent } from 'storage/recentStore';
 
 const { api } = window;
 
@@ -77,6 +78,15 @@ export const useOpenFolder = (): UseOpenFolder => {
     // プロジェクト差し替え（Open/外部リロード）で履歴は無効化する
     clearHistory();
     getStorage().purgeTrash().catch(() => undefined);
+    // 最近開いたプロジェクトへ記録（Electron=パス / Web=保持ハンドル。失敗は握りつぶす）
+    void recordRecent({
+      electronPath: api ? sharedDirPathRef.current : null,
+      webHandle: api ? null : getCurrentDirHandle(),
+    })
+      .then((list) => {
+        if (api) api.refreshRecent?.(list); // Electron ネイティブメニュー再構築（実体は別タスクで配線）
+      })
+      .catch(() => undefined);
   };
 
   // 全ての開く経路の中核。read 関数で生ペイロードを得て、検証→パース→反映する。
