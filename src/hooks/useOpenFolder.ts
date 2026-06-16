@@ -95,23 +95,27 @@ export const useOpenFolder = (): UseOpenFolder => {
   // - read が null を返した場合はキャンセル/対象なし扱いで no-op（エラーにしない）
   // - read が throw（ENOTDIR/権限/IPC reject 等）、または JSON が不正な形なら loadError を立て、
   //   現状のプロジェクトは差し替えない（applyProject を呼ばない）
-  const runOpen = async (read: () => Promise<StorageOpenResult | null>) => {
+  // 成否を返す（true=applyProject まで成功 / false=キャンセル・no-op・不正・例外）。
+  // openRecent が「失効した最近エントリの除去」を判定するために戻り値を使う。
+  const runOpen = async (read: () => Promise<StorageOpenResult | null>): Promise<boolean> => {
     try {
       await setIsLoading(true);
       await yieldToPaint();
       const payload = await read();
-      if (!payload) return; // キャンセル/対象なし（picker キャンセルや読込前の no-op）
+      if (!payload) return false; // キャンセル/対象なし（picker キャンセルや読込前の no-op）
       if (sharedDirPathRef && payload.dirPath) sharedDirPathRef.current = payload.dirPath;
       // applyProject を呼ぶ前に JSON の形を検証する（不正なら現状維持でエラー表示）
       if (!isValidProjectJson(payload.jsonText)) {
         raiseLoadError();
-        return;
+        return false;
       }
       const psds: LoadedPsd[] = payload.psds.map(({ name, data }) => ({ name, psd: readPsd(data) }));
       applyProject(payload.jsonText, psds, payload.jsonFileName);
+      return true;
     } catch {
       // 読込/パース失敗（不正フォルダ・破損 PSD・権限拒否など）。現状のプロジェクトは維持する
       raiseLoadError();
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -207,11 +211,10 @@ export const useOpenFolder = (): UseOpenFolder => {
   const openRecent = async (entry: { id: string; path?: string }) => {
     if (api) {
       if (!entry.path) return;
-      try {
-        await runOpen(() => api.readProject(entry.path!));
-      } catch {
-        void removeRecentEntry(entry.id);
-      }
+      // runOpen は例外を内部で握って raiseLoadError するため catch には来ない。成否は戻り値で判定し、
+      // 失敗（パス消失・JSON 不正・読込失敗）なら失効エントリとして最近リストから除去する。
+      const ok = await runOpen(() => api.readProject(entry.path!));
+      if (!ok) void removeRecentEntry(entry.id);
       return;
     }
     // Web FSA
@@ -231,8 +234,10 @@ export const useOpenFolder = (): UseOpenFolder => {
       if (perm !== 'granted' && queryable.requestPermission) {
         perm = await queryable.requestPermission({ mode: 'readwrite' });
       }
-      if (perm !== 'granted') return; // 拒否はリスト保持のまま
-      await openFolderFromHandle(handle);
+      if (perm !== 'granted') return; // 拒否はリスト保持のまま（再選択を促す）
+      // 権限は得たが読込に失敗（フォルダ消失/不正化）したら失効として除去する
+      const ok = await runOpen(() => openFromHandle(handle));
+      if (!ok) void removeRecentEntry(entry.id);
     } catch {
       raiseLoadError();
     }

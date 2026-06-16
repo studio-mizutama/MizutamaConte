@@ -32,6 +32,7 @@ import { useTitleEffects } from 'hooks/useTitleEffects';
 import { useProject } from 'hooks/useProject';
 import { useAutoSave } from 'hooks/useAutoSave';
 import { useOpenFolder } from 'hooks/useOpenFolder';
+import { getCurrentDirHandle } from 'storage/web';
 import { deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey, RecentProject } from 'project/types';
 import { loadRecents } from 'storage/recentStore';
@@ -202,15 +203,18 @@ const FilePicker: React.FC = () => {
   const t = useT();
   const globalFileName = useGlobal('globalFileName')[0];
   const [recents, setRecents] = useState<RecentProject[]>([]);
-  const { openRecent } = useOpenFolder();
+  const { openRecent, dirPathRef } = useOpenFolder();
 
   // globalFileName が変わるたびに最近リストを再取得する
   useEffect(() => {
     void loadRecents().then(setRecents);
   }, [globalFileName]);
 
-  // 現在開いているファイル以外の最近プロジェクトを絞り込む
-  const others = recents.filter((r) => r.name !== globalFileName);
+  // 現在開いているプロジェクトを最近リストから除外（重複表示防止）。
+  // globalFileName は JSON 名で最近の name(フォルダ名)と一致しないため、実 ID で照合する
+  // （Electron=フォルダ絶対パス=id / Web=ディレクトリハンドル名=name）。
+  const currentKey = api ? dirPathRef.current : getCurrentDirHandle()?.name ?? null;
+  const others = recents.filter((r) => (api ? r.id : r.name) !== currentKey);
 
   // react-spectrum Picker は条件付き Section を許容しないため、
   // 最近リストがある場合とない場合で children を切り替える
