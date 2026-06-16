@@ -76,13 +76,23 @@ export const ko: Record<TranslationKey, string> = {
   'panels.outline': '아웃라인',
   'panels.duration': '길이',
   'panels.dialogue': '대사',
+  'panels.stopwatch': 'Stopwatch',
 
   // 도구（탭의 「편집」과 겹치지 않도록 기본 도구 라벨은 「선택」으로 함）
   'toolGroup.edit': '선택 (V)',
   'toolGroup.resize': '크기 조정 (C)',
   'toolGroup.reorder': '재정렬 (R)',
+  'toolGroup.stopwatch': '스톱워치 (T)',
   'toolGroup.undo': '실행 취소',
   'toolGroup.redo': '다시 실행',
+
+  // 스톱워치 모드
+  'stopwatch.start': '시작',
+  'stopwatch.stop': '정지',
+  'stopwatch.hintIdle': 'Space 시작 / Esc 취소',
+  'stopwatch.hintSelect': '측정할 컷 선택',
+  'stopwatch.tooShort': '너무 짧습니다',
+  'stopwatch.lastCut': '마지막 컷',
 
   // 트랜지션（全ロケール英語固定）
   'transition.fadeIn': 'Fade In',

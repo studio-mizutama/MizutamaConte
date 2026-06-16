@@ -76,13 +76,23 @@ export const ja: Record<TranslationKey, string> = {
   'panels.outline': 'アウトライン',
   'panels.duration': 'デュレーション',
   'panels.dialogue': 'セリフ',
+  'panels.stopwatch': 'Stopwatch',
 
   // ツール（タブの「編集」と被らないよう既定ツールのラベルは「選択」にする）
   'toolGroup.edit': '選択 (V)',
   'toolGroup.resize': 'リサイズ (C)',
   'toolGroup.reorder': '並べ替え (R)',
+  'toolGroup.stopwatch': 'ストップウォッチ (T)',
   'toolGroup.undo': '元に戻す',
   'toolGroup.redo': 'やり直す',
+
+  // ストップウォッチモード
+  'stopwatch.start': '開始',
+  'stopwatch.stop': '停止',
+  'stopwatch.hintIdle': 'Space で開始 / Esc で取消',
+  'stopwatch.hintSelect': '計測するカットを選択',
+  'stopwatch.tooShort': '短すぎます',
+  'stopwatch.lastCut': '最終カット',
 
   // トランジション（全ロケール英語固定。パネル見出しは別キー panels.* で日本語のまま）
   'transition.fadeIn': 'Fade In',

@@ -1,6 +1,6 @@
 import { useGlobal } from 'reactn';
 
-export type EditorMode = 'edit' | 'resize' | 'reorder';
+export type EditorMode = 'edit' | 'resize' | 'reorder' | 'stopwatch';
 
 /** editorMode グローバル（undefined 含む）を既定 'edit' へ解決する純粋関数 */
 export const resolveEditorMode = (mode: EditorMode | undefined): EditorMode => mode ?? 'edit';
