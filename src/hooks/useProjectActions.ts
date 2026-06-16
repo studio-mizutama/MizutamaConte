@@ -1,6 +1,6 @@
 import { useGlobal } from 'reactn';
 import { useProject } from 'hooks/useProject';
-import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, updateCutAt, updateDialogueAt } from 'project/actions';
+import { appendCut, appendLayer, appendSceneCut, deleteCutAt, insertCutAfter, mergeCuts, nextPsdName, orphanedPsdAfterMerge, resizeCutCanvas, splitLastLayer, setSceneStart, setSceneTitle, setFadeType, setFadeDuration, FadeSide, FadeType, updateCutAt, updateDialogueAt } from 'project/actions';
 import { createTemplatePsd, appendLayerToPsd, mergePsd, resizeDocPsd, splitTopLayerPsd, isBlankPsd } from 'psd/template';
 import { ProjectFile, FrameSize } from 'project/types';
 import { getStorage } from 'storage';
@@ -346,6 +346,13 @@ export const useProjectActions = () => {
   const removeSceneStart = (cutIndex: number) =>
     commit('removeScene', setSceneStart(project, cutIndex, undefined));
 
+  /** トランジション fade 種別を設定。Cross は相方CUTも同じ next に含めるため 1 トランザクションで undo される */
+  const setFadeTypeAt = (index: number, side: FadeSide, type: FadeType | undefined) =>
+    commit('transition', setFadeType(project, index, side, type), `transition:${index}:${side}`);
+  /** トランジション fade 尺を設定。Cross は相方も追従し 1 トランザクションで undo される */
+  const setFadeDurationAt = (index: number, side: FadeSide, duration: number) =>
+    commit('transition', setFadeDuration(project, index, side, duration), `transition-dur:${index}:${side}`);
+
   return {
     setDialogue,
     setActionText,
@@ -357,6 +364,8 @@ export const useProjectActions = () => {
     addSceneCut,
     setSceneTitleAt,
     removeSceneStart,
+    setFadeTypeAt,
+    setFadeDurationAt,
     resizeCanvas,
     mergeCutWithNext,
     splitCutLastLayer,
