@@ -441,7 +441,14 @@ export const Header: React.FC = () => {
     if (!api?.onReloadProjectRequest) return;
     const listener = () => {
       if (dirPathRef.current) {
-        api.readProject(dirPathRef.current).then(loadFromPayload);
+        // Cmd/Ctrl+R はキーボード操作なので react-spectrum がキーボードモダリティになり、
+        // 再読込後に編集タブへ focus リングが乗ってしまう。読込完了後にフォーカスを外して回避する。
+        api
+          .readProject(dirPathRef.current)
+          .then(loadFromPayload)
+          .then(() => {
+            (document.activeElement as HTMLElement | null)?.blur();
+          });
       }
     };
     api.onReloadProjectRequest(listener);
