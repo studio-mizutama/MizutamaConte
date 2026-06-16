@@ -41,6 +41,10 @@ declare module 'reactn/default' {
 }
 
 declare global {
+  // Vite `define` でビルド時に注入される定数（AboutDialog 用）
+  const __APP_VERSION__: string;
+  const __BUILD_SHA__: string;
+
   interface Window {
     api: Sandbox;
     // File System Access API (Chromium 系のみ)
