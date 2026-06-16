@@ -1,9 +1,23 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
 import { Key } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ActionButton, Item, TabList, Tabs, Text, Picker, Flex, MenuTrigger, Menu, DialogTrigger, Dialog } from '@adobe/react-spectrum';
+import {
+  ActionButton,
+  Item,
+  Section,
+  TabList,
+  Tabs,
+  Text,
+  Picker,
+  Flex,
+  MenuTrigger,
+  Menu,
+  DialogTrigger,
+  Dialog,
+  Tooltip,
+  TooltipTrigger,
+} from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import Home from '@spectrum-icons/workflow/Home';
 import TableEdit from '@spectrum-icons/workflow/TableEdit';
 import VideoFilled from '@spectrum-icons/workflow/VideoFilled';
 import Share from '@spectrum-icons/workflow/Share';
@@ -25,9 +39,13 @@ import { NewProjectDialog } from 'NewProjectDialog';
 import { SettingsDialog } from 'SettingsDialog';
 import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
 import { useT } from 'i18n';
+import { TranslationKey } from 'i18n/catalogs/en';
 import { usePrint } from 'print/usePrint';
 import { useVideoExport } from 'hooks/useVideoExport';
 import { clearHistory } from 'history/undoManager';
+import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
+import { AboutDialog } from 'AboutDialog';
+import { WEB_MENU } from 'menuStructure';
 
 const { api } = window;
 
@@ -223,9 +241,12 @@ const GitBranchButton: React.FC = () => {
   if (!fileName) return null;
   return (
     <DialogTrigger type="popover">
-      <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
-        <Branch2 />
-      </ActionButton>
+      <TooltipTrigger delay={300}>
+        <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
+          <Branch2 />
+        </ActionButton>
+        <Tooltip>{t('git.snapshot.heading')}</Tooltip>
+      </TooltipTrigger>
       <Dialog size="S">
         <GitSnapshotPopover gitDetect={gitDetect} />
       </Dialog>
@@ -237,6 +258,8 @@ export const Header: React.FC = () => {
   const t = useT();
   const print = usePrint();
   const startVideoExport = useVideoExport();
+  const { doUndo, doRedo } = useUndoRedoControls();
+  const [aboutOpen, setAboutOpen] = useState(false);
   const fileName = useGlobal('globalFileName')[0];
   const { project, setProject } = useProject();
   const setPsdCache = useGlobal('psdCache')[1];
@@ -381,6 +404,14 @@ export const Header: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // メニューの Help > About（menu:about IPC）からのアプリ情報ダイアログ表示要求
+  useEffect(() => {
+    if (!api?.onAboutRequest) return;
+    api.onAboutRequest(() => setAboutOpen(true));
+    return () => api.removeAboutRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 外部ペイントアプリで PSD が保存されたら自動で再読込する
   useEffect(() => {
     if (!api) return;
@@ -453,11 +484,21 @@ export const Header: React.FC = () => {
               <Menu
                 onAction={(k) => {
                   if (k === 'new') setNewProjectOpen(true);
-                  if (k === 'open') openProject();
+                  else if (k === 'open') openProject();
+                  else if (k === 'print') print();
+                  else if (k === 'video') startVideoExport();
+                  else if (k === 'undo') void doUndo();
+                  else if (k === 'redo') void doRedo();
+                  else if (k === 'documentation')
+                    window.open('https://studio-mizutama.github.io/MizutamaConte/docs/', '_blank');
+                  else if (k === 'about') setAboutOpen(true);
                 }}
               >
-                <Item key="new">{t('header.menu.new')}</Item>
-                <Item key="open">{t('header.menu.open')}</Item>
+                {WEB_MENU.map((s) => (
+                  <Section key={s.key} title={t(s.titleKey as TranslationKey)} items={s.items}>
+                    {(it) => <Item key={it.key}>{t(it.labelKey as TranslationKey)}</Item>}
+                  </Section>
+                ))}
               </Menu>
             </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
@@ -469,14 +510,12 @@ export const Header: React.FC = () => {
         <NoDragArea>
           <SettingsDialog />
         </NoDragArea>
+        <AboutDialog isOpen={aboutOpen} onOpenChange={setAboutOpen} />
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />
           </ActionButton>
         )}
-        <ActionButton isQuiet marginX="size-200">
-          <Home />
-        </ActionButton>
         <NoDragArea>
           <Tab />
         </NoDragArea>
@@ -505,9 +544,12 @@ export const Header: React.FC = () => {
             </Menu>
           </MenuTrigger>
           <GitBranchButton />
-          <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
-            <Settings />
-          </ActionButton>
+          <TooltipTrigger delay={300}>
+            <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
+              <Settings />
+            </ActionButton>
+            <Tooltip>{t('header.settings.ariaLabel')}</Tooltip>
+          </TooltipTrigger>
         </Flex>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <WindowsButtons>
