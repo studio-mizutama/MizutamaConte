@@ -8,7 +8,8 @@ import { getStorage, StorageOpenResult } from 'storage';
 import { openFromHandle, getCurrentDirHandle } from 'storage/web';
 import { clearHistory } from 'history/undoManager';
 import { translate } from 'i18n';
-import { recordRecent } from 'storage/recentStore';
+import { recordRecent, removeRecentEntry } from 'storage/recentStore';
+import { getHandle } from 'storage/recentHandles';
 
 const { api } = window;
 
@@ -48,6 +49,7 @@ export interface UseOpenFolder {
   openFromPicker: (read: Promise<StorageOpenResult | null>) => Promise<void>;
   reloadFromDirPath: (dirPath: string) => Promise<void>;
   reloadCurrentProject: () => Promise<void>;
+  openRecent: (entry: { id: string; path?: string }) => Promise<void>;
   dirPathRef: React.MutableRefObject<string | null>;
 }
 
@@ -200,6 +202,42 @@ export const useOpenFolder = (): UseOpenFolder => {
     await openFolderFromHandle(handle);
   };
 
+  // 最近リストからの再オープン。Electron=パスで読込（消失時はエラー＋除去）。
+  // Web=保持ハンドルを取り出し、クリックのユーザージェスチャ内で権限を再取得してから読込。
+  const openRecent = async (entry: { id: string; path?: string }) => {
+    if (api) {
+      if (!entry.path) return;
+      try {
+        await runOpen(() => api.readProject(entry.path!));
+      } catch {
+        void removeRecentEntry(entry.id);
+      }
+      return;
+    }
+    // Web FSA
+    const handle = await getHandle(entry.id);
+    if (!handle) {
+      void removeRecentEntry(entry.id); // handle 消失 → 除去
+      return;
+    }
+    try {
+      const queryable = handle as FileSystemDirectoryHandle & {
+        queryPermission?: (d: { mode: 'readwrite' }) => Promise<PermissionState>;
+        requestPermission?: (d: { mode: 'readwrite' }) => Promise<PermissionState>;
+      };
+      // クリックのジェスチャ内で同期的に権限要求する
+      let perm: PermissionState = 'prompt';
+      if (queryable.queryPermission) perm = await queryable.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted' && queryable.requestPermission) {
+        perm = await queryable.requestPermission({ mode: 'readwrite' });
+      }
+      if (perm !== 'granted') return; // 拒否はリスト保持のまま
+      await openFolderFromHandle(handle);
+    } catch {
+      raiseLoadError();
+    }
+  };
+
   return {
     applyProject,
     loadFromPayload,
@@ -209,6 +247,7 @@ export const useOpenFolder = (): UseOpenFolder => {
     openFromPicker,
     reloadFromDirPath,
     reloadCurrentProject,
+    openRecent,
     dirPathRef,
   };
 };
