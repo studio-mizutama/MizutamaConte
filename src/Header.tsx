@@ -1,6 +1,7 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
-import { Key } from 'react';
+import { Key, useRef, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useEditorMode } from 'hooks/editorMode';
 import {
   ActionButton,
   AlertDialog,
@@ -155,6 +156,22 @@ const CloseButtonWrapper = styled.div`
 const Tab: React.FC = () => {
   const t = useT();
   const [selected, setSelected] = useGlobal('mode');
+  const [, setEditorMode] = useEditorMode();
+  // 現在タブを ref で常に最新参照（hotkey/IPC のクロージャからも遷移判定できるように）
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+
+  // タブ切替の単一入口。Preview→Edit の復帰時だけ選択ツール(V)へ戻す。
+  // editorMode を setSelected より「先」に確定するのが要点: タブ切替に伴う mode 変化で
+  // Conte は必ず再描画され、その時点で editorMode が 'edit' になっているため、
+  // editorMode 単独の再描画が（reactn の取りこぼしで）Conte に届かなくても残置が確実に消える。
+  const selectTab = useCallback(
+    (key: 'Edit' | 'Preview') => {
+      if (key === 'Edit' && selectedRef.current !== 'Edit') setEditorMode('edit');
+      setSelected(key);
+    },
+    [setSelected, setEditorMode],
+  );
 
   const keyDown = () => {
     const activeElement = document.activeElement as HTMLElement;
@@ -162,29 +179,29 @@ const Tab: React.FC = () => {
   };
 
   useHotkeys('e', () => {
-    setSelected('Edit');
+    selectTab('Edit');
     keyDown();
-  });
+  }, [selectTab]);
 
   useHotkeys('p', () => {
-    setSelected('Preview');
+    selectTab('Preview');
     keyDown();
-  });
+  }, [selectTab]);
 
   // Web のみ: ⌘/Ctrl+1=編集 / ⌘/Ctrl+2=プレビュー（Electron は View メニューの accelerator が担う＝二重発火回避）。
   // ブラウザは ⌘+数字 をタブ切替に取られ得るため best-effort。確実な切替は e/p（上）。
-  useHotkeys('command+1,ctrl+1', (e) => { if (api) return; e.preventDefault(); setSelected('Edit'); keyDown(); }, [setSelected]);
-  useHotkeys('command+2,ctrl+2', (e) => { if (api) return; e.preventDefault(); setSelected('Preview'); keyDown(); }, [setSelected]);
+  useHotkeys('command+1,ctrl+1', (e) => { if (api) return; e.preventDefault(); selectTab('Edit'); keyDown(); }, [selectTab]);
+  useHotkeys('command+2,ctrl+2', (e) => { if (api) return; e.preventDefault(); selectTab('Preview'); keyDown(); }, [selectTab]);
   // Electron: View メニュー → menu:select-tab IPC
   useEffect(() => {
     if (!api?.onSelectTab) return;
-    api.onSelectTab((tab) => setSelected(tab as 'Edit' | 'Preview'));
+    api.onSelectTab((tab) => selectTab(tab as 'Edit' | 'Preview'));
     return () => api.removeSelectTab?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <Tabs width="fit-content" selectedKey={selected} onSelectionChange={setSelected as (keys: Key) => any}>
+    <Tabs width="fit-content" selectedKey={selected} onSelectionChange={(key) => selectTab(key as 'Edit' | 'Preview')}>
       <TabList maxHeight="size-500">
         <Item key="Edit">
           <TableEdit />

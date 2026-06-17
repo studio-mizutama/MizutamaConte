@@ -1,4 +1,4 @@
-import React, { useGlobal, useEffect } from 'reactn';
+import React, { useGlobal } from 'reactn';
 import { ActionButton, ActionGroup, Flex, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
@@ -23,10 +23,8 @@ export const ToolGroup: React.FC = () => {
   const [mode, setMode] = useEditorMode();
   const tab = useGlobal('mode')[0];
   const isPreview = tab === 'Preview';
-  // Preview タブから編集タブへ戻ったら選択ツールを V(edit) にリセット
-  useEffect(() => {
-    if (tab === 'Edit') setMode('edit');
-  }, [tab, setMode]);
+  // 注: Preview→Edit 復帰時の「選択ツール(V)へリセット」は Header.selectTab に移管した
+  // （editorMode を mode 切替の前に確定することで Conte へ確実に反映＝残置バグ修正）。
   const { doUndo, doRedo, canUndo, canRedo } = useUndoRedoControls();
   const fileName = useGlobal('globalFileName')[0];
 
