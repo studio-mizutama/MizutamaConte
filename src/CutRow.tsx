@@ -29,7 +29,7 @@ import { getFrameModel } from 'project/frameModel';
 import { frameToTimecode, parseTimecode } from 'project/time';
 import { useT, TranslationKey } from 'i18n';
 
-const MyTextArea = styled.textarea<{ $editable: boolean }>`
+const MyTextArea = styled.textarea<{ $editable: boolean; $large?: boolean }>`
   position: absolute;
   top: 2px;
   height: calc(100% - 4px);
@@ -39,6 +39,8 @@ const MyTextArea = styled.textarea<{ $editable: boolean }>`
   margin: 0;
   padding: 0;
   border: none;
+  font-size: ${(p) => (p.$large ? '19px' : '15px')};
+  font-weight: ${(p) => (p.$large ? 600 : 'inherit')};
   /* 非編集モード（resize/reorder）では完全に不活性化し、ホバー/クリック/フォーカスの
      誤爆（青枠 outline）を防ぐ。クリックは背後の行へ抜ける。 */
   pointer-events: ${(p) => (p.$editable ? 'auto' : 'none')};
@@ -47,6 +49,51 @@ const MyTextArea = styled.textarea<{ $editable: boolean }>`
   :focus {
     outline: 2px solid var(--spectrum-alias-border-color-focus);
     border-radius: var(--spectrum-global-dimension-size-50, var(--spectrum-alias-size-50));
+  }
+`;
+
+/** ストップウォッチモードの TIME 読み取り表示（計測中は赤・それ以外は通常色）。 */
+const TimeDisplay = styled.div<{ $counting: boolean }>`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1;
+  color: ${(p) => (p.$counting ? 'var(--spectrum-semantic-negative-color-border, #d7373f)' : 'var(--spectrum-alias-text-color)')};
+  pointer-events: none;
+  user-select: none;
+`;
+
+/** インライン Rec ボタン。TIME セル中央に配置。3 状態（idle / active / counting）を視覚的に区別する。 */
+const RecButton = styled.button<{ $active: boolean; $counting: boolean }>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid ${(p) =>
+    p.$counting
+      ? 'var(--spectrum-semantic-negative-color-border, #d7373f)'
+      : p.$active
+      ? 'var(--spectrum-global-color-gray-700, #444)'
+      : 'var(--spectrum-global-color-gray-500, #888)'};
+  background: ${(p) =>
+    p.$counting
+      ? 'var(--spectrum-semantic-negative-color-border, #d7373f)'
+      : p.$active
+      ? 'var(--spectrum-global-color-gray-300, #ccc)'
+      : 'var(--spectrum-global-color-gray-200, #e5e5e5)'};
+  cursor: pointer;
+  padding: 0;
+  /* idle 時は薄く表示し、行ホバー時に完全表示。active/counting は常時表示 */
+  opacity: ${(p) => (p.$active || p.$counting ? 1 : 0.2)};
+  transition: opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  /* CUT 行（祖先 div.hover）ホバーで fully visible に */
+  .hover:hover & {
+    opacity: 1;
   }
 `;
 
@@ -98,7 +145,7 @@ const CutActions = styled.div`
 const TransitionLabel = styled.div`
   position: absolute;
   left: calc((100% - 96px) / 2 + 100px);
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.7;
   pointer-events: none;
   white-space: nowrap;
@@ -163,10 +210,19 @@ const TextContainer: React.FC<{
   timeSum?: number;
   fps: number;
   editable: boolean;
+  stopwatchMode: boolean;
+  isStopwatchActive: boolean;
+  isCounting: boolean;
+  liveFrames?: number;
+  onToggleRec: (index: number) => void;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
-}> = React.memo(({ cutIndex, action, dialogue, time, timeSum, fps, editable, setDialogue, setActionText, setTime }) => {
+}> = React.memo(({
+  cutIndex, action, dialogue, time, timeSum, fps, editable,
+  stopwatchMode, isStopwatchActive, isCounting, liveFrames, onToggleRec,
+  setDialogue, setActionText, setTime,
+}) => {
   const t = useT();
   // TIME はタイムコード文字列で編集し、確定時にフレーム数へ変換する
   const [timeDraft, setTimeDraft] = useState<string | null>(null);
@@ -192,6 +248,7 @@ const TextContainer: React.FC<{
         <MyTextArea
           className="hover"
           $editable={editable}
+          $large={false}
           tabIndex={editable ? undefined : -1}
           readOnly={!editable}
           onKeyDown={escKeyDown}
@@ -225,6 +282,7 @@ const TextContainer: React.FC<{
         <MyTextArea
           className="hover"
           $editable={editable}
+          $large={false}
           tabIndex={editable ? undefined : -1}
           readOnly={!editable}
           onKeyDown={escKeyDown}
@@ -233,25 +291,48 @@ const TextContainer: React.FC<{
         />
       </View>
       <View gridArea="time" width="100%" position="relative" height="auto">
-        <MyTextArea
-          className="hover"
-          $editable={editable}
-          tabIndex={editable ? undefined : -1}
-          readOnly={!editable}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              (e.target as HTMLElement).blur();
-            }
-            if (e.key === 'Escape') {
-              timeCancelRef.current = true;
-            }
-            escKeyDown(e);
-          }}
-          value={timeDraft ?? frameToTimecode(time || 0, fps)}
-          onChange={(e) => setTimeDraft(e.target.value)}
-          onBlur={commitTime}
-        />
+        {/* 編集モード: 従来の編集可能テキストエリア */}
+        {!stopwatchMode && (
+          <MyTextArea
+            className="hover"
+            $editable={editable}
+            $large={true}
+            tabIndex={editable ? undefined : -1}
+            readOnly={!editable}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (e.target as HTMLElement).blur();
+              }
+              if (e.key === 'Escape') {
+                timeCancelRef.current = true;
+              }
+              escKeyDown(e);
+            }}
+            value={timeDraft ?? frameToTimecode(time || 0, fps)}
+            onChange={(e) => setTimeDraft(e.target.value)}
+            onBlur={commitTime}
+          />
+        )}
+        {/* ストップウォッチモード: 大きな読み取り専用 TIME 表示＋ Rec ボタン */}
+        {stopwatchMode && (
+          <>
+            <TimeDisplay $counting={isCounting}>
+              {frameToTimecode(isCounting ? (liveFrames ?? 0) : (time || 0), fps)}
+            </TimeDisplay>
+            <RecButton
+              type="button"
+              $active={isStopwatchActive}
+              $counting={isCounting}
+              title={t('stopwatch.rec')}
+              aria-label={t('stopwatch.rec')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleRec(cutIndex);
+              }}
+            />
+          </>
+        )}
         <TimeSum>{frameToTimecode(timeSum || 0, fps)}</TimeSum>
       </View>
     </>
@@ -341,6 +422,16 @@ export interface CutRowProps {
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
+  /** ストップウォッチモードか */
+  stopwatchMode: boolean;
+  /** このカットがストップウォッチのアクティブターゲットか（選択中 = Rec 強調表示） */
+  isStopwatchActive: boolean;
+  /** このカットが現在計測中か */
+  isCounting: boolean;
+  /** 計測中の経過フレーム（計測中のカットのみ渡す。他は undefined → memo スキップ） */
+  liveFrames?: number;
+  /** Rec ボタン押下時のコールバック（カット index を渡す） */
+  onToggleRec: (index: number) => void;
 }
 
 /** 1カット行。project を購読せず props のみで描画する（React.memo を機能させる）。 */
@@ -366,6 +457,11 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     setDialogue,
     setActionText,
     setTime,
+    stopwatchMode,
+    isStopwatchActive,
+    isCounting,
+    liveFrames,
+    onToggleRec,
   }) => {
     const t = useT();
     // 編集操作が可能か（プロジェクト未オープン or edit 以外のモードでは 4 アイコンをロック）
@@ -575,6 +671,11 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               fps={fps}
               // 編集モードのときだけテキスト編集可（resize/reorder では誤爆防止のため読み取り専用）
               editable={editorMode === 'edit'}
+              stopwatchMode={stopwatchMode}
+              isStopwatchActive={isStopwatchActive}
+              isCounting={isCounting}
+              liveFrames={liveFrames}
+              onToggleRec={onToggleRec}
               setDialogue={setDialogue}
               setActionText={setActionText}
               setTime={setTime}

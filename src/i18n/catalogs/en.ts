@@ -78,7 +78,6 @@ export const en = {
   'panels.outline': 'Outline',
   'panels.duration': 'Duration',
   'panels.dialogue': 'Dialogue',
-  'panels.stopwatch': 'Stopwatch',
 
   // ツール（モードトグル。ショートカット V/C/R。CUT/SCENE は英語固定）
   // 'toolGroup.edit' はタブの "Edit" と被らないよう表示ラベルは "Select" にする
@@ -89,13 +88,8 @@ export const en = {
   'toolGroup.undo': 'Undo',
   'toolGroup.redo': 'Redo',
 
-  // ストップウォッチモード
-  'stopwatch.start': 'Start',
-  'stopwatch.stop': 'Stop',
-  'stopwatch.hintIdle': 'Space to start / Esc to cancel',
-  'stopwatch.hintSelect': 'Select a cut to time',
-  'stopwatch.tooShort': 'Too short',
-  'stopwatch.lastCut': 'Last cut',
+  // ストップウォッチモード（インライン Rec）
+  'stopwatch.rec': 'Rec (Space)',
 
   // トランジション（Picker の key='None'|'White In'... は保存データなので英語固定。表示のみ翻訳）
   'transition.fadeIn': 'Fade In',

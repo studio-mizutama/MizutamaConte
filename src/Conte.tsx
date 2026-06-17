@@ -30,6 +30,7 @@ import { DraggableRow } from 'styles/DraggableRow';
 import { CutRow } from 'CutRow';
 import { useT } from 'i18n';
 import { cutOffsets } from 'project/cutOffsets';
+import { useStopwatchController } from 'hooks/useStopwatchController';
 
 const { api } = window;
 
@@ -259,11 +260,18 @@ const CutContainer: React.FC = () => {
   actionsRef.current = actions;
   const [editorMode] = useEditorMode();
 
-  const scenes = deriveScenes(project.cuts);
-  const sceneByStart = new Map(scenes.map((s) => [s.startIndex, s]));
-  const cutSpans = cutOffsets(cuts);
-  const sceneOfIndex = new Map<number, number>();
-  scenes.forEach((s) => s.cutIndices.forEach((i) => sceneOfIndex.set(i, s.startIndex)));
+  const { stopwatchMode, activeIndex, countingIndex, liveFrames, toggle } = useStopwatchController();
+  const onToggleRec = useCallback((i: number) => toggle(i), [toggle]);
+
+  // useMemo で per-frame 再レンダリング時の再計算を抑える（計測中は Conte が毎フレーム再レンダーされる）
+  const scenes = useMemo(() => deriveScenes(project.cuts), [project.cuts]);
+  const sceneByStart = useMemo(() => new Map(scenes.map((s) => [s.startIndex, s])), [scenes]);
+  const cutSpans = useMemo(() => cutOffsets(cuts), [cuts]);
+  const sceneOfIndex = useMemo(() => {
+    const m = new Map<number, number>();
+    scenes.forEach((s) => s.cutIndices.forEach((i) => m.set(i, s.startIndex)));
+    return m;
+  }, [scenes]);
 
   const { reorderCutAt, reorderSceneAt } = useReorder();
   const { dragIndex, dropIndex, dragKind, startDrag, setDropIndex, endDrag } = useRowDnd();
@@ -432,6 +440,11 @@ const CutContainer: React.FC = () => {
                     setDialogue={setDialogue}
                     setActionText={setActionText}
                     setTime={setTime}
+                    stopwatchMode={stopwatchMode}
+                    isStopwatchActive={stopwatchMode && activeIndex === index}
+                    isCounting={countingIndex === index}
+                    liveFrames={countingIndex === index ? liveFrames : undefined}
+                    onToggleRec={onToggleRec}
                   />
                 </DraggableRow>
               )}
