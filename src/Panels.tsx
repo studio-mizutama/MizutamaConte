@@ -12,8 +12,6 @@ import { CameraWork } from 'CameraWork';
 import { Outline } from 'Outline';
 import { Dialogue } from 'Dialogue';
 import { Duration } from 'Duration';
-import { useEditorMode } from 'hooks/editorMode';
-import { StopwatchPanel } from 'StopwatchPanel';
 
 const ToolArea = styled.div`
   padding-left: var(--spectrum-global-dimension-size-200, var(--spectrum-alias-size-200));
@@ -34,7 +32,6 @@ const TITLE_KEYS: Record<string, TranslationKey> = {
   Outline: 'panels.outline',
   Dialogue: 'panels.dialogue',
   Duration: 'panels.duration',
-  Stopwatch: 'panels.stopwatch',
 };
 
 const Tool: React.FC<{ Title: string }> = ({ Title, children }) => {
@@ -48,7 +45,6 @@ const Tool: React.FC<{ Title: string }> = ({ Title, children }) => {
     Outline: <ViewList size="XS" />,
     Dialogue: <Comment size="XS" />,
     Duration: <Clock size="XS" />,
-    Stopwatch: <Clock size="XS" />,
   };
 
   const iconRender = (title: string): JSX.Element => tool[title];
@@ -69,32 +65,18 @@ const Tool: React.FC<{ Title: string }> = ({ Title, children }) => {
 
 export const Panels: React.FC = () => {
   const mode = useGlobal('mode')[0];
-  const [editorMode] = useEditorMode();
   return (
     <>
       <div style={mode === 'Edit' ? { display: 'block', height: '100%', overflow: 'hidden' } : { display: 'none' }}>
-        {editorMode === 'stopwatch' ? (
-          <>
-            <Tool Title="Stopwatch">
-              <StopwatchPanel />
-            </Tool>
-            <Tool Title="Outline">
-              <Outline />
-            </Tool>
-          </>
-        ) : (
-          <>
-            <Tool Title="Transition">
-              <Transition />
-            </Tool>
-            <Tool Title="Camera Work">
-              <CameraWork />
-            </Tool>
-            <Tool Title="Outline">
-              <Outline />
-            </Tool>
-          </>
-        )}
+        <Tool Title="Transition">
+          <Transition />
+        </Tool>
+        <Tool Title="Camera Work">
+          <CameraWork />
+        </Tool>
+        <Tool Title="Outline">
+          <Outline />
+        </Tool>
       </div>
       <div style={mode === 'Preview' ? { display: 'block' } : { display: 'none' }}>
         <Tool Title="Duration">
