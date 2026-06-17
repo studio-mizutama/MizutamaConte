@@ -18,6 +18,8 @@ import RemoveCircle from '@spectrum-icons/workflow/RemoveCircle';
 import Layers from '@spectrum-icons/workflow/Layers';
 import Delete from '@spectrum-icons/workflow/Delete';
 import Link from '@spectrum-icons/workflow/Link';
+import Circle from '@spectrum-icons/workflow/Circle';
+import Stop from '@spectrum-icons/workflow/Stop';
 import { cutCanvas } from 'project/scene';
 import { applyShiftSnap } from 'project/camera';
 import { ProjectCut, FrameSize } from 'project/types';
@@ -39,7 +41,7 @@ const MyTextArea = styled.textarea<{ $editable: boolean; $large?: boolean }>`
   margin: 0;
   padding: 0;
   border: none;
-  font-size: ${(p) => (p.$large ? '19px' : '15px')};
+  font-size: ${(p) => (p.$large ? '16px' : '15px')};
   font-weight: ${(p) => (p.$large ? 600 : 'inherit')};
   /* 非編集モード（resize/reorder）では完全に不活性化し、ホバー/クリック/フォーカスの
      誤爆（青枠 outline）を防ぐ。クリックは背後の行へ抜ける。 */
@@ -52,48 +54,49 @@ const MyTextArea = styled.textarea<{ $editable: boolean; $large?: boolean }>`
   }
 `;
 
-/** ストップウォッチモードの TIME 読み取り表示（計測中は赤・それ以外は通常色）。 */
+/** ストップウォッチモードの TIME 読み取り表示。
+ *  MyTextArea $large と同じ top:2px / left:0 / font 16px 600 / padding:0 にすることで
+ *  tキー切り替え時に数値が同じ位置に表示されズレを防ぐ。 */
 const TimeDisplay = styled.div<{ $counting: boolean }>`
   position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 19px;
+  top: 2px;
+  left: 0;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 1;
-  color: ${(p) => (p.$counting ? 'var(--spectrum-semantic-negative-color-border, #d7373f)' : 'var(--spectrum-alias-text-color)')};
+  line-height: normal;
+  padding: 0;
+  color: ${(p) =>
+    p.$counting
+      ? 'var(--spectrum-global-color-red-600, #d7373f)'
+      : 'var(--spectrum-alias-text-color)'};
   pointer-events: none;
   user-select: none;
 `;
 
-/** インライン Rec ボタン。TIME セル中央に配置。3 状態（idle / active / counting）を視覚的に区別する。 */
-const RecButton = styled.button<{ $active: boolean; $counting: boolean }>`
+/** Rec コントロールのラッパー。TIME セル中央に配置。
+ *  idle/非ホバー時は opacity:0 で非表示。ホバー・active・counting 時に opacity:1 で表示する。 */
+const RecControlWrapper = styled.div<{ $visible: boolean }>`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid ${(p) =>
-    p.$counting
-      ? 'var(--spectrum-semantic-negative-color-border, #d7373f)'
-      : p.$active
-      ? 'var(--spectrum-global-color-gray-700, #444)'
-      : 'var(--spectrum-global-color-gray-500, #888)'};
-  background: ${(p) =>
-    p.$counting
-      ? 'var(--spectrum-semantic-negative-color-border, #d7373f)'
-      : p.$active
-      ? 'var(--spectrum-global-color-gray-300, #ccc)'
-      : 'var(--spectrum-global-color-gray-200, #e5e5e5)'};
-  cursor: pointer;
-  padding: 0;
-  /* idle 時は薄く表示し、行ホバー時に完全表示。active/counting は常時表示 */
-  opacity: ${(p) => (p.$active || p.$counting ? 1 : 0.2)};
-  transition: opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-  /* CUT 行（祖先 div.hover）ホバーで fully visible に */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: ${(p) => (p.$visible ? 1 : 0)};
+  transition: opacity 0.12s ease;
+  /* CUT 行（祖先 div.hover）ホバーで表示 */
   .hover:hover & {
     opacity: 1;
+  }
+`;
+
+/** 計測中の Stop アイコンを赤くするラッパー。Spectrum 3.11.2 の Icon は color prop 非対応のため
+ *  CSS fill で対応する。 */
+const RedIconWrap = styled.span`
+  svg {
+    fill: var(--spectrum-global-color-red-600, #d7373f);
+    color: var(--spectrum-global-color-red-600, #d7373f);
   }
 `;
 
@@ -314,23 +317,34 @@ const TextContainer: React.FC<{
             onBlur={commitTime}
           />
         )}
-        {/* ストップウォッチモード: 大きな読み取り専用 TIME 表示＋ Rec ボタン */}
+        {/* ストップウォッチモード: 読み取り専用 TIME 表示（$large MyTextArea と同位置）＋ Rec ボタン */}
         {stopwatchMode && (
           <>
             <TimeDisplay $counting={isCounting}>
               {frameToTimecode(isCounting ? (liveFrames ?? 0) : (time || 0), fps)}
             </TimeDisplay>
-            <RecButton
-              type="button"
-              $active={isStopwatchActive}
-              $counting={isCounting}
-              title={t('stopwatch.rec')}
-              aria-label={t('stopwatch.rec')}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleRec(cutIndex);
-              }}
-            />
+            {/* stopPropagation で行クリックハンドラ（行選択 or トグル）との二重発火を防ぐ */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <RecControlWrapper $visible={isStopwatchActive || isCounting}>
+                <TooltipTrigger delay={300}>
+                  <ActionButton
+                    isQuiet
+                    aria-label={isCounting ? t('stopwatch.tipStop') : t('stopwatch.tipStart')}
+                    onPress={() => onToggleRec(cutIndex)}
+                  >
+                    {isCounting ? (
+                      <RedIconWrap><Stop size="S" /></RedIconWrap>
+                    ) : (
+                      <Circle size="S" />
+                    )}
+                  </ActionButton>
+                  <Tooltip>{isCounting ? t('stopwatch.tipStop') : t('stopwatch.tipStart')}</Tooltip>
+                </TooltipTrigger>
+              </RecControlWrapper>
+            </div>
           </>
         )}
         <TimeSum>{frameToTimecode(timeSum || 0, fps)}</TimeSum>
@@ -473,7 +487,15 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
         <div
           className={'hover'}
           id={`Cut${index + 1}`}
-          onClick={() => document.getElementById(`List${index + 1}`)?.click()}
+          onClick={() => {
+            // ストップウォッチモードでアクティブな行をクリック → 計測トグル
+            if (stopwatchMode && isStopwatchActive) {
+              onToggleRec(index);
+            } else {
+              // 通常: 行を選択（既存動作）
+              document.getElementById(`List${index + 1}`)?.click();
+            }
+          }}
           onMouseEnter={() => document.getElementById(`List${index + 1}`)?.classList.add('isHover')}
           onMouseLeave={() => document.getElementById(`List${index + 1}`)?.classList.remove('isHover')}
         >

@@ -86,7 +86,8 @@ export const ja: Record<TranslationKey, string> = {
   'toolGroup.redo': 'やり直す',
 
   // ストップウォッチモード（インライン Rec）
-  'stopwatch.rec': '録画 (Space)',
+  'stopwatch.tipStart': '計測 (Space)',
+  'stopwatch.tipStop': '停止 (Space)',
 
   // トランジション（全ロケール英語固定。パネル見出しは別キー panels.* で日本語のまま）
   'transition.fadeIn': 'Fade In',

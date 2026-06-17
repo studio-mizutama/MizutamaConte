@@ -6,7 +6,7 @@ import Crop from '@spectrum-icons/workflow/Crop';
 import Reorder from '@spectrum-icons/workflow/Reorder';
 import Undo from '@spectrum-icons/workflow/Undo';
 import Redo from '@spectrum-icons/workflow/Redo';
-import Clock from '@spectrum-icons/workflow/Clock';
+import Stopwatch from '@spectrum-icons/workflow/Stopwatch';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { EditorMode, useEditorMode } from 'hooks/editorMode';
 import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
@@ -91,7 +91,7 @@ export const ToolGroup: React.FC = () => {
           </TooltipTrigger>
           <TooltipTrigger placement="end">
             <Item key="stopwatch">
-              <Clock />
+              <Stopwatch />
             </Item>
             <Tooltip>{t('toolGroup.stopwatch')}</Tooltip>
           </TooltipTrigger>

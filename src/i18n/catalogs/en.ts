@@ -89,7 +89,8 @@ export const en = {
   'toolGroup.redo': 'Redo',
 
   // ストップウォッチモード（インライン Rec）
-  'stopwatch.rec': 'Rec (Space)',
+  'stopwatch.tipStart': 'Measure (Space)',
+  'stopwatch.tipStop': 'Stop (Space)',
 
   // トランジション（Picker の key='None'|'White In'... は保存データなので英語固定。表示のみ翻訳）
   'transition.fadeIn': 'Fade In',

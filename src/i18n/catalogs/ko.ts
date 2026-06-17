@@ -86,7 +86,8 @@ export const ko: Record<TranslationKey, string> = {
   'toolGroup.redo': '다시 실행',
 
   // 스톱워치 모드（인라인 Rec）
-  'stopwatch.rec': '녹화 (Space)',
+  'stopwatch.tipStart': '측정 (Space)',
+  'stopwatch.tipStop': '정지 (Space)',
 
   // 트랜지션（全ロケール英語固定）
   'transition.fadeIn': 'Fade In',
