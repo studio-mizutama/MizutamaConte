@@ -6,10 +6,21 @@ const proj = (times: number[]) => ({
 }) as any;
 
 describe('setFadeType（fade 既定12 + Cross ペア）', () => {
-  it('White In を選ぶと duration 既定 12', () => {
+  it('White In を選ぶと duration 既定 12（settings 無し=24fps 相当のフォールバック）', () => {
     const p = setFadeType(proj([100, 100]), 0, 'in', 'White In');
     expect(p.cuts[0].action!.fadeIn).toBe('White In');
     expect(p.cuts[0].action!.fadeInDuration).toBe(12);
+  });
+  it('既定尺は fps の半分（24→12 / 30→15 / 12→6 / 60→30）', () => {
+    const withFps = (fps: number) =>
+      ({
+        settings: { fps },
+        cuts: [100, 100].map((time, i) => ({ id: `c${i}`, time, rows: [], action: undefined })),
+      }) as any;
+    expect(setFadeType(withFps(24), 0, 'in', 'White In').cuts[0].action!.fadeInDuration).toBe(12);
+    expect(setFadeType(withFps(30), 0, 'in', 'White In').cuts[0].action!.fadeInDuration).toBe(15);
+    expect(setFadeType(withFps(12), 0, 'in', 'White In').cuts[0].action!.fadeInDuration).toBe(6);
+    expect(setFadeType(withFps(60), 0, 'in', 'White In').cuts[0].action!.fadeInDuration).toBe(30);
   });
   it('既定12 は cut 尺で clamp', () => {
     const p = setFadeType(proj([8, 8]), 0, 'in', 'White In');
@@ -51,6 +62,19 @@ describe('setFadeType（fade 既定12 + Cross ペア）', () => {
   it('先頭 cut fadeIn=Cross は no-op', () => {
     const p = setFadeType(proj([100, 100]), 0, 'in', 'Cross');
     expect(p.cuts[0].action?.fadeIn).toBeUndefined();
+  });
+  it('None（種別解除）で duration も消す（orphan フェードを残さない）', () => {
+    let p = setFadeType(proj([100, 100]), 0, 'in', 'White In');
+    expect(p.cuts[0].action!.fadeInDuration).toBe(12);
+    p = setFadeType(p, 0, 'in', undefined);
+    expect(p.cuts[0].action!.fadeIn).toBeUndefined();
+    expect(p.cuts[0].action!.fadeInDuration).toBeUndefined();
+  });
+  it('Cross 解除時は相方の duration も消す', () => {
+    let p = setFadeType(proj([100, 100]), 0, 'out', 'Cross');
+    p = setFadeType(p, 0, 'out', undefined);
+    expect(p.cuts[0].action!.fadeOutDuration).toBeUndefined();
+    expect(p.cuts[1].action!.fadeInDuration).toBeUndefined();
   });
 });
 

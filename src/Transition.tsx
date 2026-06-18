@@ -22,6 +22,13 @@ export const Transition: React.FC = () => {
   // フェード尺はカット尺(time)を超えない
   const maxDuration = cut?.time ?? 0;
 
+  // None 選択時はスライダー無効＋表示0、非None時は最小値1（0コマフェード=実質None を選ばせない）。
+  // maxDuration が 0 の時は min も 0 に倒す（react-spectrum Slider の min>max を回避）。
+  const isNoneIn = (action?.fadeIn ?? 'None') === 'None';
+  const isNoneOut = (action?.fadeOut ?? 'None') === 'None';
+  const minIn = !isNoneIn && maxDuration >= 1 ? 1 : 0;
+  const minOut = !isNoneOut && maxDuration >= 1 ? 1 : 0;
+
   return (
     <Flex direction="row" gap="size-200" wrap>
       <LabelLL>{t('transition.fadeIn')}</LabelLL>
@@ -47,10 +54,11 @@ export const Transition: React.FC = () => {
       </Picker>
       <Slider
         label={t('transition.duration')}
+        minValue={minIn}
         maxValue={maxDuration}
         width="256px"
-        isDisabled={disabled || maxDuration === 0}
-        value={Math.min(action?.fadeInDuration ?? 0, maxDuration)}
+        isDisabled={disabled || maxDuration === 0 || isNoneIn}
+        value={isNoneIn ? 0 : Math.min(action?.fadeInDuration ?? 0, maxDuration)}
         onChange={(v) => setFadeDurationAt(index, 'in', v)}
       />
       <LabelLL>{t('transition.fadeOut')}</LabelLL>
@@ -76,10 +84,11 @@ export const Transition: React.FC = () => {
       </Picker>
       <Slider
         label={t('transition.duration')}
+        minValue={minOut}
         maxValue={maxDuration}
         width="256px"
-        isDisabled={disabled || maxDuration === 0}
-        value={Math.min(action?.fadeOutDuration ?? 0, maxDuration)}
+        isDisabled={disabled || maxDuration === 0 || isNoneOut}
+        value={isNoneOut ? 0 : Math.min(action?.fadeOutDuration ?? 0, maxDuration)}
         onChange={(v) => setFadeDurationAt(index, 'out', v)}
       />
     </Flex>

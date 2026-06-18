@@ -234,7 +234,10 @@ export const resizeCutCanvas = (
 export type FadeSide = 'in' | 'out';
 export type FadeType = NonNullable<Action['fadeIn']> | NonNullable<Action['fadeOut']>;
 
-const FADE_DEFAULT = 12;
+/** フェード既定尺＝プロジェクト fps の半分（24fps→12 / 30→15 / 12→6 / 将来60→30）。
+ *  settings 欠落・不正 fps は 24fps 相当（=12）にフォールバック。最低 1 コマ。 */
+const defaultFadeFrames = (fps: number | undefined): number =>
+  Math.max(1, Math.round((Number.isFinite(fps) && (fps as number) > 0 ? (fps as number) : 24) / 2));
 const clampDur = (v: number, max: number): number => Math.max(0, Math.min(v, max));
 const sideFields = (side: FadeSide) =>
   side === 'in'
@@ -271,11 +274,12 @@ export const setFadeType = (
   const prevType = cut.action?.[f.type];
   const partner = partnerOf(index, side);
   const partnerCut = project.cuts[partner.idx];
+  const fadeDefault = defaultFadeFrames(project.settings?.fps);
 
   if (type === 'Cross') {
     if (!partnerCut) return project;
     const cap = Math.min(cut.time ?? 0, partnerCut.time ?? 0);
-    const dur = clampDur((cut.action?.[f.dur] as number) || FADE_DEFAULT, cap);
+    const dur = clampDur((cut.action?.[f.dur] as number) || fadeDefault, cap);
     const pf = sideFields(partner.side);
     return applyActionPatches(project, [
       { idx: index, action: { [f.type]: 'Cross', [f.dur]: dur } as Partial<Action> },
@@ -285,15 +289,17 @@ export const setFadeType = (
 
   const patches: Array<{ idx: number; action: Partial<Action> }> = [];
   if (type === undefined) {
-    patches.push({ idx: index, action: { [f.type]: undefined } as Partial<Action> });
+    // None 解除時は duration も消す（orphan フェード防止＝None なら尺は常に 0/未設定）
+    patches.push({ idx: index, action: { [f.type]: undefined, [f.dur]: undefined } as Partial<Action> });
   } else {
-    const dur = clampDur((cut.action?.[f.dur] as number) || FADE_DEFAULT, cut.time ?? 0);
+    const dur = clampDur((cut.action?.[f.dur] as number) || fadeDefault, cut.time ?? 0);
     patches.push({ idx: index, action: { [f.type]: type, [f.dur]: dur } as Partial<Action> });
   }
   if (prevType === 'Cross' && partnerCut) {
     const pf = sideFields(partner.side);
     if (partnerCut.action?.[pf.type] === 'Cross') {
-      patches.push({ idx: partner.idx, action: { [pf.type]: undefined } as Partial<Action> });
+      // Cross 解除で相方も None に戻る＝相方の duration も消す
+      patches.push({ idx: partner.idx, action: { [pf.type]: undefined, [pf.dur]: undefined } as Partial<Action> });
     }
   }
   return applyActionPatches(project, patches);
