@@ -30,4 +30,6 @@ yarn-error.log*
 /todo.md
 /lessons.md
 CLAUDE.md
+.claude/
+docs/superpowers/
 /out
