@@ -1,15 +1,15 @@
 # 다운로드
 
-Mizutama Conte에는 데스크톱에서 동작하는 Electron 버전과 브라우저만으로 동작하는 Web 버전이 있습니다. 둘 다 로컬에서 완결되며, 작업한 콘티 데이터를 서버로 전송하지 않습니다. 무료입니다.
+Mizutama Conte에는 Mac / Windows / Linux에서 동작하는 데스크톱 버전과, 브라우저만으로 동작하는 Web 버전이 있습니다. 둘 다 로컬에서 모든 작업이 완결되며, 작업한 콘티 데이터를 서버로 전송하지 않습니다.
 
-최신 버전은 [GitHub Releases 페이지](https://github.com/studio-mizutama/MizutamaConte/releases)에서 받을 수 있습니다. 각 릴리스에 Mac / Windows / Linux용 바이너리를 추가해 나갑니다. 다운로드는 공식 저장소(studio-mizutama/MizutamaConte)에서만 받아 주세요. 제3자가 재배포한 바이너리는 사용하지 마세요.
+최신 버전은 [GitHub Releases 페이지](https://github.com/studio-mizutama/MizutamaConte/releases)에서 받을 수 있습니다. 각 릴리스에 Mac / Windows / Linux용 바이너리를 추가해 나갑니다. 다운로드는 반드시 공식 저장소(studio-mizutama/MizutamaConte)에서만 받아 주세요. 제3자가 재배포한 바이너리는 사용하지 마세요.
 
-어느 쪽을 쓸지 고민된다면, 우선 Web 버전을 브라우저로 열어 보는 것을 추천합니다. 설치가 필요 없어 바로 사용해 볼 수 있습니다. 평소에 자주 쓸 거라면 자동 저장이나 외부 그림 소프트웨어 연동을 쓸 수 있는 데스크톱 버전을 추천합니다.
+고민된다면 먼저 Web 버전을 브라우저로 열어 보는 것을 추천합니다. 설치가 필요 없어 바로 사용해 볼 수 있습니다. 평소에 자주 쓸 거라면 자동 저장이나 외부 페인트 앱 연동을 쓸 수 있는 데스크톱 버전을 사용하세요.
 
 ## 어느 것을 쓸까
 
-- 일단 써 보고 싶다 / 설치하고 싶지 않다 → Web 버전(최신 Chrome / Edge)
-- 평소에 자주 쓴다 / PSD를 외부 그림 소프트웨어로 오가며 편집하고 싶다 → 데스크톱 버전(Mac / Windows / Linux)
+- 일단 써 보고 싶다 / 설치하고 싶지 않다 → Web 버전(Chromium 계열 브라우저 권장)
+- 평소에 자주 쓴다 / PSD를 외부 페인트 앱로 오가며 편집하고 싶다 → 데스크톱 버전(Mac / Windows / Linux)
 
 ## 데스크톱 버전 다운로드
 
@@ -43,7 +43,7 @@ chmod +x Mizutama-Conte*.AppImage
 - Windows 10 이상
 - Linux: Ubuntu 20.04 상당 이상
 
-이보다 오래된 환경에서는 데스크톱 버전이 실행되지 않을 수 있습니다. 그럴 때는 Web 버전을 사용하세요. Web 버전은 최신 Chrome / Edge에서 동작합니다.
+이보다 오래된 환경에서는 데스크톱 버전이 실행되지 않을 수 있습니다. 그럴 때는 Web 버전을 사용하세요.
 
 ## 처음 실행할 때(서명되지 않은 빌드)
 
@@ -89,7 +89,7 @@ xattr -dr com.apple.quarantine "/Applications/Mizutama Conte.app"
 
 - <https://studio-mizutama.github.io/MizutamaConte/>
 
-파일 읽기·쓰기에는 브라우저의 File System Access API를 사용합니다. 최신 Chrome / Edge에서의 사용을 전제로 합니다. 오래된 OS에서 데스크톱 버전이 동작하지 않을 때의 대안으로도 쓸 수 있습니다.
+파일 읽기·쓰기에는 브라우저의 File System Access API를 사용합니다. 최신 Chromium 계열 브라우저에서의 사용을 전제로 합니다. 오래된 OS에서 데스크톱 버전이 동작하지 않을 때의 대안으로도 쓸 수 있습니다.
 
 ## 단축키
 

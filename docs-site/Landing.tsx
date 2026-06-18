@@ -52,6 +52,7 @@ const FEAT_FILES = ['feat-psd.mp4', 'feat-camera.mp4', 'feat-stopwatch.mp4', 'fe
 
 type Copy = {
   hero: { h1a: string; em: string; h1b: string; sub: string; cta1: string; cta2: string; t1: string; t2: string; t3: string };
+  heroShot: string;
   pillarsH: string;
   pillars: { h: string; p: string }[];
   feats: { h: string; p: string; li: string[]; shot: string }[];
@@ -72,6 +73,7 @@ const JA: Copy = {
     t2: '使い慣れたペイントソフトで',
     t3: '無料で始められる',
   },
+  heroShot: '編集タブでスクロール → プレビュー再生 の収録',
   pillarsH: 'カメラ・編集効果をその場で確認。',
   pillars: [
     { h: 'カメラワーク付きプレビュー', p: 'タイミングとカメラの動きを、その場で再生して確かめられます。' },
@@ -129,7 +131,141 @@ const JA: Copy = {
   ctaSub: 'インストール不要。ブラウザでそのまま試せます。',
 };
 
-const COPY: Record<Locale, Copy> = { ja: JA, ko: JA, en: JA }; // ko/en は後で差し替え（暫定 ja フォールバック）
+const EN: Copy = {
+  hero: {
+    h1a: 'Bring',
+    em: 'camera work',
+    h1b: ' to your storyboards.',
+    sub: 'Draw your storyboard, then play it back as an animatic — a storyboard you can watch as video. Add pans and zooms, see them in place, and export to PDF or video.',
+    cta1: 'Use it free',
+    cta2: 'Download',
+    t1: 'Runs locally — no server',
+    t2: 'Draw in paint software you already know',
+    t3: 'Free to start',
+  },
+  heroShot: 'Scrolling the Edit tab, then preview playback',
+  pillarsH: 'Check camera moves and editing effects on the spot.',
+  pillars: [
+    { h: 'Preview with camera work', p: 'Play back the timing and camera moves on the spot to see how they read.' },
+    { h: 'Runs locally', p: 'Every file stays on your own machine. No account, no login.' },
+    { h: 'Draw in paint software you already know', p: 'CLIP STUDIO PAINT, Photoshop, Affinity Photo, GIMP, Krita. Keep drawing in the tools you already use.' },
+  ],
+  feats: [
+    {
+      h: 'Native PSD editing',
+      p: 'Double-click a cut and the actual .psd opens in your paint software. Save it, and Mizutama Conte reloads it automatically and updates the preview. No proprietary format at all.',
+      li: ['Downstream stages — layout, key animation, backgrounds — can use it straight away as a rough', 'Files sit plainly in a folder'],
+      shot: 'Edit the PSD in paint software → auto-reload',
+    },
+    {
+      h: 'Real resolutions and aspect ratios',
+      p: 'Supports SD / HD / FHD / 2K / 4K and 4:3 / 16:9 / 1.85:1 / 2.39:1. Widen or stretch the canvas and camera work (pans and zooms) is inserted automatically.',
+      li: ['Shift-drag to snap to vertical, horizontal, or ratio', 'A default camera move is generated from the resize direction'],
+      shot: 'Crop → camera work generated automatically',
+    },
+    {
+      h: 'Stopwatch input',
+      p: 'Enter durations efficiently with a stopwatch.',
+      li: ['Start and stop each row with Space', 'Manual entry works too'],
+      shot: 'Measure duration with the stopwatch',
+    },
+    {
+      h: 'A storyboard skeleton from your script',
+      p: 'Import a script written in Markdown and get from script to storyboard faster.',
+      li: ['Headings split scenes, horizontal rules split cuts, automatically', 'Dialogue and action are read in separately'],
+      shot: 'Script (.md) → cuts split out',
+    },
+    {
+      h: 'On paper, in PDF, or as video',
+      p: 'Print the storyboard sheet or export it to PDF. Render video at native resolution.',
+      li: ['Print A4 studio-style storyboard sheets', 'Export video at native resolution and fps'],
+      shot: 'PDF / MP4 export',
+    },
+  ],
+  audH: 'No feature limits. The full app, for everyone.',
+  audLead: 'The free public version has no feature limits whatsoever.',
+  audIndie: {
+    h: 'Indie and personal',
+    free: 'Free — every feature',
+    p: 'Doujin work (including paid distribution), self-produced films, festivals, single-theater screenings, personal and monetized channels, student projects, and education. Free to use, always.',
+  },
+  audPro: {
+    h: 'Studio and commercial production',
+    p: 'Commercial work shown on terrestrial, satellite, or streaming broadcast, or in nationwide theatrical release, needs a commercial license. Pricing and the process are still being prepared. If this might apply to you, get in touch first — we\'ll work out a license, and a signed build, with you individually.',
+    link: 'Contact',
+  },
+  ctaH: 'Go ahead — start making one.',
+  ctaSub: 'No install needed. Try it right in your browser.',
+};
+
+const KO: Copy = {
+  hero: {
+    h1a: '콘티에 ',
+    em: '카메라 워크',
+    h1b: '를.',
+    sub: '콘티를 그리면 그대로 애니매틱(영상으로 재생되는 콘티)으로. 팬·줌이 들어간 콘티를 그 자리에서 재생하고, PDF나 영상으로.',
+    cta1: '무료로 사용하기',
+    cta2: '다운로드',
+    t1: '로컬에서 완결·서버 미사용',
+    t2: '쓰던 페인트 앱 그대로',
+    t3: '무료로 시작 가능',
+  },
+  heroShot: 'Edit 탭 스크롤, 그리고 프리뷰 재생',
+  pillarsH: '카메라·편집 효과를 그 자리에서 확인.',
+  pillars: [
+    { h: '카메라 워크가 들어간 프리뷰', p: '타이밍과 카메라 움직임을 그 자리에서 재생해 확인할 수 있습니다.' },
+    { h: '로컬에서 완결', p: '파일은 전부 사용자의 기기 안에. 계정도 로그인도 필요 없습니다.' },
+    { h: '쓰던 페인트 앱 그대로', p: 'CLIP STUDIO PAINT·Photoshop·Affinity Photo·GIMP·Krita. 그림은 손에 익은 도구로 그대로.' },
+  ],
+  feats: [
+    {
+      h: '네이티브 PSD 편집',
+      p: '컷을 더블클릭하면 실제 .psd가 쓰던 페인트 앱에서 열립니다. 저장하면 자동으로 다시 읽어들여 프리뷰에 반영. 독자 포맷은 일절 없습니다.',
+      li: ['후공정(레이아웃·원화·배경미술)을 그대로 밑그림으로 쓸 수 있다', '파일은 폴더에 그대로 나열된다'],
+      shot: 'PSD를 페인트 앱로 편집 → 자동 재읽기',
+    },
+    {
+      h: '실제 제작용 해상도·화면비',
+      p: 'SD / HD / FHD / 2K / 4K, 4:3 / 16:9 / 1.85:1 / 2.39:1을 지원. 캔버스를 넓히거나 늘리면 카메라 워크(팬·줌)를 자동 삽입.',
+      li: ['Shift 드래그로 세로·가로·비율에 스냅', '리사이즈 방향에 맞춰 기본 카메라를 자동 생성'],
+      shot: '크롭 → 카메라 워크 자동 생성',
+    },
+    {
+      h: '스톱워치 입력',
+      p: '스톱워치로 효율적으로 듀레이션을 입력.',
+      li: ['행마다 Space로 시작·정지', '직접 입력도 가능'],
+      shot: '스톱워치로 길이 측정',
+    },
+    {
+      h: '각본에서 콘티의 뼈대를',
+      p: 'Markdown으로 쓴 각본 임포트를 지원. 각본에서 콘티 작성을 효율적으로.',
+      li: ['제목으로 신, 수평선으로 컷을 자동 분할', '대사·액션을 나눠서 읽어들임'],
+      shot: '각본(.md) → 나뉜 컷',
+    },
+    {
+      h: '종이로도, PDF로도, 영상으로도',
+      p: '콘티 용지는 인쇄·PDF 내보내기가 가능. 영상은 네이티브 해상도로.',
+      li: ['A4 스튜디오 서식의 콘티 인쇄', '네이티브 해상도·fps의 영상 내보내기'],
+      shot: 'PDF / MP4 내보내기',
+    },
+  ],
+  audH: '기능 제한 없음. 모든 기능을 모두에게.',
+  audLead: '무료 공개판에 기능 제한은 일절 없습니다.',
+  audIndie: {
+    h: '인디·개인',
+    free: '무료·전 기능',
+    p: '동인(유상 배포 포함)·자주 제작·영화제·단관 상영·개인/수익화 채널·학생 제작·교육. 계속 무료로 쓸 수 있습니다.',
+  },
+  audPro: {
+    h: '스튜디오·상업 제작',
+    p: '지상파·위성·스트리밍, 또는 전국 규모의 극장에서 공개하는 상업 작품에는 상용 라이선스가 필요합니다. 요금이나 절차는 이제부터 정비해 나가는 단계입니다. 해당될 것 같다면 먼저 문의해 주세요. 개별적으로 상의한 뒤 라이선스나 서명판 빌드를 마련해 드립니다.',
+    link: '문의하기',
+  },
+  ctaH: '지금 바로, 만들어 보세요.',
+  ctaSub: '설치 불필요. 브라우저에서 바로 사용해 볼 수 있습니다.',
+};
+
+const COPY: Record<Locale, Copy> = { ja: JA, ko: KO, en: EN };
 
 const getLocale = (): Locale =>
   ((typeof localStorage !== 'undefined' && (localStorage.getItem('docsLocale') as Locale)) || 'ja');
@@ -160,7 +296,7 @@ export const Landing: React.FC = () => {
           <span className="it">{c.hero.t3}</span>
         </div>
         <div className="hero-stage">
-          <Shot file="hero.mp4" video label="編集タブでスクロール → プレビュー再生 の収録" />
+          <Shot file="hero.mp4" video label={c.heroShot} />
         </div>
       </header>
 

@@ -1,15 +1,15 @@
 # Download
 
-Mizutama Conte comes in two flavors: a desktop build that runs on Electron, and a web build that runs in the browser. Both run entirely on your machine, and the storyboards you draw are never sent to a server. They're free.
+Mizutama Conte comes in a desktop version that runs on Mac / Windows / Linux, and a web version that runs in the browser alone. Both run entirely on your machine, and the storyboard data you draw is never sent to a server.
 
 The latest version is available from the [GitHub Releases page](https://github.com/studio-mizutama/MizutamaConte/releases). We'll add Mac / Windows / Linux binaries to each release. Only download from the official repository (studio-mizutama/MizutamaConte). Don't use binaries redistributed by third parties.
 
-If you're not sure where to start, open the web version in your browser and try it. There's nothing to install, so you can start right away. For everyday work, go with the desktop version, which gives you autosave and integration with external drawing apps.
+If you're not sure where to start, the easiest thing is to open the web version in your browser and try it. There's nothing to install, so you can start right away. For everyday work, go with the desktop version, which gives you autosave and integration with external paint software.
 
 ## Which one to use
 
-- Just want to try it / don't want to install → web version (a modern Chrome / Edge)
-- Daily use / want to round-trip PSD edits in an external drawing app → desktop version (Mac / Windows / Linux)
+- Want to try it first / don't want to install → web version (a Chromium-based browser is recommended)
+- Daily use / want to round-trip PSD edits through external paint software → desktop version (Mac / Windows / Linux)
 
 ## Downloading the desktop version
 
@@ -43,7 +43,7 @@ chmod +x Mizutama-Conte*.AppImage
 - Windows 10 or later
 - Linux: Ubuntu 20.04 equivalent or later
 
-On older systems, the desktop version may fail to launch. In that case, use the web version, which runs in a modern Chrome / Edge.
+On older systems, the desktop version may fail to launch. In that case, use the web version.
 
 ## About the first launch (unsigned builds)
 
@@ -89,7 +89,7 @@ Just open it in your browser. No installation needed.
 
 - <https://studio-mizutama.github.io/MizutamaConte/>
 
-It reads and writes files through the browser's File System Access API and is intended for use in a modern Chrome / Edge. It's also a good option when the desktop version won't run on an older OS.
+It reads and writes files through the browser's File System Access API. It's intended for use in modern Chromium-based browsers. It's also a good option when the desktop version won't run on an older OS.
 
 ## Shortcuts
 

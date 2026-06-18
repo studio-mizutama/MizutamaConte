@@ -1,10 +1,10 @@
 import React from 'react';
 import { Heading } from '@adobe/react-spectrum';
 import { Locale } from './content/manifest';
-import { SHORTCUTS, SC_INTRO, SC_COLS, Bilingual } from './content/shortcuts';
+import { SHORTCUTS, SC_INTRO, SC_COLS, Localized } from './content/shortcuts';
 
 // 操作名は ja / en を持つ。ko は en にフォールバック（短い参照ラベルのため）。
-const label = (b: Bilingual, loc: Locale): string => (loc === 'ja' ? b.ja : b.en);
+const label = (b: Localized, loc: Locale): string => b[loc] ?? b.en;
 
 const Keys: React.FC<{ tokens: string[] }> = ({ tokens }) => (
   <>

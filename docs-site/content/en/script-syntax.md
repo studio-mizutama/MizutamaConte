@@ -1,54 +1,54 @@
 # Script Import Syntax
 
-Write your script in Markdown, and Mizutama Conte reads it to build a storyboard skeleton split into scenes and CUTs in one pass. Dialogue (DIALOGUE) and stage directions (ACTION) are sorted out automatically, and each CUT gets an empty PSD. From there, the idea is that you draw the pictures and dial in the timing and camera work.
+If you write your script in Markdown, Mizutama Conte can read it and build a storyboard draft for you in one pass, split into scenes and CUTs. It also sorts the dialogue (DIALOGUE) and the action (ACTION), and gives each CUT an empty PSD. From there, the idea is that you draw the pictures and work out the timing and camera work.
 
-This page explains how to write the Markdown that gets read, with input examples paired with the results they produce.
+This page explains how to write the Markdown that gets imported, with input examples paired against the result they produce.
 
 ## How to start
 
-Run it from the menu via "New from Script". The shortcut is Cmd+Shift+N (Ctrl+Shift+N on Windows / Linux).
+Run it from the menu under "New from Script". The shortcut is Cmd+Shift+N (Ctrl+Shift+N on Windows / Linux).
 
-1. Pick a Markdown script file. Besides `.md`, the `.txt` extension is also accepted.
+1. Pick the Markdown file for your script. Besides `.md`, the `.txt` and `.markdown` extensions are also accepted.
 2. Set the resolution, aspect ratio, and fps, just like a regular new project (Cmd+N / Ctrl+N).
-3. Once it loads, you get a new project with scenes and CUTs assembled from the script's contents.
+3. Once it loads, you get a new project with scenes and CUTs assembled from the contents of the script.
 
-Even if the formatting differs from what's expected, the app won't crash. If it can't read something, it tells you with an error dialog.
+If the formatting isn't what's expected, the app won't crash. When something can't be read, it tells you with an error dialog.
 
 ## Overall structure
 
-A script Markdown file is interpreted roughly along these levels:
+A script in Markdown is interpreted, broadly, along the following hierarchy.
 
-- The first h1 (`# Heading`) = the work's title (= the project name)
-- Headings (`##` and below, any level) = scene breaks. The heading text is the scene name
-- Horizontal rules (`---` and similar) = CUT breaks
-- Lines like "Name: dialogue" or "Name「dialogue」" = DIALOGUE
+- The h1 at the top (`# Heading`) = the work's title (which becomes the project name)
+- A heading (`##` and below, any level) = a scene break. The heading text is the scene name.
+- A horizontal rule (`---` and the like) = a CUT break
+- A line in the form "Name: dialogue" or "Name 'dialogue'" = DIALOGUE
 - Any other body text = ACTION
 
-Let's go through these in order.
+Let's go through them in order.
 
-## h1 is the work's title
+## The h1 is the work's title
 
 The h1 at the top of the file is used as the work's title, which becomes the project name.
 
 ```
-# After-School, Rain Lifted
+# After the Rain
 ```
 
-The explanatory text written right below the h1 (up until the next heading) is not read in. You can use it as a place to keep a synopsis or notes.
+Any explanatory text written just below the h1 (up until the next heading) is not imported. You can use it as a place to keep a synopsis or notes.
 
-If there's no h1 at the top and the file starts straight from an h2, the Markdown file name becomes the project name, and everything from that h2 onward is read as scene breaks. If there's no heading at all at the top, the content up until the first heading appears is skipped.
+If there's no h1 at the top and the file starts straight from an h2, the Markdown file name becomes the project name, and everything from that h2 on is read as scene breaks. If there's no heading at all at the top, anything before the first heading appears is skipped.
 
-## Headings are scene breaks
+## Headings mark scene breaks
 
-Headings from h2 through h6 all carry the same meaning as scene breaks. You don't need to keep the levels consistent. `##` or `####` both work. The heading text becomes that scene's title.
+Headings from h2 through h6 all carry the same meaning as scene breaks. You don't need to keep the levels consistent. `##` is fine, and so is `####`. The heading text becomes the title of that scene.
 
-An h1 that appears partway through is also treated the same as h2 and below here, as a scene break.
+An h1 that turns up partway through is also treated as a scene break here, the same as h2 and below.
 
-The scene title is attached to that scene's first CUT. Empty scenes (headings with no content) are never created.
+The scene title is attached to the first CUT of that scene. Empty scenes (a heading with no contents) are never created.
 
-## Horizontal rules are CUT breaks
+## Horizontal rules mark CUT breaks
 
-Use a horizontal rule like `---` to separate CUTs. There's some tolerance for dialects of the syntax, and all of the following are treated as CUT breaks:
+A horizontal rule like `---` separates CUTs. There's some tolerance for stylistic variants, and all of the following are treated as CUT breaks.
 
 ```
 ---
@@ -57,112 +57,112 @@ ___
 - - -
 ```
 
-A line of three or more of the symbol is considered a horizontal rule.
+A line made up of three or more of the same symbol is treated as a horizontal rule.
 
-## Sorting ACTION and DIALOGUE
+## Sorting into ACTION and DIALOGUE
 
-Within a CUT, each line is sorted into either DIALOGUE (lines) or ACTION (stage directions).
+Within a CUT, the contents are sorted line by line into either DIALOGUE (the lines) or ACTION (the stage directions).
 
-Two forms are recognized as DIALOGUE:
+A line is recognized as DIALOGUE when it takes one of these two forms.
 
-- A form like `Name: dialogue`, where a character name and a colon come at the start of the line. The colon can be a half-width `:` or a full-width `：`. The space after the colon can be omitted.
-- A form like `Name「dialogue」`, where the name is followed by text wrapped in corner brackets.
+- A character name followed by a colon at the start of the line, as in `Name: dialogue`. The colon can be a half-width `:` or a full-width `：`. The space after the colon may be omitted.
+- A name followed by the line in quotation marks, as in `Name "dialogue"`.
 
-The name portion is expected to be up to about 20 characters. Everything else becomes ACTION.
+The name part is expected to be up to about 20 characters. Everything else becomes ACTION.
 
 Input example:
 
 ```
 Haru: Morning, hot again today
 Nagi:No space after the colon is fine too
-Nagi「Corner brackets are DIALOGUE all the same」
-Classroom. Cicadas crying outside the window.
+Nagi "Quotation marks are DIALOGUE all the same"
+The classroom. Cicadas are singing outside the window.
 ```
 
-When these 4 lines go into one CUT, they're sorted like this:
+When these 4 lines land in a single CUT, they're sorted like this.
 
-- DIALOGUE: "Morning, hot again today", "No space after the colon is fine too", "Corner brackets are DIALOGUE all the same"
-- ACTION: "Classroom. Cicadas crying outside the window."
+- DIALOGUE: "Morning, hot again today" / "No space after the colon is fine too" / "Quotation marks are DIALOGUE all the same"
+- ACTION: "The classroom. Cicadas are singing outside the window."
 
-The names in the dialogue (`Haru:` or `Nagi「`) are kept exactly as written. We don't strip the prefix on our own.
+The names on the dialogue (`Haru:` or `Nagi "`) are kept exactly as written. The prefix isn't stripped out on its own.
 
-## Markdown syntax is stripped, only the content is brought in
+## Markdown syntax is removed; only the contents are imported
 
-Quotes, code blocks, and bullet lists are also brought in as ACTION (as long as they aren't in dialogue form). During reading, the Markdown markers are stripped, leaving only the text content.
+Quotes, code blocks, and bullet lists are imported as ACTION too (as long as they aren't in dialogue form). On import, the Markdown markers are removed and only the text inside is kept.
 
-For example, the following input:
+For example, the following input
 
 ```
 > Hallway of the old schoolhouse
 - Graffiti left on the blackboard
-* Desk by the window
-**Strong** evening sun streams in
+* A desk by the window
+A strong **western sun** streams in
 ```
 
-is brought in as ACTION like this:
+is imported as ACTION like this.
 
 ```
 Hallway of the old schoolhouse
 Graffiti left on the blackboard
-Desk by the window
-Strong evening sun streams in
+A desk by the window
+A strong western sun streams in
 ```
 
-Markers like `-`, `>`, `**...**` (bold), `*...*` (italic), and `` `...` `` (inline code) are stripped, leaving only the content. Line breaks are kept as-is. If there are multiple lines within a single CUT, they're joined by line breaks into one ACTION.
+Markers such as `-`, `>`, `**...**` (bold), `*...*` (italic), and `` `...` `` (inline code) come off, and only the contents remain. Line breaks are kept as is. When there are several lines within one CUT, they're joined by line breaks into a single ACTION.
 
-## Empty CUTs are not created
+## Empty CUTs aren't created
 
-If there's neither ACTION nor DIALOGUE between two breaks, that CUT isn't created. Even if you write several `---` in a row, they're ignored as long as there's no content between them.
+If there's no ACTION and no DIALOGUE between two breaks, that CUT isn't created. Even if you happen to write `---` several times in a row, they're ignored as long as there's nothing in between.
 
-Each CUT ends up in a form where at least one of ACTION or DIALOGUE has text in it.
+Each CUT ends up with text in at least one of ACTION or DIALOGUE.
 
-Whether or not you put a CUT break `---` right before a scene heading, the result is the same. A leftover break after the final CUT is also handled appropriately.
+It makes no difference whether or not you put a `---` CUT break right before a scene heading. A break left over after the final CUT is handled cleanly as well.
 
 ## A complete example
 
-Suppose you load the following script:
+Suppose you import the following script.
 
 ```
-# After-School, Rain Lifted
+# After the Rain
 
-You can keep a synopsis here (ignored during reading)
+You can keep a synopsis here (ignored on import)
 
 ## Classroom
 
-Haru: The rain finally stopped
-Open the window, and the smell of the wet schoolyard.
+Haru: The rain finally let up
+Open the window, and there's the smell of the wet schoolyard.
 
 ---
 
-Nagi「Teacher, can I go home now?」
+Nagi "Sir, can I head home now?"
 The clock points to 5 p.m.
 
 ## Entrance Hall
 
-Haru「My shoes are damp」
+Haru "My shoes are damp"
 ```
 
-When loaded, it comes out like this:
+After importing, it comes out like this.
 
-- Work title: After-School, Rain Lifted
+- Work title: After the Rain
 - Scene "Classroom"
-  - CUT 1 — DIALOGUE "The rain finally stopped" / ACTION "Open the window, and the smell of the wet schoolyard."
-  - CUT 2 — DIALOGUE "Teacher, can I go home now?" / ACTION "The clock points to 5 p.m."
+  - CUT 1 — DIALOGUE "The rain finally let up" / ACTION "Open the window, and there's the smell of the wet schoolyard."
+  - CUT 2 — DIALOGUE "Sir, can I head home now?" / ACTION "The clock points to 5 p.m."
 - Scene "Entrance Hall"
-  - CUT 3 — DIALOGUE "My shoes are damp" / ACTION none
+  - CUT 3 — DIALOGUE "My shoes are damp" / no ACTION
 
-The scene titles are attached to each scene's first CUT (CUT 1 and CUT 3). The synopsis right below the h1 is not read in.
+The scene titles are attached to the first CUT of each scene (CUT 1 and CUT 3). The synopsis directly under the h1 isn't imported.
 
-## After loading
+## After importing
 
-Each CUT gets an empty PSD (`c001.psd`, `c002.psd`, ...) prepared automatically. Double-click the PICTURE to open it in an external drawing app and start drawing. CUT durations are filled with placeholder values, so use the stopwatch (T tool) or direct TIME editing to match them to the real durations.
+Each CUT comes with an empty PSD (`c001.psd`, `c002.psd`, and so on) prepared automatically. Double-click PICTURE to open it in your external paint software and start drawing. The CUT durations start with placeholder values, so use the stopwatch (T tool) or edit TIME directly to bring them in line with the real durations.
 
-Since you start with the lines and stage directions already in place, it should be easier to focus on the artwork.
+Since you start out with the dialogue and action already in place, it should be easier to focus on the artwork.
 
-## Notes
+## Things to keep in mind
 
-- The `.txt` extension is accepted in addition to `.md`, but the content is interpreted as Markdown.
-- A `Name:` or `Name「` written on a line becomes DIALOGUE. A line in a stage direction that happens to fall into this form may get picked up as dialogue.
-- Loading won't stop even with unexpected formatting. If the result differs from what you intended, review the positions of headings and `---`, and how the dialogue is written.
+- Besides `.md`, the `.txt` and `.markdown` extensions are accepted, but the contents are interpreted as Markdown.
+- A `Name:` or `Name "` written on a line becomes DIALOGUE. A line within the action that happens to fall into this form may be picked up as dialogue.
+- Even with unexpected formatting, the import itself won't stop. When the result isn't what you intended, take another look at the placement of headings and `---`, and at how the dialogue is written.
 
-A full list of shortcuts is collected on the [Shortcuts](#/shortcuts) page.
+The full list of shortcuts is collected on the [Shortcuts](#/shortcuts) page.

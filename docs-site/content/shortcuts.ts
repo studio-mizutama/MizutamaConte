@@ -2,8 +2,8 @@ import { Locale } from './manifest';
 
 // 実装監査(react-hotkeys-hook 登録 + Electron menu accelerator)から起こした単一ソース。
 // 仕様変更時はここを更新（src/ToolGroup.tsx, src/Header.tsx, electron/menu.ts 等が出典）。
-export type Bilingual = { ja: string; en: string };
-export type Shortcut = { act: Bilingual; mac: string[]; win: string[]; note?: Bilingual };
+export type Localized = Record<Locale, string>;
+export type Shortcut = { act: Localized; mac: string[]; win: string[]; note?: Localized };
 export type ScGroup = { h: Record<Locale, string>; rows: Shortcut[] };
 
 export const SC_INTRO: Record<Locale, string> = {
@@ -17,28 +17,29 @@ export const SC_COLS: Record<Locale, { act: string; mac: string; win: string }> 
   en: { act: 'Action', mac: 'Mac', win: 'Windows / Linux' },
 };
 
+const L = (ja: string, ko: string, en: string): Localized => ({ ja, ko, en });
 const G = (ja: string, ko: string, en: string): Record<Locale, string> => ({ ja, ko, en });
 
 export const SHORTCUTS: ScGroup[] = [
   {
     h: G('ファイル', '파일', 'File'),
     rows: [
-      { act: { ja: '新規プロジェクト', en: 'New project' }, mac: ['⌘', 'N'], win: ['Ctrl', 'N'] },
-      { act: { ja: '脚本から新規', en: 'New from script' }, mac: ['⌘', '⇧', 'N'], win: ['Ctrl', 'Shift', 'N'] },
-      { act: { ja: '開く', en: 'Open' }, mac: ['⌘', 'O'], win: ['Ctrl', 'O'] },
-      { act: { ja: '印刷 / PDF', en: 'Print / PDF' }, mac: ['⌘', 'P'], win: ['Ctrl', 'P'] },
-      { act: { ja: '動画書き出し', en: 'Export video' }, mac: ['⌘', 'E'], win: ['Ctrl', 'E'] },
-      { act: { ja: '再読み込み', en: 'Reload project' }, mac: ['⌘', 'R'], win: ['Ctrl', 'R'] },
-      { act: { ja: '設定', en: 'Preferences' }, mac: ['⌘', '.'], win: ['Ctrl', '.'] },
+      { act: L('新規プロジェクト', '새 프로젝트', 'New project'), mac: ['⌘', 'N'], win: ['Ctrl', 'N'] },
+      { act: L('脚本から新規', '각본에서 새로 만들기', 'New from Script'), mac: ['⌘', '⇧', 'N'], win: ['Ctrl', 'Shift', 'N'] },
+      { act: L('開く', '열기', 'Open'), mac: ['⌘', 'O'], win: ['Ctrl', 'O'] },
+      { act: L('絵コンテ印刷', '콘티 인쇄', 'Print Storyboard'), mac: ['⌘', 'P'], win: ['Ctrl', 'P'] },
+      { act: L('動画書き出し', '동영상 내보내기', 'Export Video'), mac: ['⌘', 'E'], win: ['Ctrl', 'E'] },
+      { act: L('再読み込み', '새로고침', 'Reload'), mac: ['⌘', 'R'], win: ['Ctrl', 'R'] },
+      { act: L('設定', '설정', 'Preferences'), mac: ['⌘', '.'], win: ['Ctrl', '.'] },
     ],
   },
   {
     h: G('編集', '편집', 'Edit'),
     rows: [
-      { act: { ja: '元に戻す', en: 'Undo' }, mac: ['⌘', 'Z'], win: ['Ctrl', 'Z'] },
-      { act: { ja: 'やり直す', en: 'Redo' }, mac: ['⌘', '⇧', 'Z'], win: ['Ctrl', 'Shift', 'Z'] },
+      { act: L('元に戻す', '실행 취소', 'Undo'), mac: ['⌘', 'Z'], win: ['Ctrl', 'Z'] },
+      { act: L('やり直す', '다시 실행', 'Redo'), mac: ['⌘', '⇧', 'Z'], win: ['Ctrl', 'Shift', 'Z'] },
       {
-        act: { ja: 'クロップ時に縦/横/比率スナップ', en: 'Snap to H / V / aspect while cropping' },
+        act: L('クロップ時に縦/横/比率スナップ', '크롭 시 세로/가로/비율 스냅', 'Snap to H / V / aspect while cropping'),
         mac: ['⇧', '＋ drag'],
         win: ['Shift', '＋ drag'],
       },
@@ -48,38 +49,38 @@ export const SHORTCUTS: ScGroup[] = [
     h: G('タブ / ツール', '탭 / 도구', 'Tabs / Tools'),
     rows: [
       {
-        act: { ja: 'Edit タブ', en: 'Edit tab' },
+        act: L('編集タブ', '편집 탭', 'Edit Tab'),
         mac: ['E'],
         win: ['E'],
-        note: { ja: 'または ⌘1', en: 'or ⌘1 / Ctrl 1' },
+        note: L('または ⌘1', '또는 ⌘1', 'or ⌘1 / Ctrl 1'),
       },
       {
-        act: { ja: 'Preview タブ', en: 'Preview tab' },
+        act: L('プレビュータブ', '미리보기 탭', 'Preview Tab'),
         mac: ['P'],
         win: ['P'],
-        note: { ja: 'または ⌘2', en: 'or ⌘2 / Ctrl 2' },
+        note: L('または ⌘2', '또는 ⌘2', 'or ⌘2 / Ctrl 2'),
       },
-      { act: { ja: '選択ツール', en: 'Selection tool' }, mac: ['V'], win: ['V'] },
-      { act: { ja: 'クロップ / リサイズ', en: 'Crop / Resize tool' }, mac: ['C'], win: ['C'] },
-      { act: { ja: '並べ替えツール', en: 'Reorder tool' }, mac: ['R'], win: ['R'] },
-      { act: { ja: 'ストップウォッチ（尺計測）', en: 'Stopwatch (timing) tool' }, mac: ['T'], win: ['T'] },
+      { act: L('選択ツール', '선택 도구', 'Selection tool'), mac: ['V'], win: ['V'] },
+      { act: L('クロップ / リサイズ', '크롭 / 리사이즈', 'Crop / Resize tool'), mac: ['C'], win: ['C'] },
+      { act: L('並べ替えツール', '재정렬 도구', 'Reorder tool'), mac: ['R'], win: ['R'] },
+      { act: L('ストップウォッチ（尺計測）', '스톱워치(길이 측정)', 'Stopwatch (timing) tool'), mac: ['T'], win: ['T'] },
     ],
   },
   {
     h: G('プレビュー', '미리보기', 'Preview'),
     rows: [
-      { act: { ja: '再生 / 一時停止', en: 'Play / Pause' }, mac: ['Space'], win: ['Space'] },
-      { act: { ja: 'コマ送り', en: 'Step frame' }, mac: ['←', '→'], win: ['←', '→'] },
-      { act: { ja: '前 / 次のカット', en: 'Previous / Next cut' }, mac: ['↑', '↓'], win: ['↑', '↓'] },
-      { act: { ja: '先頭へ', en: 'Rewind to start' }, mac: ['⌘', '←'], win: ['Home'] },
-      { act: { ja: '末尾へ', en: 'Jump to end' }, mac: ['⌘', '→'], win: ['End'] },
+      { act: L('再生 / 一時停止', '재생 / 일시정지', 'Play / Pause'), mac: ['Space'], win: ['Space'] },
+      { act: L('コマ送り', '프레임 이동', 'Step frame'), mac: ['←', '→'], win: ['←', '→'] },
+      { act: L('前 / 次のカット', '이전 / 다음 컷', 'Previous / Next cut'), mac: ['↑', '↓'], win: ['↑', '↓'] },
+      { act: L('先頭へ', '처음으로', 'Rewind to start'), mac: ['⌘', '←'], win: ['Home'] },
+      { act: L('末尾へ', '끝으로', 'Jump to end'), mac: ['⌘', '→'], win: ['End'] },
     ],
   },
   {
     h: G('ストップウォッチ', '스톱워치', 'Stopwatch'),
     rows: [
-      { act: { ja: '計測 開始 / 停止', en: 'Start / Stop timing' }, mac: ['Space'], win: ['Space'] },
-      { act: { ja: '計測をキャンセル', en: 'Cancel timing' }, mac: ['Esc'], win: ['Esc'] },
+      { act: L('計測 開始 / 停止', '측정 시작 / 정지', 'Start / Stop timing'), mac: ['Space'], win: ['Space'] },
+      { act: L('計測をキャンセル', '측정 취소', 'Cancel timing'), mac: ['Esc'], win: ['Esc'] },
     ],
   },
 ];
