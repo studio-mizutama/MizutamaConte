@@ -1,5 +1,6 @@
 import 'reactn';
 import { ProjectFile, PsdCache, AppSettings } from '../project/types';
+import { ParseResult } from '../project/scriptImport';
 import { Locale, ColorScheme } from '../i18n/types';
 import { EditorMode } from '../hooks/editorMode';
 import { GitDetect, GitLogEntry } from '../git/types';
@@ -40,6 +41,8 @@ declare module 'reactn/default' {
     /** 不正プロジェクト読込時のユーザー向けエラー本文。null なら非表示。
      *  Open/D&D/再読込の全経路で useOpenFolder が設定し、Header がダイアログ表示する。 */
     loadError: string | null;
+    /** 「脚本から新規」のパース結果。NewProjectDialog がこれを見て script モードで作成する。null で通常の新規。 */
+    scriptImport: ParseResult | null;
   }
 }
 
@@ -100,6 +103,9 @@ export interface Sandbox {
   removeOpenProjectRequest: () => void;
   onNewProjectRequest: (listener: () => void) => void;
   removeNewProjectRequest: () => void;
+  onNewFromScriptRequest: (listener: () => void) => void;
+  removeNewFromScriptRequest: () => void;
+  openScript: () => Promise<{ name: string; content: string } | null>;
   onOpenSettingsRequest: (listener: () => void) => void;
   removeOpenSettingsRequest: () => void;
   onPrintRequest: (listener: () => void) => void;

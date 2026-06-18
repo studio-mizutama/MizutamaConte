@@ -53,6 +53,7 @@ const boot = async (): Promise<void> => {
     canUndo: false,
     canRedo: false,
     loadError: null,
+    scriptImport: null,
   });
 
   // 開発時の検証用: 不正プロジェクト読込のエラーダイアログを手動で起こす（Web の smoke 用。本番では無効）

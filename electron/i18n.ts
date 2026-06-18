@@ -10,6 +10,7 @@ type MenuStrings = {
   'menu.preferences': string;
   'menu.file': string;
   'menu.new': string;
+  'menu.newFromScript': string;
   'menu.open': string;
   'menu.recentProjects': string;
   'menu.recentEmpty': string;
@@ -30,6 +31,7 @@ type MenuStrings = {
   'dialog.create.button': string;
   'dialog.selectPaintApp.title': string;
   'dialog.saveVideo.title': string;
+  'dialog.openScript.title': string;
 };
 
 const catalogs: Record<MenuLocale, MenuStrings> = {
@@ -39,6 +41,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.preferences': '設定…',
     'menu.file': 'ファイル',
     'menu.new': '新規',
+    'menu.newFromScript': '脚本から新規…',
     'menu.open': '開く…',
     'menu.recentProjects': '最近開いたプロジェクト',
     'menu.recentEmpty': '（履歴なし）',
@@ -59,6 +62,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'dialog.create.button': 'ここに作成',
     'dialog.selectPaintApp.title': 'お絵描きアプリを選択',
     'dialog.saveVideo.title': '動画の保存先',
+    'dialog.openScript.title': '脚本ファイルを選択',
   },
   ko: {
     'menu.about': 'Mizutama Conte 정보',
@@ -66,6 +70,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.preferences': '설정…',
     'menu.file': '파일',
     'menu.new': '새로 만들기',
+    'menu.newFromScript': '스크립트로 새로 만들기…',
     'menu.open': '열기…',
     'menu.recentProjects': '최근 프로젝트',
     'menu.recentEmpty': '(기록 없음)',
@@ -86,6 +91,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'dialog.create.button': '여기에 만들기',
     'dialog.selectPaintApp.title': '페인트 앱 선택',
     'dialog.saveVideo.title': '동영상 저장 위치',
+    'dialog.openScript.title': '스크립트 파일 선택',
   },
   en: {
     'menu.about': 'About Mizutama Conte',
@@ -93,6 +99,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.preferences': 'Preferences…',
     'menu.file': 'File',
     'menu.new': 'New',
+    'menu.newFromScript': 'New from Script…',
     'menu.open': 'Open…',
     'menu.recentProjects': 'Open Recent',
     'menu.recentEmpty': '(No recent projects)',
@@ -113,6 +120,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'dialog.create.button': 'Create here',
     'dialog.selectPaintApp.title': 'Select paint app',
     'dialog.saveVideo.title': 'Save video',
+    'dialog.openScript.title': 'Select script file',
   },
 };
 

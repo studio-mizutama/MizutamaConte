@@ -243,6 +243,23 @@ const registerIpcHandlers = () => {
     return result.filePaths[0];
   });
 
+  // 脚本ファイル（md/txt）を選択して内容を返す（脚本インポート用）
+  ipcMain.handle('script:open', async (): Promise<{ name: string; content: string } | null> => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: mt(resolveLocale(), 'dialog.openScript.title'),
+      properties: ['openFile'],
+      filters: [
+        { name: 'Script (Markdown/Text)', extensions: ['md', 'txt', 'markdown'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const filePath = result.filePaths[0];
+    const content = fs.readFileSync(filePath, 'utf8');
+    return { name: path.basename(filePath), content };
+  });
+
   // 書き出した MP4 を保存ダイアログで指定先へ書き込む
   ipcMain.handle('video:save', async (_event, fileName: string, data: Uint8Array): Promise<boolean> => {
     if (!mainWindow) return false;

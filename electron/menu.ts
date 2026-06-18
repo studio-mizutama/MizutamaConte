@@ -37,6 +37,12 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
           click: () => win.webContents.send('menu:new-project'),
         },
         {
+          label: mt(locale, 'menu.newFromScript'),
+          accelerator: 'CmdOrCtrl+Shift+N',
+          // 脚本インポートはレンダラ起点（script:open でファイル選択→パース）
+          click: () => win.webContents.send('menu:new-from-script'),
+        },
+        {
           label: mt(locale, 'menu.open'),
           accelerator: 'CmdOrCtrl+O',
           // フォルダ選択と読み込みはレンダラ起点（project:open）で行う

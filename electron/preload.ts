@@ -21,6 +21,11 @@ contextBridge.exposeInMainWorld('api', {
   // メニューの File > New からの新規作成要求
   onNewProjectRequest: (listener: () => void) => ipcRenderer.on('menu:new-project', listener),
   removeNewProjectRequest: () => ipcRenderer.removeAllListeners('menu:new-project'),
+  // メニューの File > 脚本から新規 からの要求
+  onNewFromScriptRequest: (listener: () => void) => ipcRenderer.on('menu:new-from-script', listener),
+  removeNewFromScriptRequest: () => ipcRenderer.removeAllListeners('menu:new-from-script'),
+  // 脚本ファイル選択→内容読込
+  openScript: () => ipcRenderer.invoke('script:open'),
 
   // メニューの Preferences からの設定ダイアログ表示要求
   onOpenSettingsRequest: (listener: () => void) => ipcRenderer.on('menu:open-settings', listener),
