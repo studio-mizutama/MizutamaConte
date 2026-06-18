@@ -32,6 +32,7 @@ import { useTitleEffects } from 'hooks/useTitleEffects';
 import { useProject } from 'hooks/useProject';
 import { useAutoSave } from 'hooks/useAutoSave';
 import { useOpenFolder } from 'hooks/useOpenFolder';
+import { useImportScript } from 'hooks/useImportScript';
 import { deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey, RecentProject } from 'project/types';
 import { loadRecents } from 'storage/recentStore';
@@ -327,6 +328,8 @@ export const Header: React.FC = () => {
   // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）。
   // 読込/検証/エラー化はすべてフック側に集約しているため、ここでは経路を呼ぶだけにする。
   const { loadFile, openFromPicker, reloadFromDirPath, reloadCurrentProject, openRecent, dirPathRef } = useOpenFolder();
+  // 脚本インポート（パース+検証+ダイアログ起動）
+  const { pickFromElectron, loadScriptFile } = useImportScript();
 
   // Web ハンバーガー用の最近リスト（Electron では使用しない）
   const [hamburgerRecents, setHamburgerRecents] = useState<RecentProject[]>([]);
@@ -354,6 +357,17 @@ export const Header: React.FC = () => {
       setSettingsOpen(true);
     },
     [setSettingsOpen],
+  );
+
+  // Web のみ: Cmd/Ctrl+Shift+N で脚本インポート（Electron はメニュー accelerator が担う＝二重発火回避）
+  useHotkeys(
+    'command+shift+n,ctrl+shift+n',
+    (event) => {
+      if (api) return;
+      event.preventDefault();
+      document.getElementById('inputScript')?.click();
+    },
+    [],
   );
 
   // Cmd+Opt+R / Ctrl+Alt+R で現在のプロジェクトを再読込（Web/Electron 両対応）。
@@ -389,6 +403,14 @@ export const Header: React.FC = () => {
     };
     api.onOpenProjectRequest(listener);
     return () => api.removeOpenProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの File > 脚本から新規 からの要求（Electron）。ファイル選択→パース→新規ダイアログ。
+  useEffect(() => {
+    if (!api?.onNewFromScriptRequest) return;
+    api.onNewFromScriptRequest(() => void pickFromElectron());
+    return () => api.removeNewFromScriptRequest?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -524,6 +546,7 @@ export const Header: React.FC = () => {
                 disabledKeys={hamburgerDisabled}
                 onAction={(k) => {
                   if (k === 'new') setNewProjectOpen(true);
+                  else if (k === 'newFromScript') document.getElementById('inputScript')?.click();
                   else if (k === 'open') openProject();
                   else if (k === 'reload') void reloadCurrentProject();
                   else if (k === 'print') print();
@@ -563,6 +586,13 @@ export const Header: React.FC = () => {
               </Menu>
             </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
+            <input
+              type="file"
+              accept=".md,.txt,.markdown,text/markdown,text/plain"
+              style={{ display: 'none' }}
+              id="inputScript"
+              onChange={loadScriptFile}
+            />
           </HamburgerArea>
         )}
         <NoDragArea>

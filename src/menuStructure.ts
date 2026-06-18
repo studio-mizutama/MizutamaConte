@@ -7,6 +7,7 @@ export const WEB_MENU: DocMenuSection[] = [
     titleKey: 'header.menu.file',
     items: [
       { key: 'new', labelKey: 'header.menu.new' },
+      { key: 'newFromScript', labelKey: 'header.menu.newFromScript' },
       { key: 'open', labelKey: 'header.menu.open' },
       { key: 'reload', labelKey: 'header.menu.reload' },
       { key: 'print', labelKey: 'header.share.pdf' },
