@@ -1,59 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { Flex, View, Picker, Item, Heading, Text, Divider, Link } from '@adobe/react-spectrum';
-import { PAGES, md, Locale } from './content/manifest';
+import { PAGES, md, Locale, DocPage } from './content/manifest';
 import { Markdown } from './Markdown';
+import { Shortcuts } from './Shortcuts';
+import { SiteHeader } from './SiteHeader';
+import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 
 const currentHash = (): string => window.location.hash.replace(/^#\/?/, '') || PAGES[0].id;
+
+// group.en をキーに、出現順(=order)でグループ化
+const groupedPages = (): { group: Record<Locale, string>; pages: DocPage[] }[] => {
+  const sorted = [...PAGES].sort((a, b) => a.order - b.order);
+  const out: { group: Record<Locale, string>; pages: DocPage[] }[] = [];
+  for (const p of sorted) {
+    const last = out[out.length - 1];
+    if (last && last.group.en === p.group.en) last.pages.push(p);
+    else out.push({ group: p.group, pages: [p] });
+  }
+  return out;
+};
 
 export const DocsApp: React.FC = () => {
   const [locale, setLocale] = useState<Locale>(
     ((typeof localStorage !== 'undefined' && localStorage.getItem('docsLocale')) as Locale) || 'ja',
   );
   const [pageId, setPageId] = useState<string>(currentHash());
+  // スマホ用: 目次（サイドバー）の開閉。デスクトップでは CSS で常時表示。
+  const [tocOpen, setTocOpen] = useState(false);
   useEffect(() => {
-    const on = () => setPageId(currentHash());
+    const on = () => {
+      setPageId(currentHash());
+      setTocOpen(false); // ページ移動したら目次は畳む（スマホ）
+    };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
   const page = PAGES.find((p) => p.id === pageId) ?? PAGES[0];
   const setLoc = (l: Locale) => {
     setLocale(l);
-    try {
-      localStorage.setItem('docsLocale', l);
-    } catch {
-      /* ignore */
-    }
+    try { localStorage.setItem('docsLocale', l); } catch { /* ignore */ }
   };
+  const groups = groupedPages();
+  const tocLabel = { ja: '目次', ko: '목차', en: 'Contents' }[locale];
+
   return (
-    <Flex height="100vh">
-      <View width="size-3600" backgroundColor="gray-75" padding="size-300" overflow="auto">
-        <Heading level={3} marginTop="size-0">
-          Mizutama Conte
-        </Heading>
-        <Text>{`v${__APP_VERSION__} | ${__BUILD_SHA__}`}</Text>
-        <View marginTop="size-200" marginBottom="size-200">
-          <Picker aria-label="Language" selectedKey={locale} onSelectionChange={(k) => setLoc(k as Locale)}>
-            <Item key="ja">日本語</Item>
-            <Item key="ko">한국어</Item>
-            <Item key="en">English</Item>
-          </Picker>
-        </View>
-        <Divider size="S" marginBottom="size-200" />
-        <Flex direction="column" gap="size-100">
-          {[...PAGES]
-            .sort((a, b) => a.order - b.order)
-            .map((p) => (
-              <Link key={p.id} isQuiet>
-                <a href={`#/${p.id}`} style={{ fontWeight: p.id === page.id ? 700 : 400 }}>
+    <div>
+      <SiteHeader locale={locale} setLocale={setLoc} />
+
+      <div className="docs-layout">
+        <button className="toc-toggle" aria-expanded={tocOpen} onClick={() => setTocOpen((v) => !v)}>
+          <ShowMenu aria-hidden />{tocLabel}
+        </button>
+        <aside className={`docs-side${tocOpen ? ' open' : ''}`}>
+          {groups.map((g) => (
+            <div className="grp" key={g.group.en}>
+              <div className="side-h">{g.group[locale]}</div>
+              {g.pages.map((p) => (
+                <a key={p.id} href={`#/${p.id}`} className={p.id === page.id ? 'on' : ''} onClick={() => setTocOpen(false)}>
                   {p.title[locale]}
                 </a>
-              </Link>
-            ))}
-        </Flex>
-      </View>
-      <View flex padding="size-500" overflow="auto">
-        <Markdown source={md(locale, page.id)} />
-      </View>
-    </Flex>
+              ))}
+            </div>
+          ))}
+        </aside>
+
+        <main className="docs-main">
+          {page.component === 'shortcuts'
+            ? <Shortcuts locale={locale} />
+            : <Markdown source={md(locale, page.id)} />}
+        </main>
+      </div>
+    </div>
   );
 };

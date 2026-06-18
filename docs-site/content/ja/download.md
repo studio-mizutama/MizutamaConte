@@ -1,6 +1,6 @@
 # ダウンロード
 
-Mizutama Conte には、PC / Mac で動く デスクトップ版と、ブラウザだけで動く Web 版があります。どちらもローカルで完結し、描いた絵コンテのデータをサーバーに送ることはありません。
+Mizutama Conte には、Mac / Windows / Linux で動くデスクトップ版と、ブラウザだけで動く Web 版があります。どちらもローカルで完結し、描いた絵コンテのデータをサーバーに送ることはありません。
 
 最新版は [GitHub Releases ページ](https://github.com/studio-mizutama/MizutamaConte/releases) から入手できます。各リリースに Mac / Windows / Linux 向けのバイナリを追加していきます。ダウンロードは公式リポジトリ（studio-mizutama/MizutamaConte）からのみ行ってください。第三者が再配布したバイナリは使わないでください。
 

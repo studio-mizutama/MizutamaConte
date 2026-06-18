@@ -13,6 +13,15 @@ const PILLAR_ICONS = [Camera, LockClosed, Draw];
 const APP_URL = '../';
 const REPO_URL = 'https://github.com/studio-mizutama/MizutamaConte';
 
+// 問い合わせ先（収集bot対策：アドレスは user / domain に分割保持し、静的HTML・DOM に
+// mailto: と素アドレスを残さない。クリック時にだけ組み立ててメーラーを起動。件名のみ・本文テンプレ無し）。
+const CONTACT_USER = 'conte';
+const CONTACT_DOMAIN = 'studio-mizutama.net';
+const openContact = (): void => {
+  const subject = '[Mizutama Conte] 商用ライセンスのお問い合わせ';
+  window.location.href = `mailto:${CONTACT_USER}@${CONTACT_DOMAIN}?subject=${encodeURIComponent(subject)}`;
+};
+
 /* 画像/動画の枠。public/shots/<file> を参照し、無ければラベル＋ファイル名のプレースホルダ。
    ＝ユーザーがそのファイル名で shots/ に置けば自動で表示される。 */
 const Shot: React.FC<{ file: string; label: string; video?: boolean }> = ({ file, label, video }) => {
@@ -113,7 +122,7 @@ const JA: Copy = {
   },
   audPro: {
     h: 'スタジオ・商業制作',
-    p: '地上波・衛星・配信、または全国規模の劇場で一般公開する商業作品は、商用ライセンスの対象です。ご希望の方には、署名版ビルドの提供、導入サポート等を行います。詳細はお問い合わせください。',
+    p: '地上波・衛星・配信、または全国規模の劇場で公開する商業作品には、商用ライセンスが必要です。料金や手続きはこれから整備していくところです。該当しそうな場合は、まずお問い合わせください。個別にご相談のうえ、ライセンスや署名版ビルドをご用意します。',
     link: 'お問い合わせ',
   },
   ctaH: 'さっそく、作ってみる。',
@@ -201,7 +210,7 @@ export const Landing: React.FC = () => {
             <div className="col pro">
               <h3>{c.audPro.h}</h3>
               <p style={{ color: 'var(--ink-2)', marginTop: 10 }}>{c.audPro.p}</p>
-              <a className="btn btn-ghost btn-sm" style={{ marginTop: 14 }} href={`${REPO_URL}/blob/develop/LICENSING.md`}>{c.audPro.link}</a>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 14 }} onClick={openContact}>{c.audPro.link}</button>
             </div>
           </div>
         </div>
