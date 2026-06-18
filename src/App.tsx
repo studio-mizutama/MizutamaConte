@@ -12,6 +12,8 @@ import { PrintHost } from 'PrintHost';
 import { VideoExportHost } from 'VideoExportHost';
 import { PrintStyle } from 'styles/PrintStyle';
 import { useUndoRedo } from 'hooks/useUndoRedo';
+import { ErrorBoundary } from 'ErrorBoundary';
+import { ErrorFallback } from 'ErrorFallback';
 
 const BackGround = styled.div`
   width: 100%;
@@ -40,15 +42,19 @@ const GlobalGrid: React.FC = ({ children }) => {
     >
       <GlobalStyle />
     <BackGround>
-      <Grid
-        areas={['header header header', 'toolbar content sidebar']}
-        columns={['size-600', 'auto', 'size-3600']}
-        rows={['size-500', 'auto']}
-        height="100vh"
-        gap="size-25"
-      >
-        {children}
-      </Grid>
+      {/* Provider 内に置くことで、描画 throw 時のフォールバックを react-spectrum + i18n で出せる。
+          Grid 全体（Header/Toolbar/Content/Sidebar）を包むので、どの領域の throw でも復帰 UI に倒れる。 */}
+      <ErrorBoundary fallback={(_e, reset) => <ErrorFallback reset={reset} />}>
+        <Grid
+          areas={['header header header', 'toolbar content sidebar']}
+          columns={['size-600', 'auto', 'size-3600']}
+          rows={['size-500', 'auto']}
+          height="100vh"
+          gap="size-25"
+        >
+          {children}
+        </Grid>
+      </ErrorBoundary>
     </BackGround>
     </Provider>
   );

@@ -1,6 +1,7 @@
 import React, { setGlobal } from 'reactn';
 import ReactDOM from 'react-dom';
 import App from 'App';
+import { ErrorBoundary } from 'ErrorBoundary';
 import { emptyProject } from 'project/load';
 import { loadAppSettings } from 'settings/appSettings';
 import { Locale, ColorScheme } from 'i18n/types';
@@ -60,9 +61,27 @@ const boot = async (): Promise<void> => {
     (window as any).__setLoadError = (msg: string) => setGlobal({ loadError: msg });
   }
 
+  // Provider 構築自体が失敗した時の最後の砦（Provider 外なので react-spectrum/i18n は使えない）。
+  // boot で解決済みの locale を使い単一言語で表示する。通常の描画 throw は Provider 内の ErrorBoundary が拾う。
+  const rootError =
+    locale === 'en'
+      ? { msg: 'Something went wrong.', btn: 'Reload' }
+      : locale === 'ko'
+        ? { msg: '문제가 발생했습니다.', btn: '새로고침' }
+        : { msg: '問題が発生しました。', btn: '再読込' };
+
   ReactDOM.render(
     <React.StrictMode>
-      <App />
+      <ErrorBoundary
+        fallback={() => (
+          <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
+            <p>{rootError.msg}</p>
+            <button onClick={() => window.location.reload()}>{rootError.btn}</button>
+          </div>
+        )}
+      >
+        <App />
+      </ErrorBoundary>
     </React.StrictMode>,
     document.getElementById('root'),
   );

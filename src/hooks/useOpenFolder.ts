@@ -131,16 +131,22 @@ export const useOpenFolder = (): UseOpenFolder => {
     const sortedNames = sortPsdNames(psdFiles.map((file) => file.name));
     const sortedPsdFiles = sortedNames.map((name) => psdFiles.find((file) => file.name === name)!);
 
+    // onerror/onabort で reject しないと、読込失敗時に Promise が永久 pending → スピナーが固まる。
+    // reject すれば runOpen の catch がエラー表示し finally で isLoading を解除して復帰できる。
     const readAsArrayBuffer = (file: File) =>
-      new Promise<ArrayBuffer>((resolve) => {
+      new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = () => reject(reader.error ?? new Error('file read failed'));
+        reader.onabort = () => reject(new Error('file read aborted'));
         reader.readAsArrayBuffer(file);
       });
     const readAsText = (file: File) =>
-      new Promise<string>((resolve) => {
+      new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error ?? new Error('file read failed'));
+        reader.onabort = () => reject(new Error('file read aborted'));
         reader.readAsText(file, 'utf8');
       });
 

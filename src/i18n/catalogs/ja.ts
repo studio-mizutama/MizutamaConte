@@ -178,4 +178,10 @@ export const ja: Record<TranslationKey, string> = {
   'error.openTitle': '開けませんでした',
   'error.openBody':
     'このフォルダは絵コンテプロジェクトとして読み込めませんでした。正しいプロジェクトフォルダを選んでください。',
+
+  // 描画エラー（ErrorBoundary フォールバック）
+  'error.render.title': '表示中にエラーが発生しました',
+  'error.render.body': '画面の描画でエラーが発生しました。再読込するか、新規プロジェクトに戻れます。',
+  'error.render.reload': '再読込',
+  'error.render.home': '新規プロジェクトに戻る',
 };

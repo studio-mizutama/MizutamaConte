@@ -43,10 +43,10 @@ const computeState = (cut: Cut, index: number, start: number, frame: number): Ac
   const scaleOut = cut.cameraWork?.scale?.out || 1;
   const scale = scaleIn - ((scaleIn - scaleOut) * local) / time;
 
-  const xIn = cut.cameraWork?.position?.in.x || 0;
-  const xOut = cut.cameraWork?.position?.out.x || 0;
-  const yIn = cut.cameraWork?.position?.in.y || 0;
-  const yOut = cut.cameraWork?.position?.out.y || 0;
+  const xIn = cut.cameraWork?.position?.in?.x || 0;
+  const xOut = cut.cameraWork?.position?.out?.x || 0;
+  const yIn = cut.cameraWork?.position?.in?.y || 0;
+  const yOut = cut.cameraWork?.position?.out?.y || 0;
   const posX = xIn - ((xIn - xOut) * local) / time;
   const posY = yIn - ((yIn - yOut) * local) / time;
 

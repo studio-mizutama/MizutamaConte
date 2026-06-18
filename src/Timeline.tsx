@@ -9,6 +9,7 @@ import { frameToTimecode } from 'project/time';
 import { frameUnitToDataURL } from 'psd/thumbnail';
 import { useT } from 'i18n';
 import { totalFrames, cutOffsets } from 'project/cutOffsets';
+import { clampTimelineEnd } from 'project/limits';
 
 
 const CutNumber = styled.div`
@@ -58,7 +59,11 @@ const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) =>
 
   const timeTotal = totalFrames(cuts ?? []);
   const cutSpans = cutOffsets(cuts ?? []);
-  const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
+  // end は totalFrames 由来。壊れた JSON 等で非有限/巨大になっても new Array で RangeError/フリーズしないよう安全化
+  const range = (start: number, end: number) => {
+    const safeEnd = Math.max(start, clampTimelineEnd(end));
+    return [...new Array(safeEnd - start).keys()].map((n) => n + start);
+  };
 
   return (
     <>

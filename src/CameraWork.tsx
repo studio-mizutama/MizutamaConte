@@ -6,6 +6,7 @@ import { useProjectActions } from 'hooks/useProjectActions';
 import { useEditingEnabled } from 'hooks/editingEnabled';
 import { cutCanvas } from 'project/scene';
 import { cameraRanges, posBound, clampNum } from 'project/camera';
+import { useNumericDraft } from 'hooks/useNumericDraft';
 import { useT } from 'i18n';
 
 interface Draft {
@@ -54,14 +55,16 @@ const CameraField: React.FC<{
   onDrag: (v: number) => void;
   onCommit: (v: number) => void;
 }> = ({ label, value, minValue, maxValue, isDisabled, onDrag, onCommit }) => {
-  const [text, setText] = useState<string | null>(null);
-  const commitText = () => {
-    if (text !== null) {
-      const n = Number(text);
-      if (Number.isFinite(n)) onCommit(n);
-    }
-    setText(null);
-  };
+  // 空文字・空白・非数値は確定せず直前の正常値へ復帰する（旧実装の Number('')===0 誤確定を解消）
+  const { displayValue, onChange, commit, cancel } = useNumericDraft({
+    value,
+    format: (v) => v.toFixed(2),
+    parse: (s) => {
+      const n = Number(s.trim());
+      return s.trim() !== '' && Number.isFinite(n) ? n : null;
+    },
+    onCommit,
+  });
   return (
     <div style={{ width: '100%', minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', minWidth: 0 }}>
@@ -71,16 +74,16 @@ const CameraField: React.FC<{
           type="text"
           inputMode="decimal"
           disabled={isDisabled}
-          value={text ?? value.toFixed(2)}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={commitText}
+          value={displayValue}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={commit}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
               e.currentTarget.blur();
             }
             if (e.key === 'Escape') {
-              setText(null);
+              cancel();
               e.currentTarget.blur();
             }
           }}

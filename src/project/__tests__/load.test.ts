@@ -109,6 +109,61 @@ describe('buildProject', () => {
     const { project } = buildProject(JSON.stringify(v2), loadedPsds, 'Legacy.json');
     expect(project.cuts[0].sceneStart).toBeUndefined();
   });
+
+  describe('壊れた/古い JSON の正規化（描画 throw 防止）', () => {
+    const settings = { aspect: '16:9', resolution: 'FHD', frame: { width: 1920, height: 1080 }, fps: 24 };
+    const validRow = { id: 'r', layer: '1', canvas: { width: 10, height: 10 } };
+
+    it('settings 欠落 v2 を既定 settings で補完', () => {
+      const { project } = buildProject(JSON.stringify({ version: 2, cuts: [] }), [], 'x.json');
+      expect(project.settings.frame.width).toBeGreaterThan(0);
+      expect(project.settings.frame.height).toBeGreaterThan(0);
+      expect(project.settings.fps).toBeGreaterThan(0);
+    });
+
+    it('rows 欠落 cut に既定1行を補完（throw しない）', () => {
+      const json = JSON.stringify({ version: 2, settings, cuts: [{ id: 'a', time: 24 }] });
+      const { project } = buildProject(json, [], 'x.json');
+      expect(Array.isArray(project.cuts[0].rows)).toBe(true);
+      expect(project.cuts[0].rows.length).toBeGreaterThanOrEqual(1);
+      expect(project.cuts[0].rows[0].canvas.width).toBeGreaterThan(0);
+    });
+
+    it('time が非数値/負/0/巨大なら既定/上限へ正規化', () => {
+      const mk = (time: unknown): number =>
+        buildProject(JSON.stringify({ version: 2, settings, cuts: [{ id: 'a', rows: [validRow], time }] }), [], 'x.json')
+          .project.cuts[0].time as number;
+      expect(mk('abc')).toBeGreaterThanOrEqual(1);
+      expect(mk(-5)).toBeGreaterThanOrEqual(1);
+      expect(mk(0)).toBeGreaterThanOrEqual(1); // 0コマ禁止
+      expect(Number.isFinite(mk(9e20))).toBe(true);
+      expect(mk(9e20)).toBeLessThanOrEqual(24 * 3600);
+      expect(mk(48)).toBe(48); // 有効値は維持
+    });
+
+    it('time 未設定は据え置き（undefined のまま・クラッシュしない）', () => {
+      const json = JSON.stringify({ version: 2, settings, cuts: [{ id: 'a', rows: [validRow] }] });
+      const { project } = buildProject(json, [], 'x.json');
+      expect(project.cuts[0].time).toBeUndefined();
+    });
+
+    it('cameraWork が部分欠損(position:{}) なら undefined に倒す', () => {
+      const json = JSON.stringify({
+        version: 2,
+        settings,
+        cuts: [{ id: 'a', rows: [validRow], cameraWork: { position: {} } }],
+      });
+      const { project } = buildProject(json, [], 'x.json');
+      expect(project.cuts[0].cameraWork).toBeUndefined();
+    });
+
+    it('完全な cameraWork は維持', () => {
+      const cw = { scale: { in: 1.4, out: 1 }, position: { in: { x: 0, y: 0 }, out: { x: -0.4, y: 0 } } };
+      const json = JSON.stringify({ version: 2, settings, cuts: [{ id: 'a', rows: [validRow], cameraWork: cw }] });
+      const { project } = buildProject(json, [], 'x.json');
+      expect(project.cuts[0].cameraWork?.scale?.in).toBe(1.4);
+    });
+  });
 });
 
 describe('isValidProjectJson', () => {

@@ -181,6 +181,12 @@ export const en = {
   'error.openTitle': "Couldn't open",
   'error.openBody':
     "This folder couldn't be loaded as a storyboard project. Please choose a valid project folder.",
+
+  // 描画エラー（ErrorBoundary フォールバック）
+  'error.render.title': 'Something went wrong',
+  'error.render.body': 'The view crashed. You can reload, or return to a new project.',
+  'error.render.reload': 'Reload',
+  'error.render.home': 'New project',
 } as const;
 
 export type TranslationKey = keyof typeof en;

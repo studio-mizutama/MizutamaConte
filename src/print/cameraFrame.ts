@@ -23,7 +23,16 @@ export interface CameraFrameInput {
  */
 export const cameraFrames = (input: CameraFrameInput): { in?: Rect; out?: Rect } => {
   const { frameW, frameH, displayW, displayH, cameraWork } = input;
-  if (!cameraWork?.scale || !cameraWork?.position) return {};
+  // scale/position が存在しても in/out（の x/y）が欠けた壊れたデータでは枠を作らず空を返す（throw 防止）
+  if (
+    !cameraWork?.scale ||
+    !Number.isFinite(cameraWork.scale.in) ||
+    !Number.isFinite(cameraWork.scale.out) ||
+    !cameraWork?.position?.in ||
+    !cameraWork?.position?.out
+  ) {
+    return {};
+  }
   const { scale, position } = cameraWork;
   return {
     in: {

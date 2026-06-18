@@ -4,6 +4,7 @@ import { usePsd } from 'hooks/usePsd';
 import { useProject } from 'hooks/useProject';
 import { useProjectActions } from 'hooks/useProjectActions';
 import { frameToTimecode, parseTimecode } from 'project/time';
+import { isValidCutFrames } from 'project/limits';
 import { useT } from 'i18n';
 
 /** Preview 再生中カットの尺（duration）を表示・編集するパネル */
@@ -21,7 +22,8 @@ export const Duration: React.FC = () => {
   const commit = () => {
     if (!cancelRef.current && draft !== null) {
       const frames = parseTimecode(draft, fps);
-      if (frames !== null) setTime(index, frames);
+      // 不正・0コマ・上限超過は確定せず draft 破棄＝表示が直前の正常値へ復帰する
+      if (frames !== null && isValidCutFrames(frames, fps)) setTime(index, frames);
     }
     cancelRef.current = false;
     setDraft(null);

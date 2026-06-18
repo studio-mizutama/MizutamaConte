@@ -6,9 +6,11 @@ const pad2 = (n: number): string => String(n).padStart(2, '0');
  * 例 (24fps): 0→"00+00"、12→"00+12"、24→"01+00"、1620→"01:07+12"、86400→"01:00:00+00"
  */
 export const frameToTimecode = (frames: number, fps: number): string => {
-  const value = Math.max(0, Math.round(frames));
-  const totalSec = Math.floor(value / fps);
-  const f = value % fps;
+  // 壊れた JSON 由来の NaN/Infinity・fps<=0 でも '00+00' へ倒し、表示崩壊（'NaN+NaN' 等）を防ぐ
+  const safeFps = Number.isFinite(fps) && fps > 0 ? Math.floor(fps) : 24;
+  const value = Number.isFinite(frames) ? Math.max(0, Math.round(frames)) : 0;
+  const totalSec = Math.floor(value / safeFps);
+  const f = value % safeFps;
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
@@ -28,7 +30,10 @@ export const frameToTimecode = (frames: number, fps: number): string => {
 export const parseTimecode = (text: string, fps: number): number | null => {
   const t = text.trim();
   let m: RegExpMatchArray | null;
-  if (/^\d+$/.test(t)) return Number(t);
+  if (/^\d+$/.test(t)) {
+    const n = Number(t);
+    return Number.isFinite(n) ? n : null; // 309桁等で Number→Infinity になる入力は解釈不能=直前値維持
+  }
   if ((m = t.match(/^(\d+):(\d+):(\d+)\+(\d+)$/))) {
     return (Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3])) * fps + Number(m[4]);
   }

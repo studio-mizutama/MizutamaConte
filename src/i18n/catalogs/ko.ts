@@ -177,4 +177,10 @@ export const ko: Record<TranslationKey, string> = {
   // 읽기 오류(잘못된 프로젝트)
   'error.openTitle': '열 수 없습니다',
   'error.openBody': '이 폴더는 스토리보드 프로젝트로 불러올 수 없습니다. 올바른 프로젝트 폴더를 선택하세요.',
+
+  // 렌더링 오류(ErrorBoundary 폴백)
+  'error.render.title': '화면 표시 중 오류가 발생했습니다',
+  'error.render.body': '화면 렌더링 중 오류가 발생했습니다. 새로고침하거나 새 프로젝트로 돌아갈 수 있습니다.',
+  'error.render.reload': '새로고침',
+  'error.render.home': '새 프로젝트로',
 };

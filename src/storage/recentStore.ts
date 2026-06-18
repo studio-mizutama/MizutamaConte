@@ -5,9 +5,11 @@ import { putHandle, deleteHandle, findHandleId } from 'storage/recentHandles';
 
 const basename = (p: string): string => p.split(/[\\/]/).filter(Boolean).pop() ?? p;
 
-/** 現在の最近リストを取得する。 */
-export const loadRecents = async (): Promise<RecentProject[]> =>
-  (await loadAppSettings()).recentProjects ?? [];
+/** 現在の最近リストを取得する。壊れた settings（非配列）でも Header の filter/map が throw しないよう必ず配列を返す。 */
+export const loadRecents = async (): Promise<RecentProject[]> => {
+  const r = (await loadAppSettings()).recentProjects;
+  return Array.isArray(r) ? r : [];
+};
 
 /** プロジェクトを開いた事実を最近リストへ記録する。
  *  Electron: 絶対パスを id に。Web: 既存 handle と同一なら id 再利用、無ければ新規発番して IndexedDB へ。

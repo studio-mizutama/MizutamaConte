@@ -14,7 +14,7 @@ export interface SceneGroup {
 
 /** CUT の代表キャンバス。複数レイヤー時も全 rows 同値の不変条件があるため先頭行を正とする */
 export const cutCanvas = (cut: ProjectCut): FrameSize =>
-  cut.rows[0]?.canvas ?? { width: 0, height: 0 };
+  cut.rows?.[0]?.canvas ?? { width: 0, height: 0 };
 
 export const sameCanvas = (a: FrameSize, b: FrameSize): boolean =>
   a.width === b.width && a.height === b.height;

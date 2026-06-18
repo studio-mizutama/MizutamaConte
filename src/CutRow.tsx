@@ -29,6 +29,8 @@ import { useProjectActions } from 'hooks/useProjectActions';
 import { frameUnitToDataURL } from 'psd/thumbnail';
 import { getFrameModel } from 'project/frameModel';
 import { frameToTimecode, parseTimecode } from 'project/time';
+import { isValidCutFrames } from 'project/limits';
+import { cameraFrames } from 'print/cameraFrame';
 import { useT, TranslationKey } from 'i18n';
 
 const MyTextArea = styled.textarea<{ $editable: boolean; $large?: boolean }>`
@@ -239,7 +241,8 @@ const TextContainer: React.FC<{
   const commitTime = () => {
     if (!timeCancelRef.current && timeDraft !== null) {
       const frames = parseTimecode(timeDraft, fps);
-      if (frames !== null) setTime(cutIndex, frames);
+      // 不正・0コマ・上限超過は確定せず draft 破棄＝表示が直前の正常値へ復帰する
+      if (frames !== null && isValidCutFrames(frames, fps)) setTime(cutIndex, frames);
     }
     timeCancelRef.current = false;
     setTimeDraft(null);
@@ -630,50 +633,48 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
                           alt="cut"
                         />
                       </div>
-                      {unitI === 0 && cut.cameraWork && (
-                        <In
-                          style={{
-                            height: `${frameThumbHeight * cut.cameraWork.scale!.in}px`,
-                            width: `${frameThumbWidth * cut.cameraWork.scale!.in}px`,
-                            top: `${
-                              (cut.picture!.height * thumbScale -
-                                frameThumbHeight * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.y!)) /
-                              2
-                            }px`,
-                            left: `${
-                              (cut.picture!.width * thumbScale -
-                                frameThumbWidth * (cut.cameraWork.scale!.in - cut.cameraWork.position!.in!.x!)) /
-                              2
-                            }px`,
-                          }}
-                        >
-                          <Heading level={4} margin="size-25">
-                            IN
-                          </Heading>
-                        </In>
-                      )}
-                      {unitI === unitArr.length - 1 && cut.cameraWork && (
-                        <Out
-                          style={{
-                            height: `${frameThumbHeight * cut.cameraWork.scale!.out}px`,
-                            width: `${frameThumbWidth * cut.cameraWork.scale!.out}px`,
-                            top: `${
-                              (cut.picture!.height * thumbScale -
-                                frameThumbHeight * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.y!)) /
-                              2
-                            }px`,
-                            left: `${
-                              (cut.picture!.width * thumbScale -
-                                frameThumbWidth * (cut.cameraWork.scale!.out - cut.cameraWork.position!.out!.x!)) /
-                              2
-                            }px`,
-                          }}
-                        >
-                          <Heading level={4} margin="size-25">
-                            OUT
-                          </Heading>
-                        </Out>
-                      )}
+                      {(() => {
+                        // IN/OUT 枠は cameraFrames 純関数で算出（印刷側と同一の数式・部分欠損 cameraWork はガードで空に）
+                        const camF = cameraFrames({
+                          frameW: frameThumbWidth,
+                          frameH: frameThumbHeight,
+                          displayW: cut.picture!.width * thumbScale,
+                          displayH: cut.picture!.height * thumbScale,
+                          cameraWork: cut.cameraWork,
+                        });
+                        return (
+                          <>
+                            {unitI === 0 && camF.in && (
+                              <In
+                                style={{
+                                  height: `${camF.in.height}px`,
+                                  width: `${camF.in.width}px`,
+                                  top: `${camF.in.top}px`,
+                                  left: `${camF.in.left}px`,
+                                }}
+                              >
+                                <Heading level={4} margin="size-25">
+                                  IN
+                                </Heading>
+                              </In>
+                            )}
+                            {unitI === unitArr.length - 1 && camF.out && (
+                              <Out
+                                style={{
+                                  height: `${camF.out.height}px`,
+                                  width: `${camF.out.width}px`,
+                                  top: `${camF.out.top}px`,
+                                  left: `${camF.out.left}px`,
+                                }}
+                              >
+                                <Heading level={4} margin="size-25">
+                                  OUT
+                                </Heading>
+                              </Out>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
               </div>

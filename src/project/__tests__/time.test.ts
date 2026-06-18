@@ -68,3 +68,18 @@ describe('msToFrames', () => {
   it('1000ms @30fps は 30', () => expect(msToFrames(1000, 30)).toBe(30));
   it('負の経過は 0 にクランプ', () => expect(msToFrames(-100, 24)).toBe(0));
 });
+
+describe('防御ガード（不正値で崩壊しない）', () => {
+  it('parseTimecode: 309桁の巨大入力（Number→Infinity）は null（解釈不能=直前値維持）', () => {
+    expect(parseTimecode('9'.repeat(309), 24)).toBeNull();
+  });
+  it('frameToTimecode: NaN/Infinity は 00+00 へフォールバック', () => {
+    expect(frameToTimecode(NaN, 24)).toBe('00+00');
+    expect(frameToTimecode(Infinity, 24)).toBe('00+00');
+  });
+  it('frameToTimecode: fps<=0 を既定 24 で扱い NaN/Infinity を出さない', () => {
+    expect(frameToTimecode(24, 0)).not.toContain('NaN');
+    expect(frameToTimecode(24, 0)).not.toContain('Infinity');
+    expect(frameToTimecode(24, 0)).toBe('01+00'); // 24fps 既定で 24コマ=1秒
+  });
+});
