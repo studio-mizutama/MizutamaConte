@@ -44,7 +44,7 @@ export const ko: Record<TranslationKey, string> = {
   'conte.newCut': 'CUT 추가',
 
   // 컷 행
-  'cutRow.resizeAria': 'CUT {n} 크기 조정',
+  'cutRow.resizeAria': 'CUT {n} 리사이즈',
   'cutRow.splitAria': 'CUT {n}의 마지막 레이어 분리',
   'cutRow.splitTooltip': '마지막 레이어를 새 CUT으로 분리',
   'cutRow.openHint': '{name}을 더블클릭하여 페인트 앱에서 열기',
@@ -75,12 +75,12 @@ export const ko: Record<TranslationKey, string> = {
   'panels.transition': '트랜지션',
   'panels.cameraWork': '카메라 워크',
   'panels.outline': '아웃라인',
-  'panels.duration': '길이',
+  'panels.duration': '듀레이션',
   'panels.dialogue': '대사',
 
   // 도구（탭의 「편집」과 겹치지 않도록 기본 도구 라벨은 「선택」으로 함）
   'toolGroup.edit': '선택 (V)',
-  'toolGroup.resize': '크기 조정 (C)',
+  'toolGroup.resize': '리사이즈 (C)',
   'toolGroup.reorder': '재정렬 (R)',
   'toolGroup.stopwatch': '스톱워치 (T)',
   'toolGroup.undo': '실행 취소',
@@ -102,8 +102,8 @@ export const ko: Record<TranslationKey, string> = {
   'transition.fade.cross': 'Cross',
 
   // Duration 패널
-  'duration.label': 'Cut{cut} 길이 · {sec}초 @ {fps}fps',
-  'duration.ariaLabel': '길이',
+  'duration.label': 'Cut{cut} 듀레이션 · {sec}초 @ {fps}fps',
+  'duration.ariaLabel': '듀레이션',
 
   // 설정 다이얼로그
   'settings.title': '설정',
