@@ -155,7 +155,7 @@ The distributed builds are currently not code-signed, so the first launch takes 
 - Auto-save: your edits are saved to the PSD and JSON as you go.
 - Recent projects: reopen your previous work right away.
 - Undo / Redo: undo and redo your actions.
-- Display language: switch between 日本語 / 한국어 / English.
+- Display language: switch between English / Japanese / Korean.
 - Theme: switch between light and dark.
 
 The shortcuts for these operations are collected on the [Shortcuts](#/shortcuts) page.

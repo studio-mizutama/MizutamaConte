@@ -34,7 +34,7 @@ Double-click a cut and a real `.psd` opens in the paint software you normally us
 - Cut operations: add a row, split a scene, merge or separate cuts, add a layer, and edit ACTION / DIALOGUE / TIME.
 - Transitions: fades (White / Black, In / Out) and crossfade are supported.
 - Export: a studio-format storyboard sheet PDF (A4), and an MP4 at native resolution and fps.
-- Auto-save (PSD + JSON), new project, recently opened projects, Undo / Redo, multiple languages (日本語 / 한국어 / English), and light/dark themes.
+- Auto-save (PSD + JSON), new project, recently opened projects, Undo / Redo, multiple languages (English / Japanese / Korean), and light/dark themes.
 
 ## Who it's for
 
