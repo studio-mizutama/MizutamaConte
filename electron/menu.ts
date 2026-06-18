@@ -125,7 +125,8 @@ export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocal
       submenu: [
         {
           label: mt(locale, 'menu.documentation'),
-          click: () => shell.openExternal('https://studio-mizutama.github.io/MizutamaConte/docs/'),
+          // Help は実用ページ(使い方)へ直リンク。ランディングには飛ばさない。
+          click: () => shell.openExternal('https://studio-mizutama.github.io/MizutamaConte/docs/#/usage'),
         },
         { type: 'separator' },
         {

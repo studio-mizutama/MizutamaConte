@@ -554,7 +554,8 @@ export const Header: React.FC = () => {
                   else if (k === 'undo') void doUndo();
                   else if (k === 'redo') void doRedo();
                   else if (k === 'documentation')
-                    window.open('https://studio-mizutama.github.io/MizutamaConte/docs/', '_blank');
+                    // Help は実用ページ(使い方)へ直リンク。ランディングには飛ばさない。
+                    window.open('https://studio-mizutama.github.io/MizutamaConte/docs/#/usage', '_blank');
                   else if (k === 'about') setAboutOpen(true);
                   else if (k.toString().startsWith('recent:')) {
                     const id = k.toString().slice('recent:'.length);
