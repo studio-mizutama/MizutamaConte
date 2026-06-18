@@ -19,6 +19,7 @@ export const ja: Record<TranslationKey, string> = {
   'header.save.error': '⚠ 保存エラー',
   'header.menu.ariaLabel': 'メニュー',
   'header.menu.new': '新規',
+  'header.menu.newFromScript': '脚本から新規',
   'header.menu.open': '開く',
   'header.menu.reload': '再読み込み',
   'header.share.ariaLabel': '共有',
@@ -127,6 +128,7 @@ export const ja: Record<TranslationKey, string> = {
 
   // 新規プロジェクトダイアログ
   'newProject.title': '新規プロジェクト',
+  'newProject.fromScriptTitle': '脚本から新規',
   'newProject.titleLabel': 'タイトル',
   'newProject.resolutionLabel': '解像度',
   'newProject.aspectLabel': 'アスペクト比',
@@ -178,6 +180,7 @@ export const ja: Record<TranslationKey, string> = {
   'error.openTitle': '開けませんでした',
   'error.openBody':
     'このフォルダは絵コンテプロジェクトとして読み込めませんでした。正しいプロジェクトフォルダを選んでください。',
+  'error.importBody': 'このファイルはインポートできません。脚本 markdown（.md / .txt）を選んでください。',
 
   // 描画エラー（ErrorBoundary フォールバック）
   'error.render.title': '表示中にエラーが発生しました',

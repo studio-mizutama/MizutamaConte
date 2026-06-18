@@ -20,6 +20,7 @@ export const en = {
   'header.save.error': '⚠ Save error',
   'header.menu.ariaLabel': 'Menu',
   'header.menu.new': 'New',
+  'header.menu.newFromScript': 'New from Script',
   'header.menu.open': 'Open',
   'header.menu.reload': 'Reload',
   'header.share.ariaLabel': 'Share',
@@ -130,6 +131,7 @@ export const en = {
 
   // 新規プロジェクトダイアログ（fps ラベルは英語固定）
   'newProject.title': 'New Project',
+  'newProject.fromScriptTitle': 'New from Script',
   'newProject.titleLabel': 'Title',
   'newProject.resolutionLabel': 'Resolution',
   'newProject.aspectLabel': 'Aspect ratio',
@@ -181,6 +183,8 @@ export const en = {
   'error.openTitle': "Couldn't open",
   'error.openBody':
     "This folder couldn't be loaded as a storyboard project. Please choose a valid project folder.",
+  'error.importBody':
+    "This file couldn't be imported. Please choose a script written in Markdown (.md / .txt).",
 
   // 描画エラー（ErrorBoundary フォールバック）
   'error.render.title': 'Something went wrong',
