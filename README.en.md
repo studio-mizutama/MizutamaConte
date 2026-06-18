@@ -158,6 +158,18 @@ Samples are available for download from below link.
 In Electron edition, navigate to `File -> Open` `(Cmd or Ctrl + O)`
 In [Web Edition](https://studio-mizutama.github.io/MizutamaConte/), click the folder icon in upper left corner and select the folder contains the sample. 
 
+## License
+
+Mizutama Conte is provided under the **Business Source License 1.1 (BSL 1.1)**. Each version automatically converts to the Apache License 2.0 four years after its release.
+
+- **Free to use** for self-published / doujin works (including paid doujin), film festivals, single-theater runs, personal or monetized channels, and educational / non-commercial use — and the act of using the tool to draw storyboards is always free.
+- **A commercial license is required** when the work you create is released to the general public via terrestrial / satellite / cable TV broadcast, a commercial streaming service, or a nationwide theatrical run (more than 10 screens). The license is obtained by the party that controls that release (e.g. the production committee or distributor); individual creators and subcontracted studios are always free.
+- See [LICENSING.md](LICENSING.md) and [LICENSE](LICENSE) for details.
+
+"Mizutama Conte" and "Studio Mizutama", the logo, and official build signatures are trademarks and are not covered by the license (including after the Apache conversion).
+
+> Previously published preview (prototype) builds were released under the MIT License and remain MIT.
+
 ## Many thanks to
 
 [yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder](https://github.com/yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder)

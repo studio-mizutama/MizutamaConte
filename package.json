@@ -6,7 +6,7 @@
   "homepage": "https://studio-mizutama.github.io/MizutamaConte",
   "main": "out/main/main.js",
   "private": true,
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "dependencies": {
     "@adobe/react-spectrum": "3.11.2",
     "@spectrum-icons/illustrations": "3.2.1",

@@ -158,6 +158,18 @@ interface CameraWork {
 
 Electron版では`File -> Open` `(Cmd or Ctrl + O)`、[Web版](https://studio-mizutama.github.io/MizutamaConte/)では左上のフォルダアイコンをクリックし、ダウンロードしたサンプルをフォルダごと選択してください。
 
+## License
+
+Mizutama Conte は **Business Source License 1.1 (BSL 1.1)** で提供されます。各バージョンは公開から 4 年後に自動的に Apache License 2.0 へ移行します。
+
+- **無料で使えます**：同人（有償頒布含む）・映画祭・単館上映・個人チャンネル（収益化含む）・教育/非商用、そしてツールでコンテを描く行為そのもの。
+- **商用ライセンスが必要なケース**：制作した作品を地上波/衛星/ケーブル放送、商用ストリーミング配信、または全国規模（10 館超）の劇場で一般公開する場合。支払うのは公開を仕切る側（製作委員会・配給等）で、ツールを使った制作者個人・下請けスタジオは常に無料です。
+- 詳細は [LICENSING.md](LICENSING.md) と [LICENSE](LICENSE) を参照。
+
+「Mizutama Conte」「Studio Mizutama」の名称・ロゴ・公式ビルドの署名は商標であり、ライセンスの対象外です（4 年後の Apache 移行後も同様）。
+
+> 過去に公開されたプレビュー版（プロトタイプ）は MIT ライセンスで配布されており、その版は引き続き MIT のままです。
+
 ## Many thanks to
 
 [yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder](https://github.com/yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder)
