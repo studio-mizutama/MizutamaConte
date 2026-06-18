@@ -11,7 +11,6 @@ import {
   TabList,
   Tabs,
   Text,
-  Picker,
   Flex,
   MenuTrigger,
   Menu,
@@ -33,7 +32,6 @@ import { useTitleEffects } from 'hooks/useTitleEffects';
 import { useProject } from 'hooks/useProject';
 import { useAutoSave } from 'hooks/useAutoSave';
 import { useOpenFolder } from 'hooks/useOpenFolder';
-import { getCurrentDirHandle } from 'storage/web';
 import { deriveFrame } from 'project/dimensions';
 import { AspectKey, ResolutionKey, RecentProject } from 'project/types';
 import { loadRecents } from 'storage/recentStore';
@@ -216,51 +214,28 @@ const Tab: React.FC = () => {
   );
 };
 
-const FilePicker: React.FC = () => {
+/** 現在開いているプロジェクト名を表示する（表示専用・ドロップダウン無し）。
+ *  未オープン時はアイコン含め何も出さない。
+ *  「最近開く」は web ハンバーガー / Electron メニューバーが担当する。Header の Picker からの
+ *  再オープンは react-spectrum のオーバーレイ閉鎖と setGlobal 連鎖が衝突して白画面化する沼のため廃止。 */
+const FileName: React.FC = () => {
   const globalFileName = useGlobal('globalFileName')[0];
-  const [recents, setRecents] = useState<RecentProject[]>([]);
-  const { openRecent, dirPathRef } = useOpenFolder();
-
-  // globalFileName が変わるたびに最近リストを再取得する
-  useEffect(() => {
-    void loadRecents().then(setRecents);
-  }, [globalFileName]);
-
-  // 現在開いているプロジェクトを最近リストから除外（重複表示防止）。
-  // globalFileName は JSON 名で最近の name(フォルダ名)と一致しないため、実 ID で照合する
-  // （Electron=フォルダ絶対パス=id / Web=ディレクトリハンドル名=name）。
-  const currentKey = api ? dirPathRef.current : getCurrentDirHandle()?.name ?? null;
-  const others = recents.filter((r) => (api ? r.id : r.name) !== currentKey);
-
-  // 現在ファイル(先頭) ＋ 最近 を1つの動的アイテム配列に（フラット Item。Section/Fragment は使わない）。
-  const items = [
-    { id: globalFileName || '__none__', name: globalFileName || '' },
-    ...others.map((r) => ({ id: r.id, name: r.name })),
-  ];
-
+  if (!globalFileName) return null;
   return (
-    <Picker
-      isQuiet
-      menuWidth="size-3400"
-      selectedKey={globalFileName || '__none__'}
-      items={items}
-      onSelectionChange={(key) => {
-        const id = String(key);
-        if (id === globalFileName || id === '__none__') return;
-        const entry = recents.find((r) => r.id === id);
-        // 【重要】Picker のオーバーレイ閉鎖の最中に open の setGlobal 連鎖（applyProject）を走らせると、
-        // react-spectrum が unmount 済みノードに触れて白画面になる。選択コミット＆オーバーレイ閉鎖が
-        // 終わった次マクロタスクで開く（setTimeout 0）と安全。デザインは Picker のまま維持。
-        if (entry) setTimeout(() => void openRecent(entry), 0);
-      }}
-    >
-      {(item) => (
-        <Item key={item.id} textValue={item.name}>
-          <DocumentOutline />
-          <Text>{item.name}</Text>
-        </Item>
-      )}
-    </Picker>
+    <Flex alignItems="center" gap="size-100" minWidth={0}>
+      <DocumentOutline />
+      <Text
+        UNSAFE_style={{
+          display: 'inline-block',
+          maxWidth: 360,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {globalFileName}
+      </Text>
+    </Flex>
   );
 };
 
@@ -608,7 +583,7 @@ export const Header: React.FC = () => {
         </NoDragArea>
       </HeaderLeft>
 
-      <FilePicker />
+      <FileName />
       <NoDragArea>
         <SaveIndicator />
       </NoDragArea>
