@@ -1,14 +1,15 @@
-Welcome to MizutamaConte by Studio Mizutama.
-日本語版READMEは[こちら](README.md)
+Welcome to Mizutama Conte.
+日本語: [README.md](README.md) ／ 한국어: [README.ko.md](README.ko.md)
 
-# Mizutama Conte [\[Demo Site\]](https://studio-mizutama.github.io/MizutamaConte/)
+# Mizutama Conte [\[Web App\]](https://studio-mizutama.github.io/MizutamaConte/)
 
 ![screenshot](./screenshot.png)
 
-This is the storyboard management app build with React + Electron.
-Currently only viewer part is available.
+A storyboard editor built with React + Electron. It offers resolution & aspect-ratio settings, a camera-work animatic preview, PSD + JSON saving, PDF / video export, Undo / Redo, and more. Being able to play back the preview with camera work applied is what makes it distinctive.
 
-## Usage
+> This README is for developers. End-user documentation (install steps and usage) lives on the [docs site](https://studio-mizutama.github.io/MizutamaConte/docs/).
+
+## Usage (for developers)
 
 ### Install
 
@@ -19,96 +20,138 @@ $ yarn
 ### Development
 
 ```sh
-$ yarn electron:dev
+$ yarn dev      # Electron edition (Mac / Win / Linux)
+$ yarn dev:web  # Web edition (http://localhost:3000)
 ```
 
 ### Build
 
 ```sh
-$ yarn electron:build
+$ yarn build      # Electron edition (output to out/)
+$ yarn build:web  # Web edition (output to build/)
+$ yarn build:docs # Docs site (output to build/docs/)
 ```
 
-### Deploy GitHub Pages
+### Deploy (GitHub Pages)
 
 ```sh
-$ yarn deploy
+$ yarn deploy     # Publish build:web + build:docs to the gh-pages branch
 ```
 
-## Feature
+### Verify
 
-- [x] Display Storyboard file
-- [ ] Edit/Save/Overwrite
-- [ ] Open new project
-- [ ] Interact with external drawing apps
-- [x] Play the storyboard
-- [ ] Export storybord to the video
-- [ ] Setup user preference with `setting.json`
+```sh
+$ yarn test       # vitest (pure-function unit tests)
+$ yarn typecheck  # type-check renderer + electron
+```
 
-## storyboard file 
+> **Distribution builds are unsigned.** Builds produced from this repository are not code-signed or notarized. End-user guidance, such as the macOS quarantine workaround, is on the docs site.
 
-MizutamaConte manages your storyboard with json and psd file.
+## Features
+
+- Display and edit storyboards (PSD + JSON, auto-save with a 1.5s debounce)
+- Create a new project (choose resolution & aspect ratio), or create one from a script (.md)
+- Canvas resize (auto-generates default camera work based on direction)
+- Camera-work editing, and a camera-work animatic preview
+- Transitions (fade in / fade out / crossfade)
+- Stopwatch-based TIME input
+- External paint-app integration (CLIP STUDIO PAINT / Photoshop / Affinity / GIMP / Krita)
+- Export: PDF (storyboard print) / video (MP4, H.264)
+- Undo / Redo
+- Reorder CUTs / SCENEs (drag & drop)
+- Local git integration (optional, for advanced users)
+- Recent projects
+- Multilingual (English / Japanese / Korean), light / dark / system theme
+- The web edition is installable as a PWA (Chromium-based browsers)
+- User preferences via `settings.json`
+
+## Storyboard files
+
+Mizutama Conte manages a storyboard with a single JSON file and multiple PSD files.
 
 ```sh
 conte/
-├── [Your Project Name].json
+├── [ProjectName].json
 │
 ├── c001.psd
 ├── c002.psd
 ├── c003.psd
-├──   .
-├──   .
-├──   .
-└──   .
+└──   ...
 ```
 
-### json file structure
+### JSON structure
 
-Examle below based on [With You](https://youtu.be/sva7WjdEO7k)
+The saved JSON is a `ProjectFile` (v2). Each cut has `rows` (rows that map to PSD layers by order), and DIALOGUE is held per row.
 
 ```json
-[
-  {
-    "action": { "fadeIn": "Black In", "fadeInDuration": 96 },
-    "dialogue": "佑希「楽しみだな！」晴奈「そうだね」",
-    "time": 168
+{
+  "version": 2,
+  "title": "君と一緒に",
+  "settings": {
+    "aspect": "16:9",
+    "resolution": "FHD",
+    "frame": { "width": 1920, "height": 1080 },
+    "fps": 24
   },
-  {
-    "cameraWork": {
-      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": -0.421875, "y": 0 } },
-      "scale": { "in": 1.421875, "out": 1 }
+  "cuts": [
+    {
+      "id": "c1",
+      "sceneStart": { "title": "Scene 1" },
+      "psd": "c001.psd",
+      "time": 168,
+      "action": { "fadeIn": "Black In", "fadeInDuration": 96 },
+      "rows": [
+        { "id": "r1", "layer": "1", "dialogue": "佑希「楽しみだな！」晴奈「そうだね」", "canvas": { "width": 1920, "height": 1080 } }
+      ]
     },
-    "dialogue": "佑希「僕と晴奈は飛行機に乗っている。何でかっていうと、色々とあるんだ。」",
-    "time": 156
-  },
-  {
-    "cameraWork": {
-      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": 0, "y": 0 } },
-      "scale": { "in": 1.269792, "out": 1 }
-    },
-    "dialogue": "佑希「まぁ一言で言えば駆け落ちみたいなもの。」",
-    "time": 72
-  },
-  {
-    "cameraWork": {
-      "position": { "in": { "x": 0, "y": 0 }, "out": { "x": 0, "y": 0 } },
-      "scale": { "in": 1, "out": 1.316145 }
-    },
-    "dialogue": "佑希「大学もあと卒業研究だけだったのに、ほっぽり出してきた。」",
-    "time": 132
-  },
-  { "dialogue": "佑希「それぐらい晴奈が好きなんだけどさ……」", "time": 72 },
-  { "dialogue": "佑希「これできっとよかったんだ」", "time": 228 },
-]
+    {
+      "id": "c2",
+      "psd": "c002.psd",
+      "time": 156,
+      "cameraWork": {
+        "position": { "in": { "x": 0, "y": 0 }, "out": { "x": -0.421875, "y": 0 } },
+        "scale": { "in": 1.421875, "out": 1 }
+      },
+      "rows": [
+        { "id": "r2", "layer": "1", "dialogue": "佑希「僕と晴奈は飛行機に乗っている。…」", "canvas": { "width": 1920, "height": 1080 } }
+      ]
+    }
+  ]
+}
 ```
--> Treated as a `Cut` type object. 
+
+The types are as follows (`src/project/types.ts`, `src/@types/global.d.ts`).
 
 ```ts
-interface Cut {
-  picture?: Psd;
-  cameraWork?: CameraWork;
+interface ProjectFile {
+  version: 2;
+  title: string;
+  settings: ProjectSettings;
+  cuts: ProjectCut[];
+}
+
+interface ProjectSettings {
+  aspect: '4:3' | '16:9' | '1.85:1' | '2.39:1';
+  resolution: 'SD' | 'HD' | 'FHD' | '2K' | '4K';
+  frame: { width: number; height: number };
+  fps: number;
+}
+
+interface ProjectCut {
+  id: string;
+  sceneStart?: { title?: string }; // a new scene starts at this cut
+  psd?: string;                    // PSD filename relative to the project folder
+  time?: number;                   // duration (frames)
   action?: Action;
+  cameraWork?: CameraWork;
+  rows: CutRow[];
+}
+
+interface CutRow {
+  id: string;
+  layer: string;                   // PSD layer name (loaded by order)
   dialogue?: string;
-  time?: number;
+  canvas: { width: number; height: number };
 }
 
 interface Action {
@@ -125,33 +168,43 @@ interface CameraWork {
 }
 ```
 
-`Psd` type uses [ag-psd](https://github.com/Agamnentzar/ag-psd)
+Files in the old schema (v1, a flat array) are automatically converted to v2 on load. PSD parsing uses [ag-psd](https://github.com/Agamnentzar/ag-psd).
 
-### psd file structure
+### PSD structure
 
 ![samplepsd](./samplepsd.png)
 
-#### canvas size
-Will be set as the same size with actual Anime e.g. 1920\*1080
+#### Canvas size
+
+Create it at the same size as the actual animation (e.g. 1920×1080).
 
 #### Layer structure
-- Place the background layer at the bottom
-- If there are multiple frames in the same cut, place them according to the time series
-- Assuming there is one layer per each frames (will enhance the feature as one group per each frames in our future update)
-- Layer name is variable
-- Hidden layes will also be fetched
 
-### Sample storyboard file
+- Put the background layer at the bottom (a background with artwork is rendered too).
+- If a cut has multiple frames, stack them from the top in chronological order.
+- One frame = one layer, or **one frame = one group** (a group is composited and treated as a single frame).
+- Layer blend modes, opacity, and clipping are honored.
+- Layer names are arbitrary (loading maps by order).
+- Hidden layers are loaded too.
 
-Samples are available for download from below link.
+### Sample
 
-**This sample is NOT under MIT License. ©︎ 2020 Studio Mizutama All Rights Reserved.**
+You can download sample files from the link below.
 
-[Google Drive](https://drive.google.com/drive/folders/11lSAHkNsDDrYayZGV87AM5X9dPsFVYGa?usp=sharing)
+**This sample is NOT under BSL 1.1 nor Apache 2.0 License. ©︎ 2020 Studio Mizutama All Rights Reserved.**
 
-In Electron edition, navigate to `File -> Open` `(Cmd or Ctrl + O)`
-In [Web Edition](https://studio-mizutama.github.io/MizutamaConte/), click the folder icon in upper left corner and select the folder contains the sample. 
+[Dropbox](https://www.dropbox.com/scl/fo/3qync4e9u8eew9jvjmj53/AOZaBZuIr57tLwGSNW42fss?rlkey=3kdow3hlw9pt0hdfors67capl&st=ml747cld&dl=0)
 
-## Many thanks to
+In the Electron edition, use `File -> Open` (`Cmd / Ctrl + O`); in the [web edition](https://studio-mizutama.github.io/MizutamaConte/), use the folder icon at the top left, then select the downloaded sample as a whole folder.
 
-[yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder](https://github.com/yhirose/react-typescript-electron-sample-with-create-react-app-and-electron-builder)
+## License
+
+Mizutama Conte is provided under the **Business Source License 1.1 (BSL 1.1)**. Each version automatically converts to the Apache License 2.0 four years after its release.
+
+- **Free to use** for doujin works (including paid distribution), film festivals, single-theater runs, personal channels (including monetized ones), and educational / non-commercial use — and the act of drawing storyboards with the tool is always free.
+- **A commercial license is required** when the work you create is released to the general public via terrestrial / satellite / cable broadcast, a commercial streaming service, or a nationwide theatrical run (more than 10 screens). The party that controls that release (the production committee, the distributor, etc.) pays; the individual creators and subcontracted studios who use the tool are always free.
+- See [LICENSING.md](LICENSING.md) and [LICENSE](LICENSE) for details.
+
+"Mizutama Conte" and "Studio Mizutama" — the names, logos, and official build signatures — are trademarks and are not covered by the license (the same applies after the Apache conversion four years later).
+
+> Previously published preview (prototype) builds were distributed under the MIT License, and those versions remain MIT.

@@ -1,90 +1,355 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron';
 import * as path from 'path';
-import * as isDev from 'electron-is-dev';
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import * as fs from 'fs';
+import { randomUUID } from 'node:crypto';
 import { createMenu } from './menu';
+import { openInPaintApp, findPaintApp } from './paint';
+import { loadSettings, saveSettings, AppSettings } from './settings';
+import { mt, resolveLocale, MenuLocale } from './i18n';
+import { detect, isRepo, initRepo, status, commit, logLatest } from './git';
 
-interface bounds {
+interface Bounds {
   width: number;
   height: number;
   x?: number;
   y?: number;
 }
 
-const info_path = path.join(app.getPath('userData'), 'bounds-info.json');
+interface ProjectPayload {
+  dirPath: string;
+  jsonFileName: string;
+  jsonText: string;
+  psds: { name: string; data: Buffer }[];
+}
 
-const tryBoundsInfo = (width: number, height: number): bounds => {
+const infoPath = path.join(app.getPath('userData'), 'bounds-info.json');
+
+const tryBoundsInfo = (width: number, height: number): Bounds => {
   try {
-    return JSON.parse(fs.readFileSync(info_path, 'utf8')) as unknown as bounds;
+    return JSON.parse(fs.readFileSync(infoPath, 'utf8')) as unknown as Bounds;
   } catch (e) {
-    return {
-      width: width,
-      height: height,
-    };
+    return { width, height };
   }
 };
 
-const bounds_info = tryBoundsInfo(1200, 800);
+const frame = process.platform === 'darwin';
+const fullscreenable = process.platform === 'darwin';
+const autoHideMenuBar = process.platform !== 'darwin';
 
-const frame = process.platform === 'darwin' ? true : false;
-const fullscreenable = process.platform === 'darwin' ? true : false;
-const autoHideMenuBar = process.platform === 'darwin' ? false : true;
+let mainWindow: BrowserWindow | null = null;
 
-const createWindow = () => {
-  const win = new BrowserWindow({
-    titleBarStyle: 'hiddenInset',
-    width: bounds_info.width,
-    height: bounds_info.height,
-    x: bounds_info.x,
-    y: bounds_info.y,
-    minWidth: 1024,
-    minHeight: 768,
-    frame: frame,
-    fullscreenable: fullscreenable,
-    autoHideMenuBar: autoHideMenuBar,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#252525' : '#FAFAFA',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
+/** 現在開いているプロジェクトフォルダ。storage:* 系の書き込み先 */
+let currentProjectDir: string | null = null;
+
+/** アプリ自身が書いたファイル（watch の自己反応を防ぐ） */
+const recentOwnWrites = new Map<string, number>();
+let watcher: fs.FSWatcher | null = null;
+
+/** .trash/ ディレクトリを確保し、初回作成時に既存 .gitignore へ .trash/ を冪等追記する */
+const ensureTrashDir = (): string => {
+  if (!currentProjectDir) throw new Error('No project directory');
+  const dir = path.join(currentProjectDir, '.trash');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    // 既存リポジトリ向け: .gitignore があり .trash/ が無ければ追記（新規 init は git.ts の定数で対応）
+    try {
+      const gi = path.join(currentProjectDir, '.gitignore');
+      if (fs.existsSync(gi)) {
+        const txt = fs.readFileSync(gi, 'utf8');
+        const has = txt.split(/\r?\n/).some((l) => l.trim() === '.trash/');
+        if (!has) fs.appendFileSync(gi, (txt.endsWith('\n') ? '' : '\n') + '.trash/\n');
+      }
+    } catch {
+      // best-effort（gitignore 追記失敗は致命的でない）
+    }
+  }
+  return dir;
+};
+
+/** プロジェクトフォルダの PSD 変更を監視し、外部アプリでの編集をレンダラへ通知する */
+const watchProjectDir = (dirPath: string) => {
+  watcher?.close();
+  let timer: NodeJS.Timeout | null = null;
+  watcher = fs.watch(dirPath, (_event, fileName) => {
+    if (!fileName || !fileName.toLowerCase().endsWith('.psd')) return;
+    const wroteAt = recentOwnWrites.get(fileName);
+    if (wroteAt && Date.now() - wroteAt < 3000) return;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => mainWindow?.webContents.send('project:files-changed'), 500);
+  });
+};
+
+// プロジェクトフォルダ（PSD群 + JSON 1つ）を読み込む
+const readProjectDir = (dirPath: string): ProjectPayload | null => {
+  const files = fs.readdirSync(dirPath);
+  const jsonFileName = files.find((file) => file.toLowerCase().endsWith('.json'));
+  if (!jsonFileName) return null;
+  const psdNames = files
+    .filter((file) => file.toLowerCase().endsWith('.psd'))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  currentProjectDir = dirPath;
+  watchProjectDir(dirPath);
+  // プロジェクトが開いたので File→Print を有効化（メニュー再構築）
+  if (mainWindow) createMenu(mainWindow, resolveLocale(), true);
+  return {
+    dirPath,
+    jsonFileName,
+    jsonText: fs.readFileSync(path.join(dirPath, jsonFileName), 'utf8'),
+    psds: psdNames.map((name) => ({ name, data: fs.readFileSync(path.join(dirPath, name)) })),
+  };
+};
+
+// IPC ハンドラは起動時に一度だけ登録する
+const registerIpcHandlers = () => {
+  ipcMain.handle('load-platform', () => process.platform);
+
+  ipcMain.handle('minimize', () => mainWindow?.minimize());
+  ipcMain.handle('maximize', () => mainWindow?.maximize());
+  ipcMain.handle('restore', () => mainWindow?.unmaximize());
+  ipcMain.handle('close', () => mainWindow?.close());
+
+  ipcMain.handle('project:open', async (): Promise<ProjectPayload | null> => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return readProjectDir(result.filePaths[0]);
   });
 
-  if (isDev) {
-    win.loadURL('http://localhost:3000/index.html');
-  } else {
-    // 'build/index.html'
-    win.loadURL(`file://${__dirname}/../index.html`);
-  }
+  ipcMain.handle('project:read', (_event, dirPath: string) => readProjectDir(dirPath));
 
-  // Hot Reloading
-  if (isDev) {
-    // 'node_modules/.bin/electronPath'
-    require('electron-reload')(__dirname, {
-      electron: path.join(
-        __dirname,
-        '..',
-        '..',
-        'node_modules',
-        '.bin',
-        'electron' + (process.platform === 'win32' ? '.cmd' : ''),
-      ),
-      forceHardReset: true,
-      hardResetMethod: 'exit',
+  ipcMain.handle('project:create', async (_event, name: string) => {
+    if (!mainWindow) return null;
+    // 名前はアプリ内ダイアログで決定済み。ネイティブでは保存先フォルダのみ選ぶ（名前の二重入力を避ける）
+    const locale = resolveLocale();
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: mt(locale, 'dialog.create.title'),
+      buttonLabel: mt(locale, 'dialog.create.button'),
+      properties: ['openDirectory', 'createDirectory'],
     });
-  }
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const safeName = name.replace(/[/\\:*?"<>|]/g, '_').trim() || 'NewConte';
+    const projectDir = path.join(result.filePaths[0], safeName);
+    fs.mkdirSync(projectDir, { recursive: true });
+    currentProjectDir = projectDir;
+    // 新規プロジェクト作成で File→Print を有効化
+    if (mainWindow) createMenu(mainWindow, locale, true);
+    // dirPath も返してレンダラの再読込 ref（sharedDirPathRef）を更新できるようにする（New 後の View→Reload/外部編集再読込を有効化）
+    return { name: safeName, dirPath: projectDir };
+  });
 
-  if (isDev) {
+  // atomic write (tmp + rename)。書き込み先は現在のプロジェクトフォルダ内に限定する
+  ipcMain.handle('storage:write-file', (_event, name: string, data: string | Uint8Array) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    const target = path.join(currentProjectDir, name);
+    const tmp = target + '.tmp';
+    const buffer = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
+    recentOwnWrites.set(name, Date.now());
+    fs.writeFileSync(tmp, buffer);
+    fs.renameSync(tmp, target);
+  });
+
+  // 孤立 PSD の掃除。プロジェクトフォルダ内に限定し、存在しなければ無視する（ベストエフォート）
+  ipcMain.handle('storage:delete-file', (_event, name: string) => {
+    if (!currentProjectDir) return;
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    recentOwnWrites.set(name, Date.now());
+    const target = path.join(currentProjectDir, name);
+    try {
+      fs.rmSync(target, { force: true });
+    } catch {
+      // 削除不可は無視
+    }
+  });
+
+  // プロジェクトフォルダ内のファイル名変更（並べ替えの PSD リネーム）。
+  // from/to の双方をパストラバーサル検証し、フォルダ内に限定する。
+  // fs.renameSync は from 名でも watch イベントを発火するため、from/to 双方の自己 watch を抑止する。
+  ipcMain.handle('storage:rename-file', (_event, from: string, to: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (from.includes('/') || from.includes('\\') || from.includes('..')) throw new Error(`Invalid file name: ${from}`);
+    if (to.includes('/') || to.includes('\\') || to.includes('..')) throw new Error(`Invalid file name: ${to}`);
+    recentOwnWrites.set(from, Date.now());
+    recentOwnWrites.set(to, Date.now());
+    fs.renameSync(path.join(currentProjectDir, from), path.join(currentProjectDir, to));
+  });
+
+  ipcMain.handle('storage:trash-file', (_event, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    const dir = ensureTrashDir();
+    const token = `${randomUUID()}.psd`;
+    recentOwnWrites.set(name, Date.now());
+    fs.renameSync(path.join(currentProjectDir, name), path.join(dir, token));
+    return token;
+  });
+
+  ipcMain.handle('storage:restore-file', (_event, token: string, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    if (token.includes('/') || token.includes('\\') || token.includes('..')) throw new Error(`Invalid token: ${token}`);
+    recentOwnWrites.set(name, Date.now());
+    fs.renameSync(path.join(currentProjectDir, '.trash', token), path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('storage:read-file', (_event, name: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    if (name.includes('/') || name.includes('\\') || name.includes('..')) throw new Error(`Invalid file name: ${name}`);
+    return fs.readFileSync(path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('storage:purge-trash', (_event) => {
+    if (!currentProjectDir) return;
+    const dir = path.join(currentProjectDir, '.trash');
+    try {
+      if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // best-effort
+    }
+  });
+
+  ipcMain.handle('paint:open', (_event, psdName: string) => {
+    if (!currentProjectDir) return { ok: false, error: 'No project directory' };
+    if (psdName.includes('/') || psdName.includes('\\') || psdName.includes('..')) {
+      return { ok: false, error: 'Invalid file name' };
+    }
+    return openInPaintApp(path.join(currentProjectDir, psdName));
+  });
+
+  ipcMain.handle('storage:exists', (_event, name: string) => {
+    if (!currentProjectDir) return false;
+    return fs.existsSync(path.join(currentProjectDir, name));
+  });
+
+  ipcMain.handle('settings:load', () => loadSettings());
+
+  ipcMain.handle('settings:save', (_event, settings: AppSettings) => saveSettings(settings));
+
+  ipcMain.handle('settings:detect-paint', () => findPaintApp());
+
+  // 言語・テーマ変更を main に反映: ネイティブテーマ切替 + メニュー再構築（ライブ更新）
+  ipcMain.handle('app:apply-settings', (_event, language: MenuLocale, theme: 'light' | 'dark' | 'system') => {
+    nativeTheme.themeSource = theme;
+    if (mainWindow) createMenu(mainWindow, language, currentProjectDir !== null);
+  });
+
+  ipcMain.handle('dialog:select-file', async () => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: mt(resolveLocale(), 'dialog.selectPaintApp.title'),
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  // 脚本ファイル（md/txt）を選択して内容を返す（脚本インポート用）
+  ipcMain.handle('script:open', async (): Promise<{ name: string; content: string } | null> => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: mt(resolveLocale(), 'dialog.openScript.title'),
+      properties: ['openFile'],
+      filters: [
+        { name: 'Script (Markdown/Text)', extensions: ['md', 'txt', 'markdown'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const filePath = result.filePaths[0];
+    const content = fs.readFileSync(filePath, 'utf8');
+    return { name: path.basename(filePath), content };
+  });
+
+  // 書き出した MP4 を保存ダイアログで指定先へ書き込む
+  ipcMain.handle('video:save', async (_event, fileName: string, data: Uint8Array): Promise<boolean> => {
+    if (!mainWindow) return false;
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: mt(resolveLocale(), 'dialog.saveVideo.title'),
+      defaultPath: fileName,
+      filters: [{ name: 'MP4', extensions: ['mp4'] }],
+    });
+    if (result.canceled || !result.filePath) return false;
+    fs.writeFileSync(result.filePath, Buffer.from(data));
+    return true;
+  });
+
+  // --- git バージョン管理（Electron 専用・上級者向けオプション） ---
+  // detect は dir 不要。それ以外は既存 storage と同方針で currentProjectDir を使う。
+  ipcMain.handle('git:detect', () => detect());
+
+  ipcMain.handle('git:is-repo', () => {
+    if (!currentProjectDir) return false;
+    return isRepo(currentProjectDir);
+  });
+
+  ipcMain.handle('git:init', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return initRepo(currentProjectDir);
+  });
+
+  ipcMain.handle('git:status', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return status(currentProjectDir);
+  });
+
+  ipcMain.handle('git:commit', (_event, message: string) => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return commit(currentProjectDir, message);
+  });
+
+  ipcMain.handle('git:log-latest', () => {
+    if (!currentProjectDir) throw new Error('No project directory');
+    return logLatest(currentProjectDir);
+  });
+
+  // 最近リスト変更直後（=プロジェクトを開いた直後）にメニューを再構築して最近サブメニューを更新する
+  ipcMain.on('menu:refresh-recent', () => {
+    mainWindow && createMenu(mainWindow, resolveLocale(), true);
+  });
+};
+
+const createWindow = () => {
+  const boundsInfo = tryBoundsInfo(1200, 800);
+  const win = new BrowserWindow({
+    titleBarStyle: 'hiddenInset',
+    width: boundsInfo.width,
+    height: boundsInfo.height,
+    x: boundsInfo.x,
+    y: boundsInfo.y,
+    minWidth: 1024,
+    minHeight: 768,
+    frame,
+    fullscreenable,
+    autoHideMenuBar,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#252525' : '#FAFAFA',
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/preload.js'),
+    },
+  });
+  mainWindow = win;
+
+  // 迷子のファイル/フォルダ ドロップで Chromium が file:// へナビゲートし、アプリが壊れるのを防ぐ。
+  // 本アプリは単一 index.html のみで内部ナビゲーションを使わないため、全ナビゲーションを拒否してよい。
+  // レンダラ側のロジックに依らない確実なバックストップ。
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  // 本アプリはネイティブ通知を一切使わない。万一レンダラ/依存が通知許可を要求しても
+  // macOS の通知許可ダイアログを出さないよう、'notifications' のみ拒否（他の権限は素通し）。
+  const ses = win.webContents.session;
+  ses.setPermissionRequestHandler((_wc, permission, callback) => callback(permission !== 'notifications'));
+  ses.setPermissionCheckHandler((_wc, permission) => permission !== 'notifications');
+
+  // electron-vite: dev 時はレンダラの dev サーバ URL が渡される
+  const rendererUrl = process.env['ELECTRON_RENDERER_URL'];
+  if (rendererUrl) {
+    win.loadURL(rendererUrl);
     win.webContents.openDevTools();
+  } else {
+    win.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
   if (process.platform !== 'darwin') {
-    ipcMain.handle('load-platform', () => process.platform);
-
-    ipcMain.handle('minimize', () => win.minimize());
-    ipcMain.handle('maximize', () => win.maximize());
-    ipcMain.handle('restore', () => win.unmaximize());
-    ipcMain.handle('close', () => win.close());
-
     win.on('maximize', () => win.webContents.send('maximized'));
     win.on('unmaximize', () => win.webContents.send('unMaximized'));
     win.on('resized', () => {
@@ -96,16 +361,19 @@ const createWindow = () => {
   }
 
   win.on('close', () => {
-    fs.writeFileSync(info_path, JSON.stringify(win.getBounds()));
+    fs.writeFileSync(infoPath, JSON.stringify(win.getBounds()));
+  });
+  win.on('closed', () => {
+    if (mainWindow === win) mainWindow = null;
   });
   createMenu(win);
 };
 
 app.whenReady().then(() => {
-  // DevTools
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
+  // 永続テーマをネイティブにも反映（ウインドウchrome を起動時から一致させる）
+  const savedTheme = loadSettings().theme;
+  nativeTheme.themeSource = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'system';
+  registerIpcHandlers();
   createWindow();
 
   app.on('activate', () => {
@@ -113,10 +381,10 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
 
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      app.quit();
-    }
-  });
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });

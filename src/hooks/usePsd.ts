@@ -1,47 +1,20 @@
-import { useState, useEffect, useGlobal } from 'reactn';
-import { readPsd } from 'ag-psd';
-const { api } = window;
+import { useMemo, useGlobal, useRef } from 'reactn';
+import { useProject } from 'hooks/useProject';
+import { reconcileDisplayCuts, DisplayCacheEntry } from 'project/displayCut';
+import type { ProjectCut } from 'project/types';
 
-export const usePsd = (prtCut: Cut) => {
-  const [cuts, setCuts] = useState([prtCut]);
-  const globalCuts = useGlobal('globalCuts')[0];
-  const globalPsds = useGlobal('globalPsds')[0];
+/**
+ * プロジェクト (v2) + psdCache から、表示用の Cut 配列（旧形式）を導出する。
+ * 変化していないカットは前回と同一参照を返し、下流の React.memo を機能させる。
+ */
+export const usePsd = (): Cut[] => {
+  const { project } = useProject();
+  const psdCache = useGlobal('psdCache')[0];
+  const cacheRef = useRef<Map<ProjectCut, DisplayCacheEntry>>(new Map());
 
-  useEffect(() => {
-    const f = async () => {
-      const joinBy = (arr1: Cut[], arr2: Cut[]) => {
-        const arr2Dict = new Map(arr2?.map((o, index) => [index, o]));
-        return arr1?.map((item, index) => ({ ...item, ...arr2Dict.get(index) }));
-      };
-      if (!api) {
-        const psds = globalPsds;
-        const cutsWithNoPicture: Cut[] = globalCuts;
-        const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-          return { picture: psd };
-        });
-        const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-        setCuts(cuts);
-        return;
-      }
-      const psdfiles = await api.loadPSD();
-      const json = await api.loadJSON();
-      const psds = psdfiles?.map((psdfile) => readPsd(psdfile));
-      const cutsWithNoPicture: Cut[] = json;
-      const cutsWithNoJson: Cut[] = psds?.map((psd) => {
-        return { picture: psd };
-      });
-
-      const cuts = joinBy(cutsWithNoPicture, cutsWithNoJson);
-      setCuts(cuts);
-    };
-    f();
-    return () => {
-      if (api && typeof api.removeFileName === 'function') {
-        api.removePSD();
-        api.removeJSON();
-      }
-    };
-  }, [globalCuts, globalPsds, setCuts]);
-
-  return cuts;
+  return useMemo(() => {
+    const { list, cache } = reconcileDisplayCuts(project.cuts, psdCache, cacheRef.current);
+    cacheRef.current = cache;
+    return list;
+  }, [project, psdCache]);
 };

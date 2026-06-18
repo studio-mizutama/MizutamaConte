@@ -1,20 +1,52 @@
 import React, { useState, useGlobal, useEffect } from 'reactn';
-import { Key } from 'react';
+import { Key, useRef, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ActionButton, Item, TabList, Tabs, Text, Picker, ActionGroup } from '@adobe/react-spectrum';
+import { useEditorMode } from 'hooks/editorMode';
+import {
+  ActionButton,
+  AlertDialog,
+  DialogContainer,
+  Item,
+  Section,
+  TabList,
+  Tabs,
+  Text,
+  Flex,
+  MenuTrigger,
+  Menu,
+  DialogTrigger,
+  Dialog,
+  Tooltip,
+  TooltipTrigger,
+} from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import Home from '@spectrum-icons/workflow/Home';
 import TableEdit from '@spectrum-icons/workflow/TableEdit';
 import VideoFilled from '@spectrum-icons/workflow/VideoFilled';
 import Share from '@spectrum-icons/workflow/Share';
 import Branch2 from '@spectrum-icons/workflow/Branch2';
 import Settings from '@spectrum-icons/workflow/Settings';
 import DocumentOutline from '@spectrum-icons/workflow/DocumentOutline';
-import FolderOpenOutline from '@spectrum-icons/workflow/FolderOpenOutline';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
-import { readPsd, Psd } from 'ag-psd';
 import { useTitle } from 'hooks/useTitle';
 import { useTitleEffects } from 'hooks/useTitleEffects';
+import { useProject } from 'hooks/useProject';
+import { useAutoSave } from 'hooks/useAutoSave';
+import { useOpenFolder } from 'hooks/useOpenFolder';
+import { useImportScript } from 'hooks/useImportScript';
+import { deriveFrame } from 'project/dimensions';
+import { AspectKey, ResolutionKey, RecentProject } from 'project/types';
+import { loadRecents } from 'storage/recentStore';
+import { getStorage } from 'storage';
+import { NewProjectDialog } from 'NewProjectDialog';
+import { SettingsDialog } from 'SettingsDialog';
+import { GitSnapshotPopover } from 'git/GitSnapshotPopover';
+import { useT } from 'i18n';
+import { TranslationKey } from 'i18n/catalogs/en';
+import { usePrint } from 'print/usePrint';
+import { useVideoExport } from 'hooks/useVideoExport';
+import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
+import { AboutDialog } from 'AboutDialog';
+import { WEB_MENU } from 'menuStructure';
 
 const { api } = window;
 
@@ -29,12 +61,20 @@ const NoDragArea = styled.div`
   -webkit-app-region: no-drag;
 `;
 
+// Web のハンバーガーだけに付ける右マージン。左の padding-left(12px) と対称にして
+// ☰ の左右余白を揃える（Electron にはハンバーガーが無いので影響しない）。
+const HamburgerArea = styled(NoDragArea)`
+  margin-right: 12px;
+`;
+
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
+  /* Electron(mac) は信号機ボタンのゾーンを避けて左に余白を確保。
+     web/非mac は旧 Home(marginX size-200) 相当の心地よい間隔を空ける */
   ${window.navigator.userAgent.toLowerCase().indexOf('mac') !== -1 && api
-    ? `margin-left: var(--spectrum-global-dimension-size-800, var(--spectrum-alias-size-800));`
-    : `margin-left: var(--spectrum-global-dimension-size-100, var(--spectrum-alias-size-100));`}
+    ? `padding-left: 78px;`
+    : `padding-left: 12px;`}
   margin-right: auto;
 `;
 
@@ -113,7 +153,24 @@ const CloseButtonWrapper = styled.div`
 `;
 
 const Tab: React.FC = () => {
+  const t = useT();
   const [selected, setSelected] = useGlobal('mode');
+  const [, setEditorMode] = useEditorMode();
+  // 現在タブを ref で常に最新参照（hotkey/IPC のクロージャからも遷移判定できるように）
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+
+  // タブ切替の単一入口。Preview→Edit の復帰時だけ選択ツール(V)へ戻す。
+  // editorMode を setSelected より「先」に確定するのが要点: タブ切替に伴う mode 変化で
+  // Conte は必ず再描画され、その時点で editorMode が 'edit' になっているため、
+  // editorMode 単独の再描画が（reactn の取りこぼしで）Conte に届かなくても残置が確実に消える。
+  const selectTab = useCallback(
+    (key: 'Edit' | 'Preview') => {
+      if (key === 'Edit' && selectedRef.current !== 'Edit') setEditorMode('edit');
+      setSelected(key);
+    },
+    [setSelected, setEditorMode],
+  );
 
   const keyDown = () => {
     const activeElement = document.activeElement as HTMLElement;
@@ -121,115 +178,165 @@ const Tab: React.FC = () => {
   };
 
   useHotkeys('e', () => {
-    setSelected('Edit');
+    selectTab('Edit');
     keyDown();
-  });
+  }, [selectTab]);
 
   useHotkeys('p', () => {
-    setSelected('Preview');
+    selectTab('Preview');
     keyDown();
-  });
+  }, [selectTab]);
+
+  // Web のみ: ⌘/Ctrl+1=編集 / ⌘/Ctrl+2=プレビュー（Electron は View メニューの accelerator が担う＝二重発火回避）。
+  // ブラウザは ⌘+数字 をタブ切替に取られ得るため best-effort。確実な切替は e/p（上）。
+  useHotkeys('command+1,ctrl+1', (e) => { if (api) return; e.preventDefault(); selectTab('Edit'); keyDown(); }, [selectTab]);
+  useHotkeys('command+2,ctrl+2', (e) => { if (api) return; e.preventDefault(); selectTab('Preview'); keyDown(); }, [selectTab]);
+  // Electron: View メニュー → menu:select-tab IPC
+  useEffect(() => {
+    if (!api?.onSelectTab) return;
+    api.onSelectTab((tab) => selectTab(tab as 'Edit' | 'Preview'));
+    return () => api.removeSelectTab?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <Tabs width="fit-content" selectedKey={selected} onSelectionChange={setSelected as (keys: Key) => any}>
+    <Tabs width="fit-content" selectedKey={selected} onSelectionChange={(key) => selectTab(key as 'Edit' | 'Preview')}>
       <TabList maxHeight="size-500">
         <Item key="Edit">
           <TableEdit />
-          <Text>Edit</Text>
+          <Text>{t('header.tab.edit')}</Text>
         </Item>
         <Item key="Preview">
           <VideoFilled />
-          <Text>Preview</Text>
+          <Text>{t('header.tab.preview')}</Text>
         </Item>
       </TabList>
     </Tabs>
   );
 };
 
-const FilePicker: React.FC = () => {
-  const [selected, setSelected] = useState('');
+/** 現在開いているプロジェクト名を表示する（表示専用・ドロップダウン無し）。
+ *  未オープン時はアイコン含め何も出さない。
+ *  「最近開く」は web ハンバーガー / Electron メニューバーが担当する。Header の Picker からの
+ *  再オープンは react-spectrum のオーバーレイ閉鎖と setGlobal 連鎖が衝突して白画面化する沼のため廃止。 */
+const FileName: React.FC = () => {
   const globalFileName = useGlobal('globalFileName')[0];
-  useEffect(() => {
-    const f = async () => {
-      try {
-        if (!api) {
-          setSelected(globalFileName);
-          return;
-        }
-        const fileName = await api.loadFileName();
-        setSelected(fileName);
-      } catch (e) {
-        alert(e);
-      }
-    };
-    f();
-    return () => {
-      if (api && typeof api.removeFileName === 'function') {
-        api.removeFileName();
-      }
-    };
-  }, [globalFileName, setSelected]);
+  if (!globalFileName) return null;
   return (
-    <Picker
-      isQuiet
-      menuWidth="size-3400"
-      max-width="fit-content"
-      selectedKey={selected}
-      onSelectionChange={setSelected as (keys: Key) => any}
+    <Flex alignItems="center" gap="size-100" minWidth={0}>
+      <DocumentOutline />
+      <Text
+        UNSAFE_style={{
+          display: 'inline-block',
+          maxWidth: 360,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {globalFileName}
+      </Text>
+    </Flex>
+  );
+};
+
+const SaveIndicator: React.FC = () => {
+  const t = useT();
+  const saveState = useAutoSave();
+  const fileName = useGlobal('globalFileName')[0];
+  const storage = getStorage();
+  if (!fileName) return null;
+  const label = !storage.capabilities.write
+    ? t('header.save.readOnly')
+    : {
+        idle: '',
+        dirty: t('header.save.dirty'),
+        saving: t('header.save.saving'),
+        saved: t('header.save.saved'),
+        error: t('header.save.error'),
+      }[saveState];
+  if (!label) return null;
+  return (
+    <span
+      style={{
+        fontSize: '11px',
+        opacity: 0.6,
+        whiteSpace: 'nowrap',
+        marginLeft: '8px',
+        color: saveState === 'error' ? 'var(--spectrum-semantic-negative-color-border)' : 'inherit',
+      }}
     >
-      <Item key={selected}>
-        <DocumentOutline />
-        <Text>{selected}</Text>
-      </Item>
-    </Picker>
+      {label}
+    </span>
+  );
+};
+
+const GitBranchButton: React.FC = () => {
+  const t = useT();
+  const gitDetect = useGlobal('gitDetect')[0];
+  const fileName = useGlobal('globalFileName')[0];
+  // Web（api 不在で detect 未実行）では gitDetect undefined → VC 無効でアイコンを出さない
+  if (!gitDetect) return null;
+  // プロジェクト未オープン時は非表示（git 操作はプロジェクトフォルダが必要なため）
+  if (!fileName) return null;
+  // Tooltip は DialogTrigger の外側に置く（内側に挟むと popover が開かない回帰になる）
+  return (
+    <TooltipTrigger delay={300}>
+      <DialogTrigger type="popover">
+        <ActionButton isQuiet aria-label={t('git.snapshot.heading')}>
+          <Branch2 />
+        </ActionButton>
+        <Dialog size="S">
+          <GitSnapshotPopover gitDetect={gitDetect} />
+        </Dialog>
+      </DialogTrigger>
+      <Tooltip>{t('git.snapshot.heading')}</Tooltip>
+    </TooltipTrigger>
+  );
+};
+
+/** 不正プロジェクト読込時のエラーダイアログ。loadError が立つと表示し、OK で消す。
+ *  Header は常時マウントされるため、Open/D&D/再読込のどの経路の失敗もここで拾える。 */
+const LoadErrorDialog: React.FC = () => {
+  const t = useT();
+  const [loadError, setLoadError] = useGlobal('loadError');
+  return (
+    <DialogContainer onDismiss={() => setLoadError(null)}>
+      {loadError && (
+        <AlertDialog
+          variant="error"
+          title={t('error.openTitle')}
+          primaryActionLabel={t('common.ok')}
+          onPrimaryAction={() => setLoadError(null)}
+        >
+          {loadError}
+        </AlertDialog>
+      )}
+    </DialogContainer>
   );
 };
 
 export const Header: React.FC = () => {
-  const setCuts = useGlobal('globalCuts')[1];
-  const setPsds = useGlobal('globalPsds')[1];
-  const setFileName = useGlobal('globalFileName')[1];
-  const loadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const filelist = e.target.files;
-    /* @ts-expect-error */
-    const files = Array.from(filelist);
-    const psdFiles = files.filter((file) => file.name.indexOf('.psd') !== -1);
-    const jsonFile = files.filter((file) => file.name.indexOf('.json') !== -1)![0];
-    const sortedPsdFiles = psdFiles
-      .slice()
-      .sort((a, b) => Number.parseInt(a.name.slice(1, 4)) - Number.parseInt(b.name.slice(1, 4)));
+  const t = useT();
+  const print = usePrint();
+  const startVideoExport = useVideoExport();
+  const { doUndo, doRedo, canUndo, canRedo } = useUndoRedoControls();
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const fileName = useGlobal('globalFileName')[0];
+  const { project, setProject } = useProject();
 
-    setFileName(jsonFile.name);
+  // フォルダを開く一連の処理は useOpenFolder に集約（Conte の D&D ドロップゾーンと共有）。
+  // 読込/検証/エラー化はすべてフック側に集約しているため、ここでは経路を呼ぶだけにする。
+  const { loadFile, openFromPicker, reloadFromDirPath, reloadCurrentProject, openRecent, dirPathRef } = useOpenFolder();
+  // 脚本インポート（パース+検証+ダイアログ起動）
+  const { pickFromElectron, loadScriptFile } = useImportScript();
 
-    const loadPSD = (file: File) =>
-      new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve(reader.result as ArrayBuffer);
-        };
-        reader.readAsArrayBuffer(file);
-      });
-
-    (async () => {
-      let psds: Psd[] = [];
-      await sortedPsdFiles.reduce(async (promise, file) => {
-        return promise.then(async () => {
-          psds.push(readPsd((await loadPSD(file)) as ArrayBuffer));
-        });
-      }, Promise.resolve());
-      setPsds(psds);
-    })();
-
-    const loadJSON: Promise<string> = new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve(reader.result as string);
-      };
-      reader.readAsText(jsonFile, 'utf8');
-    });
-    //loadPSD.then((result) => console.log(result));
-    loadJSON.then((result) => setCuts(JSON.parse(result)));
-  };
+  // Web ハンバーガー用の最近リスト（Electron では使用しない）
+  const [hamburgerRecents, setHamburgerRecents] = useState<RecentProject[]>([]);
+  useEffect(() => {
+    if (api) return;
+    void loadRecents().then(setHamburgerRecents);
+  }, [fileName]);
 
   useEffect(() => {
     const inputDirectory = document.getElementById('inputDirectory');
@@ -237,6 +344,163 @@ export const Header: React.FC = () => {
     inputDirectory && inputDirectory.setAttribute('directory', '');
     inputDirectory && inputDirectory.setAttribute('multiple', '');
   }, []);
+
+  const storage = getStorage();
+  const setNewProjectOpen = useGlobal('newProjectOpen')[1];
+  const setSettingsOpen = useGlobal('settingsOpen')[1];
+
+  // Cmd/Ctrl+.（環境設定の慣用ショートカット）で設定ダイアログを開く
+  useHotkeys(
+    'command+.,ctrl+.',
+    (event) => {
+      event.preventDefault();
+      setSettingsOpen(true);
+    },
+    [setSettingsOpen],
+  );
+
+  // Web のみ: Cmd/Ctrl+Shift+N で脚本インポート（Electron はメニュー accelerator が担う＝二重発火回避）
+  useHotkeys(
+    'command+shift+n,ctrl+shift+n',
+    (event) => {
+      if (api) return;
+      event.preventDefault();
+      document.getElementById('inputScript')?.click();
+    },
+    [],
+  );
+
+  // Cmd+Opt+R / Ctrl+Alt+R で現在のプロジェクトを再読込（Web/Electron 両対応）。
+  // Electron ネイティブ View>Reload は Cmd/Ctrl+R のみのバインドなので衝突しない。
+  // ブラウザのハードリロード(Cmd+Shift+R)とも別。reloadCurrentProject がプラットフォーム差を吸収する。
+  // react-hotkeys-hook 3.x は 'mod' 非対応のため command/ctrl を明示（useUndoRedo と同じ流儀）。
+  // プロジェクト未オープン時は no-op（生ページ reload を避ける）。
+  useHotkeys(
+    'command+alt+r,ctrl+alt+r',
+    (event) => {
+      event.preventDefault();
+      if (!fileName) return;
+      void reloadCurrentProject();
+    },
+    [fileName, reloadCurrentProject],
+  );
+
+  const openProject = async () => {
+    if (storage.kind === 'web-readonly') {
+      // File System Access API 非対応ブラウザは webkitdirectory で読み取り専用
+      document.getElementById('inputDirectory')?.click();
+      return;
+    }
+    // picker キャンセルは null を返すので openFromPicker（runOpen）が no-op、不正フォルダはエラー化する
+    await openFromPicker(storage.openProject());
+  };
+
+  // メニューの File > Open からの読み込み要求
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => {
+      void openFromPicker(api.openProject());
+    };
+    api.onOpenProjectRequest(listener);
+    return () => api.removeOpenProjectRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの File > 脚本から新規 からの要求（Electron）。ファイル選択→パース→新規ダイアログ。
+  useEffect(() => {
+    if (!api?.onNewFromScriptRequest) return;
+    api.onNewFromScriptRequest(() => void pickFromElectron());
+    return () => api.removeNewFromScriptRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの File > Print からの印刷要求（Electron のみ）
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => print();
+    api.onPrintRequest(listener);
+    return () => api.removePrintRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの Preferences（Cmd/Ctrl+.）からの設定ダイアログ表示要求
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => setSettingsOpen(true);
+    api.onOpenSettingsRequest(listener);
+    return () => api.removeOpenSettingsRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの Help > About（menu:about IPC）からのアプリ情報ダイアログ表示要求
+  useEffect(() => {
+    if (!api?.onAboutRequest) return;
+    api.onAboutRequest(() => setAboutOpen(true));
+    return () => api.removeAboutRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 外部ペイントアプリで PSD が保存されたら自動で再読込する
+  useEffect(() => {
+    if (!api) return;
+    const listener = () => {
+      if (dirPathRef.current) {
+        void reloadFromDirPath(dirPathRef.current);
+      }
+    };
+    api.onProjectFilesChanged(listener);
+    return () => api.removeProjectFilesChanged();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニューの View > 再読み込み（Cmd/Ctrl+R）: 現在のフォルダをディスクから再読込し Open と同じ経路で反映。
+  // 外部編集の再読込（project:files-changed）と同一パスで、applyProject 内で履歴もクリアされる。
+  // プロジェクト未オープン時は no-op（生ページ reload を避ける）。
+  useEffect(() => {
+    if (!api?.onReloadProjectRequest) return;
+    const listener = () => {
+      if (dirPathRef.current) {
+        // Cmd/Ctrl+R はキーボード操作なので react-spectrum がキーボードモダリティになり、
+        // 再読込後に編集タブへ focus リングが乗ってしまう。読込完了後にフォーカスを外して回避する。
+        void reloadFromDirPath(dirPathRef.current).then(() => {
+          (document.activeElement as HTMLElement | null)?.blur();
+        });
+      }
+    };
+    api.onReloadProjectRequest(listener);
+    return () => api.removeReloadProjectRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // メニュー File > 最近開いたプロジェクト からの再オープン要求（Electron のみ）
+  useEffect(() => {
+    if (!api?.onOpenRecentRequest) return;
+    api.onOpenRecentRequest((path) => void openRecent({ id: path, path }));
+    return () => api.removeOpenRecentRequest?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 開発時の回帰テスト用: ダイアログなしでプロジェクトを開く
+  useEffect(() => {
+    if (api && import.meta.env.DEV) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__loadProjectByPath = async (dirPath: string) => reloadFromDirPath(dirPath);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 開発時の検証用: 解像度・アスペクト比を切り替える（設定UIは Phase 4 で実装）
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__setProjectSettings = (resolution: ResolutionKey, aspect: AspectKey) =>
+        setProject({
+          ...project,
+          settings: { ...project.settings, resolution, aspect, frame: deriveFrame(resolution, aspect) },
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
 
   const [maximized, setMaximized, , setBlur] = useTitle(false, false);
 
@@ -262,42 +526,128 @@ export const Header: React.FC = () => {
 
   useTitleEffects(setMaximized, setBlur);
 
+  // Web ハンバーガーメニューの無効化キー（Undo/Redo は可否、再読込/印刷/動画はプロジェクト未オープンで無効）
+  const hamburgerDisabled = [
+    ...(!canUndo ? ['undo'] : []),
+    ...(!canRedo ? ['redo'] : []),
+    ...(!fileName ? ['reload', 'print', 'video'] : []),
+  ];
+
   return (
     <DragArea>
       <HeaderLeft>
         {!api && (
-          <ActionButton isQuiet onPress={() => document.getElementById('inputDirectory')?.click()}>
-            <FolderOpenOutline />
+          <HamburgerArea>
+            <MenuTrigger>
+              <ActionButton isQuiet aria-label={t('header.menu.ariaLabel')}>
+                <ShowMenu />
+              </ActionButton>
+              <Menu
+                disabledKeys={hamburgerDisabled}
+                onAction={(k) => {
+                  if (k === 'new') setNewProjectOpen(true);
+                  else if (k === 'newFromScript') document.getElementById('inputScript')?.click();
+                  else if (k === 'open') openProject();
+                  else if (k === 'reload') void reloadCurrentProject();
+                  else if (k === 'print') print();
+                  else if (k === 'video') startVideoExport();
+                  else if (k === 'undo') void doUndo();
+                  else if (k === 'redo') void doRedo();
+                  else if (k === 'documentation')
+                    // Help は実用ページ(使い方)へ直リンク。ランディングには飛ばさない。
+                    window.open('https://studio-mizutama.github.io/MizutamaConte/docs/#/usage', '_blank');
+                  else if (k === 'about') setAboutOpen(true);
+                  else if (k.toString().startsWith('recent:')) {
+                    const id = k.toString().slice('recent:'.length);
+                    const entry = hamburgerRecents.find((r) => r.id === id);
+                    if (entry) void openRecent(entry);
+                  }
+                }}
+              >
+                {/* 全 Section を「items + 関数 children」の動的パターンに統一する
+                    （静的 children Section と混在させると react-spectrum の collection が実行時に壊れる）。 */}
+                {[
+                  ...WEB_MENU.map((s) => (
+                    <Section key={s.key} title={t(s.titleKey as TranslationKey)} items={s.items}>
+                      {(it) => <Item key={it.key}>{t(it.labelKey as TranslationKey)}</Item>}
+                    </Section>
+                  )),
+                  ...(hamburgerRecents.length > 0
+                    ? [
+                        <Section
+                          key="recent"
+                          title={t('header.recentProjects')}
+                          items={hamburgerRecents.map((r) => ({ key: `recent:${r.id}`, label: r.name }))}
+                        >
+                          {(it: { key: string; label: string }) => <Item key={it.key}>{it.label}</Item>}
+                        </Section>,
+                      ]
+                    : []),
+                ]}
+              </Menu>
+            </MenuTrigger>
             <input type="file" style={{ display: 'none' }} id="inputDirectory" onChange={loadFile} />
-          </ActionButton>
+            <input
+              type="file"
+              accept=".md,.txt,.markdown,text/markdown,text/plain"
+              style={{ display: 'none' }}
+              id="inputScript"
+              onChange={loadScriptFile}
+            />
+          </HamburgerArea>
         )}
+        <NoDragArea>
+          <NewProjectDialog />
+        </NoDragArea>
+        <NoDragArea>
+          <SettingsDialog />
+        </NoDragArea>
+        <AboutDialog isOpen={aboutOpen} onOpenChange={setAboutOpen} />
+        <LoadErrorDialog />
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <ActionButton isQuiet onPress={onContextMenu}>
             <ShowMenu />
           </ActionButton>
         )}
-        <ActionButton isQuiet marginX="size-200">
-          <Home />
-        </ActionButton>
         <NoDragArea>
           <Tab />
         </NoDragArea>
       </HeaderLeft>
 
-      <FilePicker />
+      <FileName />
+      <NoDragArea>
+        <SaveIndicator />
+      </NoDragArea>
 
       <HeaderRight>
-        <ActionGroup isQuiet>
-          <Item key="Share">
-            <Share />
-          </Item>
-          <Item key="Branch2">
-            <Branch2 />
-          </Item>
-          <Item key="Settings">
-            <Settings />
-          </Item>
-        </ActionGroup>
+        {/* Share → Branch2(バージョン管理) → Settings を等間隔で並べる */}
+        <Flex alignItems="center" gap="size-100">
+          {/* Tooltip は MenuTrigger の外側に置く（react-spectrum の menu/dialog ボタン + tooltip の合成法） */}
+          <TooltipTrigger delay={300}>
+            <MenuTrigger>
+              <ActionButton isQuiet aria-label={t('header.share.ariaLabel')} isDisabled={!fileName}>
+                <Share />
+              </ActionButton>
+              <Menu
+                onAction={(key) => {
+                  if (key === 'pdf') print();
+                  else if (key === 'video') startVideoExport();
+                }}
+              >
+                <Item key="pdf">{t('header.share.pdf')}</Item>
+                <Item key="video">{t('header.share.video')}</Item>
+              </Menu>
+            </MenuTrigger>
+            <Tooltip>{t('header.share.ariaLabel')}</Tooltip>
+          </TooltipTrigger>
+          <GitBranchButton />
+          <TooltipTrigger delay={300}>
+            <ActionButton isQuiet aria-label={t('header.settings.ariaLabel')} onPress={() => setSettingsOpen(true)}>
+              <Settings />
+            </ActionButton>
+            <Tooltip>{t('header.settings.ariaLabel')}</Tooltip>
+          </TooltipTrigger>
+        </Flex>
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
           <WindowsButtons>
             <ActionButton isQuiet onPress={onMinimize}>

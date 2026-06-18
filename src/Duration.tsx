@@ -1,0 +1,50 @@
+import React, { useGlobal, useState, useRef } from 'reactn';
+import { TextField } from '@adobe/react-spectrum';
+import { usePsd } from 'hooks/usePsd';
+import { useProject } from 'hooks/useProject';
+import { useProjectActions } from 'hooks/useProjectActions';
+import { frameToTimecode, parseTimecode } from 'project/time';
+import { isValidCutFrames } from 'project/limits';
+import { useT } from 'i18n';
+
+/** Preview 再生中カットの尺（duration）を表示・編集するパネル */
+export const Duration: React.FC = () => {
+  const t = useT();
+  const cuts = usePsd();
+  const index = useGlobal('currentCutIndex')[0];
+  const { fps } = useProject();
+  const { setTime } = useProjectActions();
+  const cut = cuts[index];
+  // タイムコード文字列で編集し、確定時にフレーム数へ変換する（Edit の TIME 列と同方式）
+  const [draft, setDraft] = useState<string | null>(null);
+  const cancelRef = useRef(false);
+
+  const commit = () => {
+    if (!cancelRef.current && draft !== null) {
+      const frames = parseTimecode(draft, fps);
+      // 不正・0コマ・上限超過は確定せず draft 破棄＝表示が直前の正常値へ復帰する
+      if (frames !== null && isValidCutFrames(frames, fps)) setTime(index, frames);
+    }
+    cancelRef.current = false;
+    setDraft(null);
+  };
+
+  return (
+    <TextField
+      aria-label={t('duration.ariaLabel')}
+      width="100%"
+      marginTop="size-100"
+      value={draft ?? frameToTimecode(cut?.time ?? 0, fps)}
+      onChange={setDraft}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLElement).blur();
+        if (e.key === 'Escape') {
+          cancelRef.current = true;
+          (e.target as HTMLElement).blur();
+        }
+      }}
+      isDisabled={!cut}
+    />
+  );
+};

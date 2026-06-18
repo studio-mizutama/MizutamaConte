@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useRef } from 'reactn';
+import React, { useState, useEffect, useRef, useGlobal } from 'reactn';
 import { Heading, Flex, ProgressCircle } from '@adobe/react-spectrum';
 import styled from 'styled-components';
-import { Psd, Layer } from 'ag-psd';
 import { usePsd } from 'hooks/usePsd';
+import { useProject } from 'hooks/useProject';
+import { useViewportSize } from 'hooks/useViewportSize';
+import { thumbnailScale } from 'project/dimensions';
+import { frameToTimecode } from 'project/time';
+import { frameUnitToDataURL } from 'psd/thumbnail';
+import { useT } from 'i18n';
+import { totalFrames, cutOffsets } from 'project/cutOffsets';
+import { clampTimelineEnd } from 'project/limits';
 
-const { api } = window;
 
 const CutNumber = styled.div`
   position: absolute;
@@ -42,116 +48,81 @@ const ScaleNumber = styled.div`
 `;
 
 const TimelineContainer: React.FC<{ scale: number }> = React.memo(({ scale }) => {
-  const prtPsd: Psd = { width: 1, height: 1 };
-  const prtCut: Cut = {
-    picture: prtPsd,
+  const t = useT();
+  const cuts = usePsd();
+  const isLoading = useGlobal('isLoading')[0];
+  const { frame, fps } = useProject();
+  const thumbScale = thumbnailScale(frame);
+
+  const viewport = useViewportSize();
+  const width = viewport.width - 340;
+
+  const timeTotal = totalFrames(cuts ?? []);
+  const cutSpans = cutOffsets(cuts ?? []);
+  // end は totalFrames 由来。壊れた JSON 等で非有限/巨大になっても new Array で RangeError/フリーズしないよう安全化
+  const range = (start: number, end: number) => {
+    const safeEnd = Math.max(start, clampTimelineEnd(end));
+    return [...new Array(safeEnd - start).keys()].map((n) => n + start);
   };
-  const cuts = usePsd(prtCut);
-
-  const [width, setWidth] = useState(window.innerWidth - 340);
-
-  window.addEventListener('resize', () => setWidth(window.innerWidth - 340));
-
-  useEffect(() => {
-    api &&
-      cuts?.map((cut, index) => {
-        cut.picture?.children
-          ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
-          .map((child: Layer) => {
-            const element = document.getElementById(`CCC${index + 1}PPP${child.name}`) || document.createElement('div');
-            const canvas = child.canvas || document.createElement('canvas');
-            canvas.style.width = `${canvas.width * 0.12}px`;
-            element.innerHTML = '';
-            element.style.backgroundColor = '#FFF';
-            element.appendChild(canvas);
-            return 0;
-          });
-        return 0;
-      });
-  }, [cuts]);
-
-  const timeTotal = cuts?.reduce((sum, i) => i.time && sum + i.time, 0) || 0;
-  const range = (start: number, end: number) => [...new Array(end - start).keys()].map((n) => n + start);
 
   return (
     <>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % (240 / scale) === 0)
+          .filter((n) => n % ((fps * 10) / scale) === 0)
           .map((n) => (
             <ScaleNumber key={n} style={{ left: `${n * scale + 2}px` }}>
-              {n > 24 ? ((n / 24) | 0) + ':' + ('00' + (n % 24)).slice(-2) : ('00' + n).slice(-2)}
+              {frameToTimecode(n, fps)}
             </ScaleNumber>
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
         {range(0, timeTotal)
-          .filter((n) => n % ((24 / scale) | 0) === 0)
+          .filter((n) => n % ((fps / scale) | 0) === 0)
           .map((n) => (
             <Scale key={n} style={{ left: `${n * scale}px`, top: '32px', width: '24px' }} />
           ))}
         {range(0, timeTotal)
-          .filter((n) => n % (240 / scale) === 0)
+          .filter((n) => n % ((fps * 10) / scale) === 0)
           .map((n) => (
             <Scale key={n} style={{ left: `${n * scale}px`, top: '24px', width: '24px' }} />
           ))}
       </TimelineArea>
       <TimelineArea style={{ width: `${width}px` }}>
-        {!api && cuts?.length > 1 && !cuts[1]?.picture && (
+        {isLoading && (
           <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
-          </Flex>
-        )}
-        {api && cuts?.length === 1 && (
-          <Flex direction="column" alignItems="center" justifyContent="center" height="100%">
-            <ProgressCircle aria-label="Loading…" isIndeterminate size="L" />
-            <Heading>Now Loading...</Heading>
+            <ProgressCircle aria-label={t('common.loading.ariaLabel')} isIndeterminate size="L" />
+            <Heading>{t('common.loading.heading')}</Heading>
           </Flex>
         )}
 
-        {cuts?.length > 1 &&
+        {cuts.length > 0 &&
           cuts.map((cut, index) => {
-            const preTimeSum = cuts.slice(0, index).reduce((sum, i) => i.time && sum + i.time, 0) || 0;
+            const preTimeSum = cutSpans[index]?.start ?? 0;
             const time = cut?.time || 0;
             return (
               <CutArea
                 style={{ left: `${preTimeSum * scale}px`, top: '40px', width: `${time * scale}px`, overflow: 'hidden' }}
                 key={index}
               >
-                {cut.picture?.children
-                  ?.filter((child: Psd['children'], layerindex: number) => layerindex !== 0)
-                  .map((child: Layer) => {
-                    const src = child.canvas?.toDataURL('image/png', 0.4);
-                    return (
-                      <div
-                        style={{
-                          height: `${child.canvas && child.canvas.height * 0.12}px`,
-                          width: `${child.canvas && child.canvas.width * 0.12}px`,
-                          position: 'relative',
-                        }}
-                        key={`CCC${index + 1}PPP${child.name}`}
-                      >
-                        <div
-                          style={{
-                            height: `${child.canvas && child.canvas.height * 0.12}px`,
-                            width: `${child.canvas && child.canvas.width * 0.12}px`,
-                            position: 'relative',
-                            background: `${api ? 'none' : '#FFF'}`,
-                          }}
-                          id={`CCC${index + 1}PPP${child.name}`}
-                        >
-                          {!api && (
-                            <img
-                              style={{ transform: 'scale(0.12)', transformOrigin: 'left top' }}
-                              src={src}
-                              alt="cut"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                {(() => {
+                  // 各カット = 先頭ユニット（時系列の最前フレーム）を実背景込みで1枚だけ合成する。
+                  // 共有コンポジタ（Editor/Preview/動画/印刷と同一経路）経由でグループ/ブレンド/背景を
+                  // 正しく解釈し、複数ユニットでも先頭のみ描く（旧来「最前レイヤーのみ」挙動の踏襲）。
+                  const thumbSrc = frameUnitToDataURL(cut.picture, 0);
+                  if (!thumbSrc) return null;
+                  const docW = (cut.picture?.width || 0) * thumbScale;
+                  const docH = (cut.picture?.height || 0) * thumbScale;
+                  return (
+                    <div style={{ height: `${docH}px`, width: `${docW}px`, position: 'relative' }}>
+                      <img
+                        style={{ transform: `scale(${thumbScale})`, transformOrigin: 'left top' }}
+                        src={thumbSrc}
+                        alt="cut"
+                      />
+                    </div>
+                  );
+                })()}
                 <CutNumber>
                   <Heading level={4} margin="size-25">
                     {`Cut${('00' + (index + 1)).slice(-3)}`}
@@ -199,6 +170,8 @@ export const Timeline: React.FC<{
 
   const width = timeTotal * scale;
 
+  const viewport = useViewportSize();
+
   const toolAreaRef = useRef<HTMLDivElement>(null);
 
   const toolArea = toolAreaRef.current ?? document.createElement('div');
@@ -211,13 +184,13 @@ export const Timeline: React.FC<{
 
   useEffect(() => {
     const currentPos = frame * scale - scroll;
-    if (window.innerWidth - 364 < currentPos) {
-      toolArea.scrollBy(window.innerWidth - 364, 0);
+    if (viewport.width - 364 < currentPos) {
+      toolArea.scrollBy(viewport.width - 364, 0);
     }
     if (currentPos < 0) {
       toolArea.scrollBy(currentPos, 0);
     }
-  }, [frame, scroll, toolArea, width]);
+  }, [frame, scroll, toolArea, width, viewport.width]);
 
   return (
     <ToolArea ref={toolAreaRef}>
@@ -229,6 +202,10 @@ export const Timeline: React.FC<{
         min="0"
         max={timeTotal}
         onChange={setCurrentFrame}
+        // ドラッグ/クリック後はフォーカスを残さない（input にフォーカスが残ると
+        // react-hotkeys-hook がフォーム要素内とみなし Space/矢印等のショートカットを発火させないため）。
+        // マウス操作時のみ＝キーボードでの focus には不介入。
+        onPointerUp={(e) => e.currentTarget.blur()}
         style={{ width: `${width}px` }}
       />
     </ToolArea>

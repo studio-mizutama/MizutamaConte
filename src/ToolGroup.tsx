@@ -1,11 +1,16 @@
 import React, { useGlobal } from 'reactn';
-import { ActionGroup, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
+import { ActionButton, ActionGroup, Flex, Item, Tooltip, TooltipTrigger } from '@adobe/react-spectrum';
 import styled from 'styled-components';
 import Select from '@spectrum-icons/workflow/Select';
 import Crop from '@spectrum-icons/workflow/Crop';
-import Text from '@spectrum-icons/workflow/Text';
-import { Selection } from '@react-types/shared/src/selection';
+import Reorder from '@spectrum-icons/workflow/Reorder';
+import Undo from '@spectrum-icons/workflow/Undo';
+import Redo from '@spectrum-icons/workflow/Redo';
+import Stopwatch from '@spectrum-icons/workflow/Stopwatch';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { EditorMode, useEditorMode } from 'hooks/editorMode';
+import { useUndoRedoControls } from 'hooks/useUndoRedoControls';
+import { useT } from 'i18n';
 
 const AlignCenter = styled.div`
   display: flex;
@@ -14,57 +19,106 @@ const AlignCenter = styled.div`
 `;
 
 export const ToolGroup: React.FC = () => {
-  const [selected, setSelected] = useGlobal('tool');
+  const t = useT();
+  const [mode, setMode] = useEditorMode();
+  const tab = useGlobal('mode')[0];
+  const isPreview = tab === 'Preview';
+  // 注: Preview→Edit 復帰時の「選択ツール(V)へリセット」は Header.selectTab に移管した
+  // （editorMode を mode 切替の前に確定することで Conte へ確実に反映＝残置バグ修正）。
+  const { doUndo, doRedo, canUndo, canRedo } = useUndoRedoControls();
+  const fileName = useGlobal('globalFileName')[0];
 
   const keyDown = () => {
     const activeElement = document.activeElement as HTMLElement;
     activeElement.blur();
   };
 
+  // ショートカット: v=選択(既定・Adobe 系と同じ手癖) / c=resize / r=reorder
   useHotkeys('v', () => {
-    setSelected(new Set(['Select']));
+    setMode('edit');
     keyDown();
   });
 
   useHotkeys('c', () => {
-    setSelected(new Set(['Crop']));
+    setMode('resize');
+    keyDown();
+  });
+
+  useHotkeys('r', () => {
+    setMode('reorder');
     keyDown();
   });
 
   useHotkeys('t', () => {
-    setSelected(new Set(['Text']));
+    setMode('stopwatch');
     keyDown();
   });
 
   return (
-    <AlignCenter>
-      <ActionGroup
-        orientation="vertical"
-        selectionMode="single"
-        isQuiet
-        isEmphasized
-        selectedKeys={selected}
-        onSelectionChange={setSelected as (keys: Selection) => any}
-      >
+    <Flex direction="column" alignItems="center" height="100%">
+      <AlignCenter>
+        <ActionGroup
+          orientation="vertical"
+          selectionMode="single"
+          isQuiet
+          isEmphasized
+          isDisabled={!fileName || isPreview}
+          selectedKeys={fileName && !isPreview ? new Set([mode]) : new Set()}
+          onSelectionChange={(keys) => {
+            const k = (keys instanceof Set ? [...keys][0] : undefined) as EditorMode | undefined;
+            if (k) setMode(k);
+          }}
+        >
+          <TooltipTrigger placement="end">
+            <Item key="edit">
+              <Select />
+            </Item>
+            <Tooltip>{t('toolGroup.edit')}</Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger placement="end">
+            <Item key="resize">
+              <Crop />
+            </Item>
+            <Tooltip>{t('toolGroup.resize')}</Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger placement="end">
+            <Item key="reorder">
+              <Reorder />
+            </Item>
+            <Tooltip>{t('toolGroup.reorder')}</Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger placement="end">
+            <Item key="stopwatch">
+              <Stopwatch />
+            </Item>
+            <Tooltip>{t('toolGroup.stopwatch')}</Tooltip>
+          </TooltipTrigger>
+        </ActionGroup>
+      </AlignCenter>
+      <Flex direction="column" alignItems="center" gap="size-50" marginTop="auto" marginBottom="size-100">
         <TooltipTrigger placement="end">
-          <Item key="Select">
-            <Select />
-          </Item>
-          <Tooltip>Select (V)</Tooltip>
+          <ActionButton
+            isQuiet
+            aria-label={t('toolGroup.undo')}
+            isDisabled={!fileName || !canUndo}
+            onPress={() => void doUndo()}
+          >
+            <Undo />
+          </ActionButton>
+          <Tooltip>{t('toolGroup.undo')}</Tooltip>
         </TooltipTrigger>
         <TooltipTrigger placement="end">
-          <Item key="Crop">
-            <Crop />
-          </Item>
-          <Tooltip>Crop (C)</Tooltip>
+          <ActionButton
+            isQuiet
+            aria-label={t('toolGroup.redo')}
+            isDisabled={!fileName || !canRedo}
+            onPress={() => void doRedo()}
+          >
+            <Redo />
+          </ActionButton>
+          <Tooltip>{t('toolGroup.redo')}</Tooltip>
         </TooltipTrigger>
-        <TooltipTrigger placement="end">
-          <Item key="Text">
-            <Text />
-          </Item>
-          <Tooltip>Text (T)</Tooltip>
-        </TooltipTrigger>
-      </ActionGroup>
-    </AlignCenter>
+      </Flex>
+    </Flex>
   );
 };

@@ -1,22 +1,76 @@
 import 'reactn';
+import { ProjectFile, PsdCache, AppSettings } from '../project/types';
+import { ParseResult } from '../project/scriptImport';
+import { Locale, ColorScheme } from '../i18n/types';
+import { EditorMode } from '../hooks/editorMode';
+import { GitDetect, GitLogEntry } from '../git/types';
 
 declare module 'reactn/default' {
   export interface State {
     mode: string;
-    tool: Set<string> | undefined;
+    /** 編集モード（相互排他）。既定 'edit'＝テキスト常時編集可・クリックで CUT 選択 */
+    editorMode: EditorMode | undefined;
     cut: Cut;
-    globalCuts: Cut[];
-    globalPsds: Psd[];
+    project: ProjectFile;
+    psdCache: PsdCache;
     globalFileName: string;
+    isLoading: boolean;
+    saveState: 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+    /** Preview で再生中のカット index（Dialogue パネルが参照） */
+    currentCutIndex: number;
+    /** Edit で選択中のカット index（Transition/CameraWork パネルが参照・編集） */
+    selectedCutIndex: number;
+    /** 新規プロジェクトダイアログの開閉（メニュー/ハンバーガーから開く） */
+    newProjectOpen: boolean;
+    /** 設定ダイアログの開閉（Header の歯車から開く） */
+    settingsOpen: boolean;
+    /** UI 言語（i18n）。設定ダイアログで切替・settings.json に永続化 */
+    locale: Locale;
+    /** テーマ。'system' は OS 設定に追従（react-spectrum Provider colorScheme を駆動） */
+    colorScheme: ColorScheme;
+    /** 起動時 1 回検出した git/git-lfs 導入状況。Web（api 不在）では undefined のまま */
+    gitDetect: GitDetect | undefined;
+    /** 印刷要求フラグ。usePrint で立て、PrintHost が計測→ページ割り→window.print() を駆動 */
+    printRequested: boolean;
+    /** 動画書き出し要求フラグ。useVideoExport で立て、VideoExportHost が品質選択→エンコードを駆動 */
+    videoExportRequested: boolean;
+    /** Undo 可能か（Edit メニュー/将来の UI 用。undoManager が同期） */
+    canUndo: boolean;
+    /** Redo 可能か */
+    canRedo: boolean;
+    /** 不正プロジェクト読込時のユーザー向けエラー本文。null なら非表示。
+     *  Open/D&D/再読込の全経路で useOpenFolder が設定し、Header がダイアログ表示する。 */
+    loadError: string | null;
+    /** 「脚本から新規」のパース結果。NewProjectDialog がこれを見て script モードで作成する。null で通常の新規。 */
+    scriptImport: ParseResult | null;
   }
 }
 
 declare global {
+  // Vite `define` でビルド時に注入される定数（AboutDialog 用）
+  const __APP_VERSION__: string;
+  const __BUILD_SHA__: string;
+
   interface Window {
     api: Sandbox;
+    // File System Access API (Chromium 系のみ)
+    showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
+  }
+  interface FileSystemDirectoryHandle {
+    values(): AsyncIterableIterator<FileSystemHandle>;
+    removeEntry(name: string, options?: { recursive?: boolean }): Promise<void>;
+  }
+  // Electron main から受け取るプロジェクト一式
+  export interface ProjectPayload {
+    dirPath: string;
+    jsonFileName: string;
+    jsonText: string;
+    psds: { name: string; data: Uint8Array<ArrayBuffer> }[];
   }
   export interface Cut {
     picture?: Psd;
+    /** プロジェクトフォルダ相対の PSD ファイル名（外部アプリ起動に使用） */
+    psdName?: string;
     cameraWork?: CameraWork;
     action?: Action;
     dialogue?: string;
@@ -39,14 +93,58 @@ declare global {
 
 export interface Sandbox {
   loadPlatform: () => Promise<void | string>;
-  loadPSD: () => Promise<BufferLike[] | ArrayBuffer[]>;
-  removePSD: () => Electron.IpcRenderer;
 
-  loadJSON: () => Promise<Cut[]>;
-  removeJSON: () => Electron.IpcRenderer;
+  // ドロップ/選択された File の絶対パス（Electron 32+ で File.path 廃止のため webUtils 経由）
+  getPathForFile: (file: File) => string;
 
-  loadFileName: () => Promise<string>;
-  removeFileName: () => Electron.IpcRenderer;
+  openProject: () => Promise<ProjectPayload | null>;
+  readProject: (dirPath: string) => Promise<ProjectPayload | null>;
+  onOpenProjectRequest: (listener: () => void) => void;
+  removeOpenProjectRequest: () => void;
+  onNewProjectRequest: (listener: () => void) => void;
+  removeNewProjectRequest: () => void;
+  onNewFromScriptRequest: (listener: () => void) => void;
+  removeNewFromScriptRequest: () => void;
+  openScript: () => Promise<{ name: string; content: string } | null>;
+  onOpenSettingsRequest: (listener: () => void) => void;
+  removeOpenSettingsRequest: () => void;
+  onPrintRequest: (listener: () => void) => void;
+  removePrintRequest: () => void;
+  onExportVideoRequest: (listener: () => void) => void;
+  removeExportVideoRequest: () => void;
+  onReloadProjectRequest: (listener: () => void) => void;
+  removeReloadProjectRequest: () => void;
+  onOpenRecentRequest: (cb: (path: string) => void) => void;
+  removeOpenRecentRequest: () => void;
+  refreshRecent?: (list: unknown) => void;
+  onSelectTab: (cb: (tab: string) => void) => void;
+  removeSelectTab: () => void;
+  onUndoRequest: (listener: () => void) => void;
+  removeUndoRequest: () => void;
+  onRedoRequest: (listener: () => void) => void;
+  removeRedoRequest: () => void;
+  onAboutRequest: (listener: () => void) => void;
+  removeAboutRequest: () => void;
+  saveVideo: (fileName: string, data: Uint8Array) => Promise<boolean>;
+
+  createProject: (defaultName: string) => Promise<{ name: string; dirPath?: string } | null>;
+  writeFile: (name: string, data: string | Uint8Array) => Promise<void>;
+  deleteFile: (name: string) => Promise<void>;
+  renameFile: (from: string, to: string) => Promise<void>;
+  trashFile: (name: string) => Promise<string>;
+  restoreFile: (token: string, name: string) => Promise<void>;
+  readFile: (name: string) => Promise<Uint8Array>;
+  purgeTrash: () => Promise<void>;
+  fileExists: (name: string) => Promise<boolean>;
+
+  openInPaint: (psdName: string) => Promise<{ ok: boolean; app?: string; error?: string }>;
+  loadSettings: () => Promise<AppSettings>;
+  saveSettings: (settings: AppSettings) => Promise<void>;
+  applyAppSettings: (language: 'ja' | 'ko' | 'en', theme: 'light' | 'dark' | 'system') => Promise<void>;
+  detectPaintApp: () => Promise<{ kind: 'mac-app' | 'exe'; path: string } | null>;
+  selectPaintAppPath: () => Promise<string | null>;
+  onProjectFilesChanged: (listener: () => void) => void;
+  removeProjectFilesChanged: () => void;
 
   contextMenu: () => void;
 
@@ -69,4 +167,13 @@ export interface Sandbox {
 
   getBlur: (listener: () => Promise<void>) => Electron.IpcRenderer;
   removeGetBlur: () => Electron.IpcRenderer;
+
+  git?: {
+    detect(): Promise<GitDetect>;
+    isRepo(): Promise<boolean>;
+    init(): Promise<void>;
+    status(): Promise<{ dirty: boolean }>;
+    commit(message: string): Promise<void>;
+    logLatest(): Promise<GitLogEntry | null>;
+  };
 }

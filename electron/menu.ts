@@ -1,43 +1,141 @@
-import { app, Menu, dialog, ipcMain, BrowserWindow } from 'electron';
-import * as fs from 'fs';
-import { Cut } from './@types/cut';
+import { app, Menu, MenuItemConstructorOptions, ipcMain, BrowserWindow, shell } from 'electron';
+import { mt, resolveLocale, MenuLocale } from './i18n';
+import { loadSettings } from './settings';
 
-export const createMenu = (win: BrowserWindow) => {
-  const template = [
+/** アプリケーションメニューを構築する。ラベルは locale（未指定時は settings から解決）でローカライズ。 */
+export const createMenu = (win: BrowserWindow, locale: MenuLocale = resolveLocale(), hasProject = false) => {
+  const template: MenuItemConstructorOptions[] = [
     {
       label: 'Mizutama Conte',
       submenu: [
         {
-          label: 'about',
+          label: mt(locale, 'menu.about'),
+          // ネイティブパネルではなくレンダラのクロスプラットフォーム About ダイアログへ
+          click: () => win.webContents.send('menu:about'),
         },
         {
-          label: 'Quit Mizutama Conte',
+          label: mt(locale, 'menu.preferences'),
+          accelerator: 'CmdOrCtrl+.',
+          // 設定ダイアログをレンダラ側で開く
+          click: () => win.webContents.send('menu:open-settings'),
+        },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.quit'),
           accelerator: 'CmdOrCtrl+Q',
-          click: () => app.exit(),
+          click: () => app.quit(),
         },
       ],
     },
     {
-      label: 'File',
+      label: mt(locale, 'menu.file'),
       submenu: [
         {
-          label: 'Open..',
+          label: mt(locale, 'menu.new'),
+          accelerator: 'CmdOrCtrl+N',
+          // 新規プロジェクトダイアログをレンダラ側で開く
+          click: () => win.webContents.send('menu:new-project'),
+        },
+        {
+          label: mt(locale, 'menu.newFromScript'),
+          accelerator: 'CmdOrCtrl+Shift+N',
+          // 脚本インポートはレンダラ起点（script:open でファイル選択→パース）
+          click: () => win.webContents.send('menu:new-from-script'),
+        },
+        {
+          label: mt(locale, 'menu.open'),
           accelerator: 'CmdOrCtrl+O',
-          click: () => {
-            openFile(win);
-          },
+          // フォルダ選択と読み込みはレンダラ起点（project:open）で行う
+          click: () => win.webContents.send('menu:open-project'),
+        },
+        {
+          label: mt(locale, 'menu.recentProjects'),
+          submenu: (() => {
+            const recents = loadSettings().recentProjects ?? [];
+            if (recents.length === 0) return [{ label: mt(locale, 'menu.recentEmpty'), enabled: false }] as MenuItemConstructorOptions[];
+            return recents.map((r) => ({
+              label: r.name,
+              click: () => win.webContents.send('menu:open-recent', r.path),
+            })) as MenuItemConstructorOptions[];
+          })(),
+        },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.print'),
+          accelerator: 'CmdOrCtrl+P',
+          // プロジェクト未読込ではグレーアウト
+          enabled: hasProject,
+          // 印刷はレンダラの window.print()（CSS組版）で行う
+          click: () => win.webContents.send('menu:print'),
+        },
+        {
+          label: mt(locale, 'menu.exportVideo'),
+          accelerator: 'CmdOrCtrl+E',
+          // プロジェクト未読込ではグレーアウト
+          enabled: hasProject,
+          // 動画書き出しはレンダラ（WebCodecs）で行う
+          click: () => win.webContents.send('menu:export-video'),
         },
       ],
     },
     {
-      label: 'View',
+      label: mt(locale, 'menu.edit'),
       submenu: [
         {
-          label: 'Reload',
+          label: mt(locale, 'menu.undo'),
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => win.webContents.send('menu:undo'),
+        },
+        {
+          label: mt(locale, 'menu.redo'),
+          accelerator: 'CmdOrCtrl+Shift+Z',
+          click: () => win.webContents.send('menu:redo'),
+        },
+      ],
+    },
+    {
+      label: mt(locale, 'menu.view'),
+      submenu: [
+        {
+          label: mt(locale, 'menu.editTab'),
+          accelerator: 'CmdOrCtrl+1',
+          click: () => win.webContents.send('menu:select-tab', 'Edit'),
+        },
+        {
+          label: mt(locale, 'menu.previewTab'),
+          accelerator: 'CmdOrCtrl+2',
+          click: () => win.webContents.send('menu:select-tab', 'Preview'),
+        },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.reload'),
           accelerator: 'CmdOrCtrl+R',
-          click: () => {
-            win.reload();
-          },
+          // プロジェクトを開いている時は現在のフォルダをディスクから再読込（レンダラ起点）。
+          // 未オープン時はレンダラ側で no-op（生ページreloadは唐突なので避ける）。
+          click: () => win.webContents.send('menu:reload-project'),
+        },
+      ],
+    },
+    {
+      label: mt(locale, 'menu.window'),
+      submenu: [{ role: 'minimize' }, { role: 'zoom' }, { type: 'separator' }, { role: 'close' }],
+    },
+    {
+      label: mt(locale, 'menu.help'),
+      submenu: [
+        {
+          label: mt(locale, 'menu.documentation'),
+          // Help は実用ページ(使い方)へ直リンク。ランディングには飛ばさない。
+          click: () => shell.openExternal('https://studio-mizutama.github.io/MizutamaConte/docs/#/usage'),
+        },
+        { type: 'separator' },
+        {
+          label: mt(locale, 'menu.about'),
+          click: () => win.webContents.send('menu:about'),
+        },
+        {
+          label: mt(locale, 'menu.licenses'),
+          click: () => win.webContents.send('menu:about'),
         },
       ],
     },
@@ -45,26 +143,7 @@ export const createMenu = (win: BrowserWindow) => {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
   if (process.platform !== 'darwin') {
+    ipcMain.removeAllListeners('show-context-menu');
     ipcMain.on('show-context-menu', () => menu.popup());
   }
-};
-
-const openFile = (win: BrowserWindow) => {
-  const filePaths = dialog.showOpenDialogSync({ properties: ['openDirectory'] });
-  if (!filePaths) return;
-  const files = fs.readdirSync(filePaths[0]);
-  const psdFiles = files.filter((file) => file.indexOf('.psd') !== -1);
-
-  const jsonFile = files.filter((file) => file.indexOf('.json') !== -1)![0];
-
-  const buffurs: Buffer[] = psdFiles.map((file) => fs.readFileSync(filePaths[0] + '/' + file));
-
-  const conteString = fs.readFileSync(filePaths![0] + '/' + jsonFile, 'utf8');
-
-  const conteObject: Cut[] = JSON.parse(conteString);
-
-  ipcMain.handle('load-psd', () => buffurs);
-  ipcMain.handle('load-json', () => conteObject);
-  ipcMain.handle('load-file-name', () => jsonFile);
-  win.reload();
 };

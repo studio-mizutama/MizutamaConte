@@ -1,11 +1,5 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { Cut } from './@types/cut';
-
-interface BufferLike {
-  buffer: ArrayBuffer;
-  byteOffset: number;
-  byteLength: number;
-}
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
+import type { AppSettings } from './settings';
 
 contextBridge.exposeInMainWorld('api', {
   loadPlatform: (): Promise<void | string> =>
@@ -13,26 +7,80 @@ contextBridge.exposeInMainWorld('api', {
       .invoke('load-platform')
       .then((result) => result)
       .catch((err) => console.log(err)),
-  loadPSD: (): Promise<BufferLike[] | ArrayBuffer[]> =>
-    ipcRenderer
-      .invoke('load-psd')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removePSD: () => ipcRenderer.removeAllListeners('load-psd'),
 
-  loadJSON: (): Promise<Cut[]> =>
-    ipcRenderer
-      .invoke('load-json')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removeJSON: () => ipcRenderer.removeAllListeners('load-json'),
+  // Electron 32+ は File.path を廃止。ドロップ/選択された File の絶対パスは webUtils 経由で取得する
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
 
-  loadFileName: (): Promise<string> =>
-    ipcRenderer
-      .invoke('load-file-name')
-      .then((result) => result)
-      .catch((err) => console.log(err)),
-  removeFileName: () => ipcRenderer.removeAllListeners('load-file-name'),
+  // フォルダ選択ダイアログ → プロジェクト読み込み
+  openProject: () => ipcRenderer.invoke('project:open'),
+  // ダイアログなしで指定パスを読み込み（開発・回帰テスト用）
+  readProject: (dirPath: string) => ipcRenderer.invoke('project:read', dirPath),
+  // メニューの File > Open からの読み込み要求
+  onOpenProjectRequest: (listener: () => void) => ipcRenderer.on('menu:open-project', listener),
+  removeOpenProjectRequest: () => ipcRenderer.removeAllListeners('menu:open-project'),
+  // メニューの File > New からの新規作成要求
+  onNewProjectRequest: (listener: () => void) => ipcRenderer.on('menu:new-project', listener),
+  removeNewProjectRequest: () => ipcRenderer.removeAllListeners('menu:new-project'),
+  // メニューの File > 脚本から新規 からの要求
+  onNewFromScriptRequest: (listener: () => void) => ipcRenderer.on('menu:new-from-script', listener),
+  removeNewFromScriptRequest: () => ipcRenderer.removeAllListeners('menu:new-from-script'),
+  // 脚本ファイル選択→内容読込
+  openScript: () => ipcRenderer.invoke('script:open'),
+
+  // メニューの Preferences からの設定ダイアログ表示要求
+  onOpenSettingsRequest: (listener: () => void) => ipcRenderer.on('menu:open-settings', listener),
+  removeOpenSettingsRequest: () => ipcRenderer.removeAllListeners('menu:open-settings'),
+  // メニューの File > Print からの印刷要求
+  onPrintRequest: (listener: () => void) => ipcRenderer.on('menu:print', listener),
+  removePrintRequest: () => ipcRenderer.removeAllListeners('menu:print'),
+  // メニューの File > 動画書き出し からの要求
+  onExportVideoRequest: (listener: () => void) => ipcRenderer.on('menu:export-video', listener),
+  removeExportVideoRequest: () => ipcRenderer.removeAllListeners('menu:export-video'),
+  // メニューの View > 再読み込み からの要求（現在のプロジェクトフォルダをディスクから再読込）
+  onReloadProjectRequest: (listener: () => void) => ipcRenderer.on('menu:reload-project', listener),
+  removeReloadProjectRequest: () => ipcRenderer.removeAllListeners('menu:reload-project'),
+  // メニューの File > 最近開いたプロジェクト からの再オープン要求
+  onOpenRecentRequest: (cb: (path: string) => void) => ipcRenderer.on('menu:open-recent', (_e, path: string) => cb(path)),
+  removeOpenRecentRequest: () => ipcRenderer.removeAllListeners('menu:open-recent'),
+  // 最近リスト変更後にメイン側でメニューを再構築するよう通知（引数は無視）
+  refreshRecent: (_list: unknown) => ipcRenderer.send('menu:refresh-recent'),
+  // メニューの View > 編集タブ / プレビュータブ からのタブ切替要求
+  onSelectTab: (cb: (tab: string) => void) => ipcRenderer.on('menu:select-tab', (_e, tab: string) => cb(tab)),
+  removeSelectTab: () => ipcRenderer.removeAllListeners('menu:select-tab'),
+  // メニューの Edit > 取り消す / やり直す からの要求
+  onUndoRequest: (listener: () => void) => ipcRenderer.on('menu:undo', listener),
+  removeUndoRequest: () => ipcRenderer.removeAllListeners('menu:undo'),
+  onRedoRequest: (listener: () => void) => ipcRenderer.on('menu:redo', listener),
+  removeRedoRequest: () => ipcRenderer.removeAllListeners('menu:redo'),
+  // メニューの About / Help からの About ダイアログ表示要求
+  onAboutRequest: (listener: () => void) => ipcRenderer.on('menu:about', listener),
+  removeAboutRequest: () => ipcRenderer.removeAllListeners('menu:about'),
+  // 書き出した MP4 を保存ダイアログでディスクへ書き込む
+  saveVideo: (fileName: string, data: Uint8Array) => ipcRenderer.invoke('video:save', fileName, data),
+
+  // 新規プロジェクトフォルダ作成・保存
+  createProject: (defaultName: string) => ipcRenderer.invoke('project:create', defaultName),
+  writeFile: (name: string, data: string | Uint8Array) => ipcRenderer.invoke('storage:write-file', name, data),
+  deleteFile: (name: string) => ipcRenderer.invoke('storage:delete-file', name),
+  renameFile: (from: string, to: string) => ipcRenderer.invoke('storage:rename-file', from, to),
+  trashFile: (name: string) => ipcRenderer.invoke('storage:trash-file', name),
+  restoreFile: (token: string, name: string) => ipcRenderer.invoke('storage:restore-file', token, name),
+  readFile: (name: string) => ipcRenderer.invoke('storage:read-file', name),
+  purgeTrash: () => ipcRenderer.invoke('storage:purge-trash'),
+  fileExists: (name: string) => ipcRenderer.invoke('storage:exists', name),
+
+  // 外部ペイントアプリで PSD を開く / 外部編集の検知
+  openInPaint: (psdName: string) => ipcRenderer.invoke('paint:open', psdName),
+  // アプリ全体設定（settings.json）の読み書き / ペイントアプリ検出・選択
+  loadSettings: () => ipcRenderer.invoke('settings:load'),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke('settings:save', settings),
+  detectPaintApp: () => ipcRenderer.invoke('settings:detect-paint'),
+  selectPaintAppPath: () => ipcRenderer.invoke('dialog:select-file'),
+  // 言語・テーマ変更を main に反映（ネイティブテーマ + メニュー再構築）
+  applyAppSettings: (language: 'ja' | 'ko' | 'en', theme: 'light' | 'dark' | 'system') =>
+    ipcRenderer.invoke('app:apply-settings', language, theme),
+  onProjectFilesChanged: (listener: () => void) => ipcRenderer.on('project:files-changed', listener),
+  removeProjectFilesChanged: () => ipcRenderer.removeAllListeners('project:files-changed'),
 
   contextMenu: () => ipcRenderer.send('show-context-menu'),
 
@@ -55,4 +103,14 @@ contextBridge.exposeInMainWorld('api', {
 
   getBlur: (listener: () => Promise<void>) => ipcRenderer.on('get-blur', listener),
   removeGetBlur: () => ipcRenderer.removeAllListeners('get-blur'),
+
+  // git バージョン管理（Electron 専用）。detect 以外は main 側で currentProjectDir を使う。
+  git: {
+    detect: () => ipcRenderer.invoke('git:detect'),
+    isRepo: () => ipcRenderer.invoke('git:is-repo'),
+    init: () => ipcRenderer.invoke('git:init'),
+    status: () => ipcRenderer.invoke('git:status'),
+    commit: (message: string) => ipcRenderer.invoke('git:commit', message),
+    logLatest: () => ipcRenderer.invoke('git:log-latest'),
+  },
 });
