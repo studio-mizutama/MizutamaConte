@@ -70,7 +70,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'menu.preferences': '설정…',
     'menu.file': '파일',
     'menu.new': '새로 만들기',
-    'menu.newFromScript': '스크립트로 새로 만들기…',
+    'menu.newFromScript': '각본에서 새로 만들기…',
     'menu.open': '열기…',
     'menu.recentProjects': '최근 프로젝트',
     'menu.recentEmpty': '(기록 없음)',
@@ -91,7 +91,7 @@ const catalogs: Record<MenuLocale, MenuStrings> = {
     'dialog.create.button': '여기에 만들기',
     'dialog.selectPaintApp.title': '페인트 앱 선택',
     'dialog.saveVideo.title': '동영상 저장 위치',
-    'dialog.openScript.title': '스크립트 파일 선택',
+    'dialog.openScript.title': '각본 파일 선택',
   },
   en: {
     'menu.about': 'About Mizutama Conte',

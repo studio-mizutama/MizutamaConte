@@ -19,7 +19,7 @@ export const ko: Record<TranslationKey, string> = {
   'header.save.error': '⚠ 저장 오류',
   'header.menu.ariaLabel': '메뉴',
   'header.menu.new': '새로 만들기',
-  'header.menu.newFromScript': '스크립트로 새로 만들기',
+  'header.menu.newFromScript': '각본에서 새로 만들기',
   'header.menu.open': '열기',
   'header.menu.reload': '새로고침',
   'header.share.ariaLabel': '공유',
@@ -128,7 +128,7 @@ export const ko: Record<TranslationKey, string> = {
 
   // 새 프로젝트 다이얼로그
   'newProject.title': '새 프로젝트',
-  'newProject.fromScriptTitle': '스크립트로 새로 만들기',
+  'newProject.fromScriptTitle': '각본에서 새로 만들기',
   'newProject.titleLabel': '제목',
   'newProject.resolutionLabel': '해상도',
   'newProject.aspectLabel': '화면비',
@@ -179,7 +179,7 @@ export const ko: Record<TranslationKey, string> = {
   // 읽기 오류(잘못된 프로젝트)
   'error.openTitle': '열 수 없습니다',
   'error.openBody': '이 폴더는 스토리보드 프로젝트로 불러올 수 없습니다. 올바른 프로젝트 폴더를 선택하세요.',
-  'error.importBody': '이 파일은 가져올 수 없습니다. 스크립트 마크다운(.md / .txt)을 선택하세요.',
+  'error.importBody': '이 파일은 가져올 수 없습니다. 각본 마크다운(.md / .txt)을 선택하세요.',
 
   // 렌더링 오류(ErrorBoundary 폴백)
   'error.render.title': '화면 표시 중 오류가 발생했습니다',
