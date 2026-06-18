@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Locale } from './content/manifest';
+import { applyDocLang } from './lang';
 import { SiteHeader, NAV } from './SiteHeader';
 import Camera from '@spectrum-icons/workflow/Camera';
 import LockClosed from '@spectrum-icons/workflow/LockClosed';
@@ -273,6 +274,8 @@ const getLocale = (): Locale =>
 export const Landing: React.FC = () => {
   const [locale, setLocale] = useState<Locale>(getLocale());
   const c = COPY[locale];
+  // 初回マウント時の locale と切替時の両方で <html lang> を追従させる。
+  useEffect(() => { applyDocLang(locale); }, [locale]);
   const setLoc = (l: Locale) => {
     setLocale(l);
     try { localStorage.setItem('docsLocale', l); } catch { /* ignore */ }

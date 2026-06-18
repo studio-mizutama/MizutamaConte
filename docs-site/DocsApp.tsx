@@ -3,6 +3,7 @@ import { PAGES, md, Locale, DocPage } from './content/manifest';
 import { Markdown } from './Markdown';
 import { Shortcuts } from './Shortcuts';
 import { SiteHeader } from './SiteHeader';
+import { applyDocLang } from './lang';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 
 const currentHash = (): string => window.location.hash.replace(/^#\/?/, '') || PAGES[0].id;
@@ -26,6 +27,8 @@ export const DocsApp: React.FC = () => {
   const [pageId, setPageId] = useState<string>(currentHash());
   // スマホ用: 目次（サイドバー）の開閉。デスクトップでは CSS で常時表示。
   const [tocOpen, setTocOpen] = useState(false);
+  // 初回マウント時の locale と切替時の両方で <html lang> を追従させる。
+  useEffect(() => { applyDocLang(locale); }, [locale]);
   useEffect(() => {
     const on = () => {
       setPageId(currentHash());
