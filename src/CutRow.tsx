@@ -80,6 +80,7 @@ const RecControlWrapper = styled.div<{ $visible: boolean }>`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  pointer-events: none; /* クリックは背後の行へ通す（行が activate / toggle を処理する） */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,13 +218,12 @@ const TextContainer: React.FC<{
   isStopwatchActive: boolean;
   isCounting: boolean;
   liveFrames?: number;
-  onToggleRec: (index: number) => void;
   setDialogue: (index: number, value: string) => void;
   setActionText: (index: number, value: string) => void;
   setTime: (index: number, value: number) => void;
 }> = React.memo(({
   cutIndex, action, dialogue, time, timeSum, fps, editable,
-  stopwatchMode, isStopwatchActive, isCounting, liveFrames, onToggleRec,
+  stopwatchMode, isStopwatchActive, isCounting, liveFrames,
   setDialogue, setActionText, setTime,
 }) => {
   const t = useT();
@@ -317,34 +317,23 @@ const TextContainer: React.FC<{
             onBlur={commitTime}
           />
         )}
-        {/* ストップウォッチモード: 読み取り専用 TIME 表示（$large MyTextArea と同位置）＋ Rec ボタン */}
+        {/* ストップウォッチモード: 読み取り専用 TIME 表示（$large MyTextArea と同位置）＋ Rec インジケータ。
+            Rec は視覚のみ（pointer-events:none）。クリックは行が処理する（非 active=その行を activate /
+            active=計測トグル）。ホバー or active or 計測中で表示、計測中は Stop アイコン＋赤。 */}
         {stopwatchMode && (
           <>
             <TimeDisplay $counting={isCounting}>
               {frameToTimecode(isCounting ? (liveFrames ?? 0) : (time || 0), fps)}
             </TimeDisplay>
-            {/* stopPropagation で行クリックハンドラ（行選択 or トグル）との二重発火を防ぐ */}
-            <div
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <RecControlWrapper $visible={isStopwatchActive || isCounting}>
-                <TooltipTrigger delay={300}>
-                  <ActionButton
-                    isQuiet
-                    aria-label={isCounting ? t('stopwatch.tipStop') : t('stopwatch.tipStart')}
-                    onPress={() => onToggleRec(cutIndex)}
-                  >
-                    {isCounting ? (
-                      <RedIconWrap><Stop size="S" /></RedIconWrap>
-                    ) : (
-                      <Circle size="S" />
-                    )}
-                  </ActionButton>
-                  <Tooltip>{isCounting ? t('stopwatch.tipStop') : t('stopwatch.tipStart')}</Tooltip>
-                </TooltipTrigger>
-              </RecControlWrapper>
-            </div>
+            <RecControlWrapper $visible={isStopwatchActive || isCounting}>
+              {isCounting ? (
+                <RedIconWrap>
+                  <Stop size="S" />
+                </RedIconWrap>
+              ) : (
+                <Circle size="S" />
+              )}
+            </RecControlWrapper>
           </>
         )}
         <TimeSum>{frameToTimecode(timeSum || 0, fps)}</TimeSum>
@@ -444,8 +433,10 @@ export interface CutRowProps {
   isCounting: boolean;
   /** 計測中の経過フレーム（計測中のカットのみ渡す。他は undefined → memo スキップ） */
   liveFrames?: number;
-  /** Rec ボタン押下時のコールバック（カット index を渡す） */
+  /** active 行クリック時の計測トグル（開始/停止）コールバック */
   onToggleRec: (index: number) => void;
+  /** 非 active 行クリック時に、その行を計測対象（active）にするコールバック */
+  onActivate: (index: number) => void;
 }
 
 /** 1カット行。project を購読せず props のみで描画する（React.memo を機能させる）。 */
@@ -476,6 +467,7 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
     isCounting,
     liveFrames,
     onToggleRec,
+    onActivate,
   }) => {
     const t = useT();
     // 編集操作が可能か（プロジェクト未オープン or edit 以外のモードでは 4 アイコンをロック）
@@ -488,13 +480,15 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
           className={'hover'}
           id={`Cut${index + 1}`}
           onClick={() => {
-            // ストップウォッチモードでアクティブな行をクリック → 計測トグル
-            if (stopwatchMode && isStopwatchActive) {
-              onToggleRec(index);
-            } else {
-              // 通常: 行を選択（既存動作）
-              document.getElementById(`List${index + 1}`)?.click();
+            if (stopwatchMode) {
+              // active 行クリック=計測トグル（開始/停止） / 非 active 行クリック=その行を
+              // アクティブ化（起動直後はどの行も非 active＝null）。
+              if (isStopwatchActive) onToggleRec(index);
+              else onActivate(index);
+              return;
             }
+            // 通常: 行を選択（既存動作）
+            document.getElementById(`List${index + 1}`)?.click();
           }}
           onMouseEnter={() => document.getElementById(`List${index + 1}`)?.classList.add('isHover')}
           onMouseLeave={() => document.getElementById(`List${index + 1}`)?.classList.remove('isHover')}
@@ -697,7 +691,6 @@ export const CutRow: React.FC<CutRowProps> = React.memo(
               isStopwatchActive={isStopwatchActive}
               isCounting={isCounting}
               liveFrames={liveFrames}
-              onToggleRec={onToggleRec}
               setDialogue={setDialogue}
               setActionText={setActionText}
               setTime={setTime}

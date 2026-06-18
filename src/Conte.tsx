@@ -260,8 +260,9 @@ const CutContainer: React.FC = () => {
   actionsRef.current = actions;
   const [editorMode] = useEditorMode();
 
-  const { stopwatchMode, activeIndex, countingIndex, liveFrames, toggle } = useStopwatchController();
+  const { stopwatchMode, activeIndex, countingIndex, liveFrames, activate, toggle } = useStopwatchController();
   const onToggleRec = useCallback((i: number) => toggle(i), [toggle]);
+  const onActivate = useCallback((i: number) => activate(i), [activate]);
 
   // useMemo で per-frame 再レンダリング時の再計算を抑える（計測中は Conte が毎フレーム再レンダーされる）
   const scenes = useMemo(() => deriveScenes(project.cuts), [project.cuts]);
@@ -445,6 +446,7 @@ const CutContainer: React.FC = () => {
                     isCounting={countingIndex === index}
                     liveFrames={countingIndex === index ? liveFrames : undefined}
                     onToggleRec={onToggleRec}
+                    onActivate={onActivate}
                   />
                 </DraggableRow>
               )}
