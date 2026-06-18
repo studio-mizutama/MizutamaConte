@@ -19,7 +19,8 @@ import { getStorage } from 'storage';
 import { emptyProject } from 'project/load';
 import { serializeProject, setLastPersisted, setPendingV1Backup } from 'project/save';
 import { ASPECT_KEYS, RESOLUTION_KEYS, deriveFrame } from 'project/dimensions';
-import { AspectKey, ResolutionKey } from 'project/types';
+import { AspectKey, ResolutionKey, ProjectFile, PsdCache } from 'project/types';
+import { buildProjectFromScript } from 'project/scriptProject';
 import { useT } from 'i18n';
 import { gitReady } from 'git/types';
 import { GitHelpPopover } from 'git/GitHelpPopover';
@@ -37,6 +38,7 @@ export const NewProjectDialog: React.FC = () => {
   const setFileName = useGlobal('globalFileName')[1];
   const setSaveState = useGlobal('saveState')[1];
   const [open, setOpen] = useGlobal('newProjectOpen');
+  const [scriptImport, setScriptImport] = useGlobal('scriptImport');
   const storage = getStorage();
 
   const [title, setTitle] = useState('NewConte');
@@ -57,6 +59,12 @@ export const NewProjectDialog: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 「脚本から新規」で開いたとき、作品名をタイトル欄に流し込む
+  useEffect(() => {
+    if (open && scriptImport) setTitle(scriptImport.title || 'NewConte');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, scriptImport]);
+
   const create = async () => {
     // 名前はここで決定。保存先フォルダのみネイティブ/FSA で選ぶ（名前の二重入力なし）
     const created = await storage.createProject(title.trim() || 'NewConte');
@@ -64,21 +72,36 @@ export const NewProjectDialog: React.FC = () => {
     // Electron: 作成フォルダの絶対パスをレンダラの再読込 ref に反映し、New 直後でも
     // View→Reload / 外部編集の自動再読込を有効化する（Web は getCurrentDirHandle() が非null なので不要）。
     if (created.dirPath) setSharedDirPath(created.dirPath);
-    const project = emptyProject(created.name);
-    project.settings = {
+    const settings = {
       resolution,
       aspect,
       frame: deriveFrame(resolution, aspect),
       fps: Number(fps),
     };
+    let project: ProjectFile;
+    let cache: PsdCache = {};
+    let psdFiles: { name: string; buffer: Uint8Array }[] = [];
+    if (scriptImport) {
+      // 脚本モード: 先に全カット+空PSDをメモリ構築（createProject 後にまとめて書き込む）
+      const built = buildProjectFromScript(scriptImport, settings);
+      project = { ...built.project, title: created.name };
+      cache = built.cache;
+      psdFiles = built.psdFiles;
+    } else {
+      project = emptyProject(created.name);
+      project.settings = settings;
+    }
     const jsonFileName = `${created.name}.json`;
     const text = serializeProject(project);
     try {
+      for (const f of psdFiles) {
+        await storage.writeFile(f.name, f.buffer);
+      }
       await storage.writeFile(jsonFileName, text);
       setLastPersisted(text);
       setPendingV1Backup(null);
       setProject(project);
-      setPsdCache({});
+      setPsdCache(cache);
       setFileName(jsonFileName);
       setSaveState('saved');
       clearHistory();
@@ -91,6 +114,7 @@ export const NewProjectDialog: React.FC = () => {
           alert(gitErr);
         }
       }
+      setScriptImport(null);
       setOpen(false);
     } catch (err) {
       alert(err);
@@ -100,10 +124,15 @@ export const NewProjectDialog: React.FC = () => {
   if (!storage.capabilities.write) return null;
 
   return (
-    <DialogContainer onDismiss={() => setOpen(false)}>
+    <DialogContainer
+      onDismiss={() => {
+        setOpen(false);
+        setScriptImport(null);
+      }}
+    >
       {open && (
         <Dialog size="S">
-          <Heading>{t('newProject.title')}</Heading>
+          <Heading>{scriptImport ? t('newProject.fromScriptTitle') : t('newProject.title')}</Heading>
           <Divider />
           <Content>
             <Flex direction="column" gap="size-150">
@@ -148,7 +177,13 @@ export const NewProjectDialog: React.FC = () => {
             </Flex>
           </Content>
           <ButtonGroup>
-            <Button variant="secondary" onPress={() => setOpen(false)}>
+            <Button
+              variant="secondary"
+              onPress={() => {
+                setOpen(false);
+                setScriptImport(null);
+              }}
+            >
               {t('common.cancel')}
             </Button>
             <Button variant="cta" onPress={create}>
