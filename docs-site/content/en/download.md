@@ -83,6 +83,12 @@ This lets the install (or launch) proceed. It won't show up on later runs.
 
 Depending on your distribution, you may be asked to confirm execute permission or trust at launch. As noted above, make the `AppImage` executable before launching it.
 
+Even after you make the file executable, some file managers refuse to launch it by double-click for security reasons. In that case, run it directly from a terminal.
+
+```sh
+./Mizutama-Conte*.AppImage
+```
+
 ## Web version
 
 Just open it in your browser. No installation needed.

@@ -61,8 +61,8 @@ const NoDragArea = styled.div`
   -webkit-app-region: no-drag;
 `;
 
-// Web のハンバーガーだけに付ける右マージン。左の padding-left(12px) と対称にして
-// ☰ の左右余白を揃える（Electron にはハンバーガーが無いので影響しない）。
+// Web と Win/Linux メニューバーのハンバーガーに付ける右マージン。左の padding-left(12px) と
+// 対称にして ☰ の左右余白を揃える（mac の Electron はグローバルメニューバーゆえ ☰ 自体が無い）。
 const HamburgerArea = styled(NoDragArea)`
   margin-right: 12px;
 `;
@@ -605,9 +605,11 @@ export const Header: React.FC = () => {
         <AboutDialog isOpen={aboutOpen} onOpenChange={setAboutOpen} />
         <LoadErrorDialog />
         {window.navigator.userAgent.toLowerCase().indexOf('mac') === -1 && api && (
-          <ActionButton isQuiet onPress={onContextMenu}>
-            <ShowMenu />
-          </ActionButton>
+          <HamburgerArea>
+            <ActionButton isQuiet onPress={onContextMenu}>
+              <ShowMenu />
+            </ActionButton>
+          </HamburgerArea>
         )}
         <NoDragArea>
           <Tab />
