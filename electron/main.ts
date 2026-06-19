@@ -7,6 +7,12 @@ import { openInPaintApp, findPaintApp } from './paint';
 import { loadSettings, saveSettings, AppSettings } from './settings';
 import { mt, resolveLocale, MenuLocale } from './i18n';
 import { detect, isRepo, initRepo, status, commit, logLatest } from './git';
+import { applyPathFix } from './pathFix';
+
+// Finder/Dock 起動時は GUI アプリの PATH が launchd の最小値になり Homebrew 等が落ちる。
+// git / git-lfs / paint は child_process でバイナリを解決するため、最初の spawn より前に
+// （モジュールトップで 1 回）PATH を補正して後続のすべての子プロセスに継承させる。
+applyPathFix();
 
 interface Bounds {
   width: number;
