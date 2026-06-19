@@ -83,6 +83,12 @@ xattr -dr com.apple.quarantine "/Applications/Mizutama Conte.app"
 
 배포판에 따라 실행할 때 실행 권한이나 신뢰 여부 확인을 요구할 수 있습니다. 앞서 설명한 대로 `AppImage`에 실행 권한을 부여한 뒤 실행하세요.
 
+파일 관리자에서 실행 권한을 부여해도 보안 확인 때문에 더블 클릭으로는 실행되지 않을 수 있습니다. 그럴 때는 터미널에서 직접 실행하면 됩니다.
+
+```sh
+./Mizutama-Conte*.AppImage
+```
+
 ## Web 버전
 
 브라우저에서 열기만 하면 사용할 수 있습니다. 설치가 필요 없습니다.
