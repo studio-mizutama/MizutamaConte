@@ -1,0 +1,46 @@
+name: Deploy web & docs
+
+# Web 版と docs サイトを gh-pages へ公開する（リリースとは独立）。
+# - master への push（web/docs 関連パス変更時）で自動デプロイ
+# - 手動実行（Actions 画面の Run workflow ボタン）でもデプロイ可
+# ローカルの `yarn deploy` と同じ成果物（build/）を同じ gh-pages ブランチへ publish する。
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'docs-site/**'
+      - 'index.html'
+      - 'vite.config.mts'
+      - 'vite.docs.config.mts'
+      - 'package.json'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      # 順序厳守: build:web が build/ を一掃 → build:docs が build/docs/ を書く
+      - run: yarn build:web
+      - run: yarn build:docs
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages

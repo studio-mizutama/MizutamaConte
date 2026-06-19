@@ -1,0 +1,89 @@
+name: Release
+
+# `vX.Y.Z` タグを push すると、3 OS のバイナリをネイティブビルドし（wine 不要）、
+# CHANGELOG.md の該当バージョン節を本文にして GitHub Release を作成する。
+#   リリース = git push origin master --follow-tags  （master 反映で web も自動デプロイ）
+#
+# (beta) 表記・prerelease の切替は下の env で行う（現状は v0.9.x = "(beta)" 表記・Latest 扱い）。
+# 安定版にするときは RELEASE_TITLE_SUFFIX を "" に、必要なら下の release ジョブの
+# prerelease を true にする。
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  # 安定版にしたくなったら "" にする
+  RELEASE_TITLE_SUFFIX: ' (beta)'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - name: Build renderer/main/preload
+        run: yarn build
+      # targets/arch は package.json の build 設定で OS ごとに固定（mac=arm64+x64 / win,linux=x64）
+      - name: Package distributables
+        run: yarn electron-builder --${{ matrix.platform }} --publish never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.platform }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="## v${VERSION}" '$0==v {f=1; next} /^## /{ if (f) exit } f' CHANGELOG.md > RELEASE_BODY.md
+          if [ ! -s RELEASE_BODY.md ]; then
+            echo "::error::CHANGELOG.md に '## v${VERSION}' の節が見つかりません" >&2
+            exit 1
+          fi
+          echo "----- release body -----"; cat RELEASE_BODY.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Mizutama Conte ${{ github.ref_name }}${{ env.RELEASE_TITLE_SUFFIX }}
+          body_path: RELEASE_BODY.md
+          prerelease: false
+          files: |
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/*.exe
+            artifacts/*.AppImage
+            artifacts/*.tar.gz
