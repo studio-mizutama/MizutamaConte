@@ -24,7 +24,7 @@
     "dev:web": "vite",
     "build": "electron-vite build",
     "build:web": "vite build",
-    "build:docs": "vite build --config vite.docs.config.mts",
+    "build:docs": "vite build --config vite.docs.config.mts && node docs-site/scripts/gen-sitemap.mjs",
     "dist:dir": "electron-vite build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder",
     "test": "vitest run",
@@ -45,36 +45,14 @@
     },
     "mac": {
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
       ]
     },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
       ]
     },
     "nsis": {
@@ -83,18 +61,8 @@
     },
     "linux": {
       "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "tar.gz",
-          "arch": [
-            "x64"
-          ]
-        }
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "tar.gz", "arch": ["x64"] }
       ],
       "category": "Graphics"
     }
