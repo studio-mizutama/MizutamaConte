@@ -7,6 +7,10 @@ conte
 /.pnp
 .pnp.js
 
+# vite-prerender-plugin が build:docs 時に root(=docs-site)/node_modules 配下へ
+# 一時 SSR バンドルを展開する（headless-prerender）。ビルド成果物なので無視。
+docs-site/node_modules/
+
 # testing
 /coverage
 
