@@ -373,7 +373,7 @@ export const Landing: React.FC = () => {
           <span>
             <a href="#/usage">{NAV[locale].usage}</a>&nbsp;·&nbsp;
             <a href="#/shortcuts">{NAV[locale].shortcuts}</a>&nbsp;·&nbsp;
-            <a href={`${REPO_URL}/blob/develop/LICENSING.md`}>License (BSL 1.1)</a>&nbsp;·&nbsp;
+            <a href={`${REPO_URL}/blob/master/LICENSING.md`}>License (BSL 1.1)</a>&nbsp;·&nbsp;
             <a href={REPO_URL}>GitHub</a>
           </span>
         </div>
