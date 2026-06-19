@@ -181,7 +181,7 @@ Create it at the same size as the actual animation (e.g. 1920×1080).
 #### Layer structure
 
 - Put the background layer at the bottom (a background with artwork is rendered too).
-- If a cut has multiple frames, stack them from the top in chronological order.
+- If a cut has multiple frames, stack them from the bottom in chronological order.
 - One frame = one layer, or **one frame = one group** (a group is composited and treated as a single frame).
 - Layer blend modes, opacity, and clipping are honored.
 - Layer names are arbitrary (loading maps by order).
