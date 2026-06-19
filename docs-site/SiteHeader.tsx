@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Locale } from './content/manifest';
+import { buildPath } from './route';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 import Close from '@spectrum-icons/workflow/Close';
 import logoUrl from './assets/logo.png';
@@ -15,30 +16,33 @@ export const NAV: Record<Locale, { usage: string; shortcuts: string; download: s
 };
 
 /* ランディングとドキュメントで完全に同一のヘッダー。
-   ブランド（Mizutama Conte）クリックでホームへ。言語切替は href を持たず onClick のみ
-   ＝現在ページに留まったまま locale だけ切り替える（docs でホームへ飛ばない）。
+   ブランド（Mizutama Conte）クリックでその locale のホームへ。
+   言語切替は「現在ページの同一 id・別 locale」への実リンク（= URL に locale を含む設計。
+   クローラが全 locale を辿れる＋URL と表示が常に一致）。
    スマホ（≤820px）ではナビ一式をハンバーガーのドロップダウンに畳む。 */
-export const SiteHeader: React.FC<{ locale: Locale; setLocale: (l: Locale) => void }> = ({ locale, setLocale }) => {
+export const SiteHeader: React.FC<{ locale: Locale; pageId: string | null; base: string }> = ({ locale, pageId, base }) => {
   const [open, setOpen] = useState(false);
   const n = NAV[locale];
   const close = () => setOpen(false);
+  // 言語スイッチャの飛び先: doc ページなら同一 id の別 locale、home なら別 locale の home。
+  const langHref = (l: Locale): string => (pageId ? buildPath(base, l, pageId) : buildPath(base, l));
   return (
     <>
       <nav className="lp-nav">
         <div className="wrap">
-          <a className="lp-brand" href="#/" onClick={close}><img src={logoUrl} alt="Mizutama Conte" />Mizutama&nbsp;Conte</a>
+          <a className="lp-brand" href={buildPath(base, locale)} onClick={close}><img src={logoUrl} alt="Mizutama Conte" />Mizutama&nbsp;Conte</a>
           <button className="lp-burger" aria-label={n.menu} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
             {open ? <Close aria-hidden /> : <ShowMenu aria-hidden />}
           </button>
           <div className={`lp-navlinks${open ? ' open' : ''}`}>
-            <a href="#/usage" onClick={close}>{n.usage}</a>
-            <a href="#/shortcuts" onClick={close}>{n.shortcuts}</a>
-            <a href="#/download" onClick={close}>{n.download}</a>
+            <a href={buildPath(base, locale, 'usage')} onClick={close}>{n.usage}</a>
+            <a href={buildPath(base, locale, 'shortcuts')} onClick={close}>{n.shortcuts}</a>
+            <a href={buildPath(base, locale, 'download')} onClick={close}>{n.download}</a>
             <span className="lp-lang">
               {(['ja', 'ko', 'en'] as Locale[]).map((l, i) => (
                 <React.Fragment key={l}>
                   {i > 0 && ' · '}
-                  <a onClick={() => { setLocale(l); close(); }}>
+                  <a href={langHref(l)} onClick={close}>
                     {l === locale ? <b>{l.toUpperCase()}</b> : l.toUpperCase()}
                   </a>
                 </React.Fragment>

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Locale } from './content/manifest';
-import { applyDocLang } from './lang';
+import { buildPath } from './route';
 import { SiteHeader, NAV } from './SiteHeader';
 import Camera from '@spectrum-icons/workflow/Camera';
 import LockClosed from '@spectrum-icons/workflow/LockClosed';
@@ -268,22 +268,13 @@ const KO: Copy = {
 
 const COPY: Record<Locale, Copy> = { ja: JA, ko: KO, en: EN };
 
-const getLocale = (): Locale =>
-  ((typeof localStorage !== 'undefined' && (localStorage.getItem('docsLocale') as Locale)) || 'ja');
-
-export const Landing: React.FC = () => {
-  const [locale, setLocale] = useState<Locale>(getLocale());
+// locale/base は URL 由来（App が parseRoute して渡す）。
+export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, base }) => {
   const c = COPY[locale];
-  // 初回マウント時の locale と切替時の両方で <html lang> を追従させる。
-  useEffect(() => { applyDocLang(locale); }, [locale]);
-  const setLoc = (l: Locale) => {
-    setLocale(l);
-    try { localStorage.setItem('docsLocale', l); } catch { /* ignore */ }
-  };
 
   return (
     <div className="lp">
-      <SiteHeader locale={locale} setLocale={setLoc} />
+      <SiteHeader locale={locale} pageId={null} base={base} />
 
       {/* hero */}
       <header className="hero wrap">
@@ -291,7 +282,7 @@ export const Landing: React.FC = () => {
         <p className="sub">{c.hero.sub}</p>
         <div className="cta">
           <a className="btn btn-primary" href={APP_URL}>{c.hero.cta1} ▸</a>
-          <a className="btn btn-ghost" href="#/download">{c.hero.cta2}</a>
+          <a className="btn btn-ghost" href={buildPath(base, locale, 'download')}>{c.hero.cta2}</a>
         </div>
         <div className="trust">
           <span className="it">{c.hero.t1}</span>
@@ -362,7 +353,7 @@ export const Landing: React.FC = () => {
           <p className="lead">{c.ctaSub}</p>
           <div className="cta">
             <a className="btn btn-primary" href={APP_URL}>{c.hero.cta1} ▸</a>
-            <a className="btn btn-ghost" href="#/download">{c.hero.cta2}</a>
+            <a className="btn btn-ghost" href={buildPath(base, locale, 'download')}>{c.hero.cta2}</a>
           </div>
         </div>
       </section>
@@ -371,8 +362,8 @@ export const Landing: React.FC = () => {
         <div className="wrap">
           <span><img className="studio-mark" src={studioLogo} alt="Studio Mizutama" />© 2021–2026</span>
           <span>
-            <a href="#/usage">{NAV[locale].usage}</a>&nbsp;·&nbsp;
-            <a href="#/shortcuts">{NAV[locale].shortcuts}</a>&nbsp;·&nbsp;
+            <a href={buildPath(base, locale, 'usage')}>{NAV[locale].usage}</a>&nbsp;·&nbsp;
+            <a href={buildPath(base, locale, 'shortcuts')}>{NAV[locale].shortcuts}</a>&nbsp;·&nbsp;
             <a href={`${REPO_URL}/blob/master/LICENSING.md`}>License (BSL 1.1)</a>&nbsp;·&nbsp;
             <a href={REPO_URL}>GitHub</a>
           </span>
