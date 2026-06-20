@@ -1,1 +1,0 @@
-import{p as a,R as t,j as n,A as r}from"./prerender-ue3UnnMO.js";const s="/MizutamaConte/docs/",c=a(window.location.pathname,s),e=document.getElementById("root"),o=n.jsx(r,{route:c,base:s});e.hasChildNodes()?t.hydrate(o,e):t.render(o,e);
