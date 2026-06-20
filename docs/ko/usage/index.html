@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>기본 사용법 — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="기본 사용법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/usage/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/usage/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/usage/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/usage/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/usage/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="기본 사용법 — Mizutama Conte">
+<meta property="og:description" content="기본 사용법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ko/usage/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="기본 사용법 — Mizutama Conte">
+<meta name="twitter:description" content="기본 사용법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ko-KR" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ko/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="메뉴" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ko/usage/">사용법</a><a href="/MizutamaConte/docs/ko/shortcuts/">단축키</a><a href="/MizutamaConte/docs/ko/download/">다운로드</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/usage/">JA</a> · <a href="/MizutamaConte/docs/ko/usage/"><b>KO</b></a> · <a href="/MizutamaConte/docs/en/usage/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">브라우저에서 사용해보기</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>목차</button><aside class="docs-side"><div class="grp"><div class="side-h">시작하기</div><a href="/MizutamaConte/docs/ko/overview/" class="">소개</a><a href="/MizutamaConte/docs/ko/download/" class="">다운로드</a></div><div class="grp"><div class="side-h">사용법</div><a href="/MizutamaConte/docs/ko/usage/" class="on">기본 사용법</a></div><div class="grp"><div class="side-h">레퍼런스</div><a href="/MizutamaConte/docs/ko/script-syntax/" class="">스크립트 가져오기 문법</a><a href="/MizutamaConte/docs/ko/shortcuts/" class="">단축키</a><a href="/MizutamaConte/docs/ko/git/" class="">Git 연동</a></div><div class="grp"><div class="side-h">지원</div><a href="/MizutamaConte/docs/ko/faq/" class="">자주 묻는 질문</a></div></aside><main class="docs-main"><h1>사용법 기본</h1>
+<p>Mizutama Conte는 애니메이션 제작용으로, 콘티를 그려서 애니매틱(영상으로 재생할 수 있는 콘티)으로 재생할 수 있는 에디터입니다. 데이터는 모두 사용자 PC 안에서만 처리되며 서버로 전송되지 않습니다. 데스크톱 버전(Mac / Windows / Linux)과 브라우저에서 동작하는 Web 버전을 제공합니다.</p>
+<p>이 페이지에서는 프로젝트를 만들고 내보내기까지의 전체 흐름을 순서대로 설명합니다. 키보드 단축키 목록은 별도 페이지(<a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">단축키</a>)에 정리해 두었습니다.</p>
+<h2>전체 흐름</h2>
+<ol>
+<li>프로젝트를 만든다 (해상도·화면비를 고른다)</li>
+<li>컷의 그림을 그린다 (외부 페인트 앱으로 PSD 파일을 편집)</li>
+<li>컷을 편집한다 (컷 추가·씬 구분 편집·컷 결합과 분리·레이어 추가, ACTION / DIALOGUE / TIME 편집)</li>
+<li>카메라 워크를 넣는다 (크롭과 리사이즈, 슬라이더 편집)</li>
+<li>듀레이션을 정한다 (스톱워치로 실연하며 측정)</li>
+<li>트랜지션을 넣는다 (페이드·크로스페이드)</li>
+<li>프리뷰로 재생해서 확인한다</li>
+<li>PDF나 MP4로 내보낸다</li>
+</ol>
+<p>작업 중간의 저장은 자동으로 이루어집니다(PSD와 JSON). 명시적인 저장 조작은 기본적으로 필요 없습니다.</p>
+<h2>1. 프로젝트를 만든다</h2>
+<h3>새 프로젝트</h3>
+<p>메뉴에서 &quot;새 프로젝트&quot;를 선택합니다. 생성 시점에, 앞으로 작업할 콘티의 해상도와 화면비를 정합니다.</p>
+<p>해상도는 SD / HD / FHD / 2K / 4K 중에서, 화면비는 4:3 / 16:9 / 1.85:1 / 2.39:1 중에서 고릅니다. 여기서 정한 해상도가 PSD의 기준 크기(네이티브 해상도)가 됩니다.</p>
+<p>고민된다면, TV 애니메이션이라면 HD 또는 FHD의 16:9, 극장용 작품을 상정한다면 1.85:1 또는 2.39:1 정도가 기준이 됩니다.</p>
+<h3>각본(Markdown)에서 만든다</h3>
+<p>작성한 각본이 이미 Markdown으로 되어 있다면, 거기서 한 번에 씬과 컷을 만들 수 있습니다. 메뉴의 &quot;각본에서 새로 만들기&quot;(<code>Cmd / Ctrl + Shift + N</code>)에서 불러옵니다. 제목(헤딩)이 씬의 구분, 수평선이 컷의 구분, 대사 행이 DIALOGUE가 되며, 각 컷에 빈 PSD가 자동으로 만들어집니다.</p>
+<p>표기법의 자세한 내용과 구체적인 예시는 <a href="../script-syntax/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">각본(Markdown) 작성법</a>을 참조하세요.</p>
+<h2>2. 그림을 그린다</h2>
+<p>Mizutama Conte 자체에는 드로잉 도구가 없습니다. 그림은 평소 사용하는 페인트 앱으로 그립니다. CLIP STUDIO PAINT / Photoshop / Affinity Photo / GIMP / Krita 등, PSD 파일을 읽어 들여 덮어쓰기 저장할 수 있는 것이라면 어떤 소프트웨어든 사용할 수 있습니다.</p>
+<h3>PSD를 열어서 그린다</h3>
+<ol>
+<li>컷의 칸(PICTURE)을 더블클릭합니다.</li>
+<li>설정에서 선택한 페인트 앱이 실행되고, 그 컷의 실체인 <code>.psd</code> 파일이 열립니다.</li>
+<li>그대로 그린 뒤 덮어쓰기 저장합니다.</li>
+<li>Mizutama Conte로 돌아오면, 저장된 내용이 자동으로 읽혀 칸의 표시가 갱신됩니다.</li>
+</ol>
+<p>독자적인 포맷으로 변환하지 않습니다. 열리는 것은 일반 PSD이며, 늘 쓰던 소프트웨어에서 그대로 편집할 수 있습니다.</p>
+<h2>3. 컷을 편집한다</h2>
+<p>콘티는 씬과 컷(CUT)의 모음입니다. 목록의 각 행이 하나의 컷에 해당합니다.</p>
+<h3>컷을 추가한다</h3>
+<p>행을 추가하면 새로운 빈 컷이 들어갑니다. 각 컷에는 빈 PSD가 만들어지므로, 그대로 그림을 그리기 시작할 수 있습니다.</p>
+<h3>씬을 구분한다</h3>
+<p>원하는 위치에서 씬을 구분할 수 있습니다. 씬 구분을 넣으면, 거기서부터 새로운 씬이 시작됩니다.</p>
+<h3>컷을 결합·분리한다</h3>
+<p>인접한 컷은 결합할 수 있습니다. 반대로, 결합한 컷은 분리해서 원래대로 되돌릴 수 있습니다. 컷을 다시 나눌 때 사용합니다.</p>
+<h3>레이어＝컷 안의 칸</h3>
+<p>하나의 컷은 여러 레이어를 가질 수 있습니다. 여기서 말하는 레이어는, 컷 안의 시계열 플립북(움직이는 그림책)으로 다뤄집니다. 배경 위에 겹친 레이어가 한 칸씩 순서대로 표시됩니다. 인비트윈이나 움직임이 있는 컷을, 한 컷 안에서 표현하기 위한 구조입니다. 여러 레이어를 묶어서 한 칸으로 다루고 싶은 경우에는 레이어를 그룹화합니다.</p>
+<h3>ACTION / DIALOGUE / TIME</h3>
+<p>각 컷에는 다음 정보를 적어 넣을 수 있습니다.</p>
+<ul>
+<li>ACTION(지문): 컷의 내용이나 움직임에 대한 설명</li>
+<li>DIALOGUE(대사): 그 컷에서 말하는 대사</li>
+<li>TIME(듀레이션): 그 컷의 길이</li>
+</ul>
+<p>ACTION과 DIALOGUE는 그 자리에서 텍스트를 편집할 수 있습니다. TIME은 숫자로 입력하는 것 외에, 뒤에서 설명할 스톱워치로도 정할 수 있습니다.</p>
+<h2>4. 카메라 워크를 넣는다</h2>
+<p>컷 위에서 카메라 프레임(크롭 프레임)을 드래그하여 크기와 위치를 정합니다. 프레임을 크게 하면 줌인, 위치를 옮기면 팬을 표현할 수 있습니다.</p>
+<p>드래그 중에 <code>Shift</code>를 누르면 스냅이 적용됩니다.</p>
+<ul>
+<li>가로 방향 스냅 (수평 팬)</li>
+<li>세로 방향 스냅 (수직 팬)</li>
+<li>비율을 유지한 스냅 (화면비를 유지한 채로 하는 줌)</li>
+</ul>
+<h3>리사이즈 방향에서 기본 카메라 워크를 자동 생성</h3>
+<p>카메라 프레임을 리사이즈하면, 그 방향(어느 쪽으로 넓혔는지 / 줄였는지)으로부터 그럴듯한 팬이나 줌의 초깃값이 자동으로 들어갑니다. 우선 대략적으로 프레임을 움직여 감을 잡고, 나중에 세밀하게 조정하는 흐름이 편합니다.</p>
+<h3>슬라이더와 숫자로 조정한다</h3>
+<p>카메라 워크 패널에서는, 슬라이더와 숫자 입력 양쪽으로 값을 다듬을 수 있습니다.</p>
+<ul>
+<li>슬라이더로 대략 맞추고, 숫자로 정확하게 정한다</li>
+<li>IN과 OUT은 서로 바꿀(스왑) 수 있다</li>
+<li>네이티브 해상도 가득(=잘라내기 없음, 움직임 없음) 상태인 항목은 회색으로 비활성화된다</li>
+</ul>
+<p>회색 비활성화는 &quot;여기는 카메라 워크가 걸려 있지 않다&quot;는 표시입니다.</p>
+<h2>5. 듀레이션을 정한다 (스톱워치)</h2>
+<p>컷의 길이는, 실제로 연기를 해 보고 그 시간을 그대로 듀레이션으로 입력할 수 있습니다.</p>
+<ol>
+<li>왼쪽 툴바에서 <code>T</code>(스톱워치) 도구를 선택합니다.</li>
+<li>듀레이션을 재고 싶은 컷을 선택합니다.</li>
+<li><code>Space</code>로 측정을 시작하고, 다시 한 번 <code>Space</code>로 정지합니다.</li>
+<li>연기한 길이가 그 컷의 TIME(초 + 프레임)으로 들어갑니다.</li>
+</ol>
+<p>대사를 소리 내어 읽거나, 움직임을 몸으로 재현하는 등, 머릿속의 타이밍을 그대로 숫자로 만들 수 있습니다. 손으로 초 수를 입력하고 싶은 경우에는 TIME을 직접 편집해도 됩니다.</p>
+<h2>6. 트랜지션을 넣는다</h2>
+<p>컷이 바뀌는 부분에 페이드와 크로스페이드를 설정할 수 있습니다.</p>
+<ul>
+<li>페이드인·페이드아웃: White / Black 두 종류를 고를 수 있습니다.</li>
+<li>크로스페이드: 앞 컷과 다음 컷이 겹쳐서 바뀌는 페이드입니다.</li>
+</ul>
+<p>트랜지션 듀레이션의 기본값은 0.5초입니다(예: 24fps라면 12프레임, 30fps라면 15프레임). 길이는 나중에 조정할 수 있습니다.</p>
+<h2>7. 프리뷰로 재생한다</h2>
+<p>프리뷰를 재생하면, 설정한 듀레이션·카메라 워크·트랜지션이 모두 반영된 상태로, 애니매틱으로서 처음부터 끝까지 볼 수 있습니다. 팬이나 줌은 실제 움직임으로 재생되므로, 타이밍이나 화면의 흐름을 그림을 그린 단계에서 확인할 수 있습니다.</p>
+<h2>8. 내보낸다</h2>
+<p>완성된 콘티는 두 가지 형식으로 내보낼 수 있습니다.</p>
+<h3>PDF 인쇄(콘티 용지)</h3>
+<p>스튜디오의 콘티 용지에 가까운 서식(A4)으로 내보냅니다. 각 컷의 PICTURE에는 IN / OUT 카메라 프레임이 표시되고, 누적 듀레이션도 들어갑니다. 종이 운용에 그대로 올릴 수 있습니다.</p>
+<h3>MP4 동영상(애니매틱)</h3>
+<p>프로젝트의 네이티브 해상도·fps로 MP4 형식의 동영상 파일로 내보냅니다. 프리뷰에서 확인한 움직임이 그대로 동영상이 됩니다.</p>
+<h2>지원 환경</h2>
+<p>데스크톱 버전의 지원 환경은 다음과 같습니다.</p>
+<ul>
+<li>macOS 12 이상</li>
+<li>Windows 10 이상</li>
+<li>Linux(Ubuntu 20.04 상당 이상)</li>
+</ul>
+<p>이보다 오래된 환경에서는, Chromium 계열 브라우저에서 동작하는 Web 버전을 이용하세요.</p>
+<p>Web 버전은 Chromium 계열 브라우저(Chrome / Edge 등)에서의 이용을 상정하고 있습니다. 파일의 저장·읽기나 동영상 내보내기는 File System Access API·WebCodecs에 의존하므로, Safari나 Firefox에서는 열람만 가능합니다(저장·내보내기 불가). PDF 인쇄도 Chromium 계열을 권장합니다.</p>
+<p>배포하는 빌드는 현재 코드 서명을 하지 않았기 때문에, 첫 실행 시 OS의 경고를 우회하는 한 가지 절차가 필요합니다(Mac이라면 Gatekeeper 허용 등).</p>
+<h2>그 밖에</h2>
+<ul>
+<li>자동 저장: 편집 내용은 PSD와 JSON에 수시로 저장됩니다.</li>
+<li>최근 연 프로젝트: 지난번까지의 작업을 바로 다시 열 수 있습니다.</li>
+<li>Undo / Redo: 조작의 취소와 다시 실행을 할 수 있습니다.</li>
+<li>표시 언어: 한국어 / 일본어 / 영어를 전환할 수 있습니다.</li>
+<li>테마: 라이트 / 다크를 전환할 수 있습니다.</li>
+</ul>
+<p>조작 단축키는 <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">단축키</a> 페이지에 정리해 두었습니다.</p></main></div></div></div></div>
+  </body>
+</html>

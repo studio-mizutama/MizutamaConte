@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>스크립트 가져오기 문법 — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="스크립트 가져오기 문법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/script-syntax/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/script-syntax/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/script-syntax/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="스크립트 가져오기 문법 — Mizutama Conte">
+<meta property="og:description" content="스크립트 가져오기 문법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ko/script-syntax/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="스크립트 가져오기 문법 — Mizutama Conte">
+<meta name="twitter:description" content="스크립트 가져오기 문법 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ko-KR" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ko/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="메뉴" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ko/usage/">사용법</a><a href="/MizutamaConte/docs/ko/shortcuts/">단축키</a><a href="/MizutamaConte/docs/ko/download/">다운로드</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/script-syntax/">JA</a> · <a href="/MizutamaConte/docs/ko/script-syntax/"><b>KO</b></a> · <a href="/MizutamaConte/docs/en/script-syntax/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">브라우저에서 사용해보기</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>목차</button><aside class="docs-side"><div class="grp"><div class="side-h">시작하기</div><a href="/MizutamaConte/docs/ko/overview/" class="">소개</a><a href="/MizutamaConte/docs/ko/download/" class="">다운로드</a></div><div class="grp"><div class="side-h">사용법</div><a href="/MizutamaConte/docs/ko/usage/" class="">기본 사용법</a></div><div class="grp"><div class="side-h">레퍼런스</div><a href="/MizutamaConte/docs/ko/script-syntax/" class="on">스크립트 가져오기 문법</a><a href="/MizutamaConte/docs/ko/shortcuts/" class="">단축키</a><a href="/MizutamaConte/docs/ko/git/" class="">Git 연동</a></div><div class="grp"><div class="side-h">지원</div><a href="/MizutamaConte/docs/ko/faq/" class="">자주 묻는 질문</a></div></aside><main class="docs-main"><h1>각본 가져오기 표기법</h1>
+<p>각본을 Markdown으로 적어 두면 Mizutama Conte가 그것을 읽어 들여 씬과 CUT으로 나눈 콘티 초안을 한 번에 만들어 줍니다. 대사(DIALOGUE)와 지문(ACTION)도 자동으로 나누고, 각 CUT에는 빈 PSD가 준비됩니다. 그다음에는 그림을 그리고 길이와 카메라 워크를 다듬어 가는 흐름을 염두에 두고 있습니다.</p>
+<p>이 페이지에서는 읽어 들이는 Markdown을 쓰는 방법을, 입력 예시와 생성 결과를 짝지어 설명합니다.</p>
+<h2>실행 방법</h2>
+<p>메뉴의 「각본에서 새로 만들기」에서 실행합니다. 단축키는 Cmd+Shift+N(Windows / Linux는 Ctrl+Shift+N)입니다.</p>
+<ol>
+<li>각본 Markdown 파일을 선택합니다. 확장자는 <code>.md</code> 외에 <code>.txt</code> / <code>.markdown</code>도 받습니다.</li>
+<li>일반 새로 만들기(Cmd+N / Ctrl+N)와 마찬가지로 해상도・화면비・fps를 설정합니다.</li>
+<li>읽어 들이면, 각본 내용으로부터 씬과 CUT이 구성된 새 프로젝트가 만들어집니다.</li>
+</ol>
+<p>서식이 예상과 다르더라도 앱이 멈추는 일은 없습니다. 읽어 들일 수 없는 경우에는 오류 대화 상자로 알려 줍니다.</p>
+<h2>전체 구조</h2>
+<p>각본 Markdown은 대략 다음 계층으로 해석됩니다.</p>
+<ul>
+<li>맨 앞의 h1(<code># 제목</code>) = 작품 제목(＝프로젝트 이름)</li>
+<li>제목(<code>##</code> 이하, 레벨은 상관없음) = 씬의 구분. 제목 텍스트가 씬 이름</li>
+<li>수평선(<code>---</code> 등) = CUT의 구분</li>
+<li>「이름：대사」「이름「대사」」 형태의 행 = DIALOGUE</li>
+<li>그 외의 본문 = ACTION</li>
+</ul>
+<p>순서대로 살펴보겠습니다.</p>
+<h2>h1은 작품 제목</h2>
+<p>파일 맨 앞에 있는 h1이 작품 제목으로서 프로젝트 이름에 사용됩니다.</p>
+<pre><code># 비 갠 뒤의 방과 후
+</code></pre>
+<p>h1 바로 아래에 쓴 설명문(다음 제목이 나올 때까지)은 읽어 들이는 대상이 되지 않습니다. 줄거리나 메모를 적어 두는 자리로 쓸 수 있습니다.</p>
+<p>맨 앞에 h1이 없고 곧바로 h2부터 시작하는 경우에는, Markdown의 파일 이름이 프로젝트 이름이 되고, 그 h2 이후는 씬 구분으로 읽힙니다. 맨 앞에 제목이 전혀 없는 경우에는, 첫 제목이 나타날 때까지의 내용은 건너뜁니다.</p>
+<h2>제목은 씬의 구분</h2>
+<p>h2부터 h6까지의 제목은 어느 것이든 씬의 구분으로서 같은 의미를 가집니다. 계층을 맞출 필요는 없습니다. <code>##</code>이든 <code>####</code>이든 상관없습니다. 제목 텍스트가 그 씬의 제목이 됩니다.</p>
+<p>도중에 나오는 h1도, 여기서는 h2 이하와 마찬가지로 씬 구분으로 취급합니다.</p>
+<p>씬 제목은 그 씬의 첫 CUT에 붙습니다. 빈 씬(내용이 없는 제목)이 만들어지는 일은 없습니다.</p>
+<h2>수평선은 CUT의 구분</h2>
+<p><code>---</code> 같은 수평선으로 CUT을 구분합니다. 표기 방식의 차이에도 어느 정도 대응하고 있어서, 다음 것들은 모두 CUT 구분으로 취급됩니다.</p>
+<pre><code>---
+***
+___
+- - -
+</code></pre>
+<p>기호가 3개 이상만 있는 행이면 수평선으로 봅니다.</p>
+<h2>ACTION과 DIALOGUE의 구분</h2>
+<p>CUT의 내용은 행마다 DIALOGUE(대사)인지 ACTION(지문)인지 나뉩니다.</p>
+<p>DIALOGUE로 판정되는 것은 다음 2가지 형태입니다.</p>
+<ul>
+<li><code>이름：대사</code>처럼, 행 머리에 캐릭터 이름과 콜론이 이어지는 형태. 콜론은 반각 <code>:</code>이든 전각 <code>：</code>이든 상관없습니다. 콜론 뒤의 공백은 생략할 수 있습니다.</li>
+<li><code>이름「대사」</code>처럼, 이름 뒤에 낫표로 감싼 형태.</li>
+</ul>
+<p>이름 부분은 20자까지를 기준으로 하고 있습니다. 그 외의 본문은 모두 ACTION이 됩니다.</p>
+<p>입력 예시:</p>
+<pre><code>하루：안녕, 오늘도 덥네
+나기:콜론 뒤에 공백이 없어도 괜찮아
+나기「낫표라도 똑같이 DIALOGUE」
+교실. 창밖에서 매미가 울고 있다.
+</code></pre>
+<p>이 4행이 하나의 CUT에 들어가면 다음과 같이 나뉩니다.</p>
+<ul>
+<li>DIALOGUE: 「안녕, 오늘도 덥네」「콜론 뒤에 공백이 없어도 괜찮아」「낫표라도 똑같이 DIALOGUE」</li>
+<li>ACTION: 「교실. 창밖에서 매미가 울고 있다.」</li>
+</ul>
+<p>대사의 이름(<code>하루：</code>이나 <code>나기「</code>)은 쓴 그대로 남습니다. 접두 부분을 임의로 지우거나 하지는 않습니다.</p>
+<h2>Markdown 표기법은 떼어 내고 내용만 가져온다</h2>
+<p>인용・코드 블록・글머리 기호도, 내용은 ACTION으로 가져옵니다(대사 형태가 아니라면). 읽어 들일 때 Markdown 기호는 떼어 내고, 내용 텍스트만 남깁니다.</p>
+<p>예를 들어 다음 입력은,</p>
+<pre><code>&gt; 오래된 교사의 복도
+- 칠판에 남은 낙서
+* 창가의 책상
+**강한 석양**이 비쳐 든다
+</code></pre>
+<p>ACTION으로서 이렇게 가져옵니다.</p>
+<pre><code>오래된 교사의 복도
+칠판에 남은 낙서
+창가의 책상
+강한 석양이 비쳐 든다
+</code></pre>
+<p><code>-</code>이나 <code>&gt;</code>, <code>**...**</code>(굵게), <code>*...*</code>(기울임), <code>`...`</code>(인라인 코드) 같은 기호는 떨어져 나가고, 내용만 남습니다. 줄바꿈은 그대로 유지합니다. 하나의 CUT 안에 여러 행이 있으면, 줄바꿈으로 결합해 하나의 ACTION으로 묶습니다.</p>
+<h2>빈 CUT은 만들지 않는다</h2>
+<p>구분과 구분 사이에 ACTION도 DIALOGUE도 없으면, 그 CUT은 만들지 않습니다. <code>---</code>를 연달아 써 버려도, 사이에 내용이 없으면 무시됩니다.</p>
+<p>각 CUT에는 ACTION이나 DIALOGUE 중 적어도 어느 한쪽에 반드시 글자가 들어가는 형태가 됩니다.</p>
+<p>씬 제목 바로 앞에 CUT 구분 <code>---</code>를 넣든 넣지 않든 결과는 같습니다. 마지막 CUT 뒤에 구분이 남아 있어도 적절히 처리합니다.</p>
+<h2>정리된 예시</h2>
+<p>다음 각본을 읽어 들였다고 합시다.</p>
+<pre><code># 비 갠 뒤의 방과 후
+
+줄거리를 여기에 적어 둘 수 있다(읽어 들일 때는 무시됨)
+
+## 교실
+
+하루：드디어 비 그쳤네
+창을 열자, 젖은 운동장의 냄새.
+
+---
+
+나기「선생님, 이제 집에 가도 돼요?」
+시계는 오후 5시를 가리키고 있다.
+
+## 출입구
+
+하루「신발, 축축해」
+</code></pre>
+<p>읽어 들이면 다음과 같이 됩니다.</p>
+<ul>
+<li>작품 제목: 비 갠 뒤의 방과 후</li>
+<li>씬 「교실」<!-- -->
+<ul>
+<li>CUT 1 — DIALOGUE「드디어 비 그쳤네」 / ACTION「창을 열자, 젖은 운동장의 냄새.」</li>
+<li>CUT 2 — DIALOGUE「선생님, 이제 집에 가도 돼요?」 / ACTION「시계는 오후 5시를 가리키고 있다.」</li>
+</ul>
+</li>
+<li>씬 「출입구」<!-- -->
+<ul>
+<li>CUT 3 — DIALOGUE「신발, 축축해」 / ACTION 없음</li>
+</ul>
+</li>
+</ul>
+<p>씬 제목은 각 씬의 첫 CUT(CUT 1과 CUT 3)에 붙습니다. h1 바로 아래의 줄거리는 읽어 들이지 않습니다.</p>
+<h2>읽어 들인 뒤</h2>
+<p>각 CUT에는 빈 PSD(<code>c001.psd</code>, <code>c002.psd</code>, …)가 자동으로 준비됩니다. PICTURE를 더블 클릭하면 외부 페인트 앱으로 열어 작업을 시작할 수 있습니다. CUT의 길이는 임시 값이 들어가므로, 스톱워치(T 도구)나 TIME의 직접 편집으로 실제 길이에 맞춰 가세요.</p>
+<p>대사와 지문이 들어간 상태에서 시작할 수 있으므로, 그림에 집중하기 쉬워집니다.</p>
+<h2>주의점</h2>
+<ul>
+<li>확장자는 <code>.md</code> 외에 <code>.txt</code> / <code>.markdown</code>도 받지만, 내용은 Markdown으로 해석합니다.</li>
+<li>한 행에 쓴 <code>이름：</code>이나 <code>이름「</code>은 DIALOGUE가 됩니다. 지문 안에서 우연히 이 형태가 된 행은 대사로 잡히는 경우가 있습니다.</li>
+<li>예상 밖의 서식이어도 읽어 들이는 것 자체는 멈추지 않습니다. 결과가 생각한 것과 다를 때는 제목이나 <code>---</code>의 위치, 대사를 쓰는 방식을 다시 살펴보세요.</li>
+</ul>
+<p>단축키 목록은 <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">단축키</a> 페이지에 정리해 두었습니다.</p></main></div></div></div></div>
+  </body>
+</html>

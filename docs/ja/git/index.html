@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Git 連携 — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Git 連携 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/git/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/git/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Git 連携 — Mizutama Conte">
+<meta property="og:description" content="Git 連携 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git 連携 — Mizutama Conte">
+<meta name="twitter:description" content="Git 連携 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ja-JP" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ja/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ja/usage/">使い方</a><a href="/MizutamaConte/docs/ja/shortcuts/">ショートカット</a><a href="/MizutamaConte/docs/ja/download/">ダウンロード</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/git/"><b>JA</b></a> · <a href="/MizutamaConte/docs/ko/git/">KO</a> · <a href="/MizutamaConte/docs/en/git/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">ブラウザで試す</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>目次</button><aside class="docs-side"><div class="grp"><div class="side-h">はじめに</div><a href="/MizutamaConte/docs/ja/overview/" class="">はじめに</a><a href="/MizutamaConte/docs/ja/download/" class="">ダウンロード</a></div><div class="grp"><div class="side-h">使い方</div><a href="/MizutamaConte/docs/ja/usage/" class="">使い方の基本</a></div><div class="grp"><div class="side-h">リファレンス</div><a href="/MizutamaConte/docs/ja/script-syntax/" class="">脚本インポート記法</a><a href="/MizutamaConte/docs/ja/shortcuts/" class="">ショートカット</a><a href="/MizutamaConte/docs/ja/git/" class="on">Git 連携</a></div><div class="grp"><div class="side-h">サポート</div><a href="/MizutamaConte/docs/ja/faq/" class="">よくある質問</a></div></aside><main class="docs-main"><h1>Git 連携</h1>
+<p>デスクトップ版には、プロジェクトを git でバージョン管理する機能があります。任意のタイミングでその時点の状態を記録し、あとから前の状態に戻したり、変更の履歴をたどったりできます。Web 版にはこの機能はありません。</p>
+<p>自動保存は常に動いていて、編集はその都度ファイルに書き込まれます。git 連携は、その上で「ここまでの状態」を区切って残しておくための仕組みです。</p>
+<h2>始め方</h2>
+<p>プロジェクトを開いた状態で、git のパネルから「バージョン管理を開始」を押すと、そのプロジェクトフォルダが git の管理下に入ります。このとき次のことが自動で行われます。</p>
+<ul>
+<li>フォルダを git リポジトリとして初期化する</li>
+<li><code>.gitignore</code> と <code>.gitattributes</code> を書き込む</li>
+<li>git-lfs をこのリポジトリに対して有効にする</li>
+<li>最初のコミットを作る</li>
+</ul>
+<p>すでに git で管理しているプロジェクトを開いた場合は、そのまま続きから使えます。</p>
+<h2>スナップショットを残す</h2>
+<p>変更があるときに「スナップショットを作成」を押すと、その時点の状態がコミットとして記録されます。メッセージを書いて残すこともできますし、空のままでも日時を使った名前で記録されます。</p>
+<p>変更がないときはボタンは押せません。最後にいつ記録したかも、パネルで確認できます。</p>
+<h2>何が記録され、何が除外されるか</h2>
+<p>記録される（追跡される）のは、絵コンテの中身そのものです。</p>
+<ul>
+<li><code>.json</code>: プロジェクトの構成や設定</li>
+<li><code>.psd</code>: 各カットの絵（後述のとおり git-lfs で管理）</li>
+</ul>
+<p>一方、次のものは <code>.gitignore</code> で除外されます。</p>
+<pre><code>.DS_Store
+*.pdf
+*.mp4
+*.mov
+.trash/
+</code></pre>
+<p>PDF や動画（MP4 / MOV）は、絵コンテから書き出した結果です。元データから何度でも作り直せるので、履歴には含めません。<code>.trash/</code> はアプリ内で削除したものの置き場、<code>.DS_Store</code> は macOS が作る管理用ファイルなので、どちらも記録しません。</p>
+<h2>大きな PSD は git-lfs で扱う</h2>
+<p><code>.psd</code> は画像なので、ファイルサイズが大きくなりがちです。これをそのまま git に入れると、リポジトリが急速に膨らみ、履歴の扱いも重くなります。そこで <code>.psd</code> は <a href="https://git-lfs.com/" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">git-lfs</a>（Git Large File Storage）で管理します。</p>
+<p>バージョン管理を開始すると、<code>.gitattributes</code> に次の 1 行が書き込まれます。</p>
+<pre><code>*.psd filter=lfs diff=lfs merge=lfs -text
+</code></pre>
+<p>これにより、リポジトリ本体には軽いポインタだけが入り、PSD の実体は lfs 側に保存されます。普段の操作で git-lfs を意識する必要はありません。</p>
+<h2>必要なもの</h2>
+<p>git 連携を使うには、<code>git</code> と <code>git-lfs</code> の両方がインストールされている必要があります。どちらかが見つからないときは、git のパネルにその旨と導入の案内が表示されます。インストールしてからアプリを再起動すると、機能が使えるようになります。</p></main></div></div></div></div>
+  </body>
+</html>

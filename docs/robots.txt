@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://studio-mizutama.github.io/MizutamaConte/docs/sitemap.xml

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>はじめに — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="はじめに | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/overview/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/overview/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="はじめに — Mizutama Conte">
+<meta property="og:description" content="はじめに | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="はじめに — Mizutama Conte">
+<meta name="twitter:description" content="はじめに | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ja-JP" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ja/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ja/usage/">使い方</a><a href="/MizutamaConte/docs/ja/shortcuts/">ショートカット</a><a href="/MizutamaConte/docs/ja/download/">ダウンロード</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/overview/"><b>JA</b></a> · <a href="/MizutamaConte/docs/ko/overview/">KO</a> · <a href="/MizutamaConte/docs/en/overview/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">ブラウザで試す</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>目次</button><aside class="docs-side"><div class="grp"><div class="side-h">はじめに</div><a href="/MizutamaConte/docs/ja/overview/" class="on">はじめに</a><a href="/MizutamaConte/docs/ja/download/" class="">ダウンロード</a></div><div class="grp"><div class="side-h">使い方</div><a href="/MizutamaConte/docs/ja/usage/" class="">使い方の基本</a></div><div class="grp"><div class="side-h">リファレンス</div><a href="/MizutamaConte/docs/ja/script-syntax/" class="">脚本インポート記法</a><a href="/MizutamaConte/docs/ja/shortcuts/" class="">ショートカット</a><a href="/MizutamaConte/docs/ja/git/" class="">Git 連携</a></div><div class="grp"><div class="side-h">サポート</div><a href="/MizutamaConte/docs/ja/faq/" class="">よくある質問</a></div></aside><main class="docs-main"><h1>はじめに</h1>
+<p>Mizutama Conte は、アニメ制作の絵コンテを作るためのエディタです。Mac / Windows / Linux で動く Electron 版と、ブラウザで動く Web 版があります。</p>
+<p>絵コンテをただ並べて印刷するだけでなく、カメラワークを付けたまま映像として再生できるのが特徴です。データはすべて手元のマシンで完結し、サーバーに送りません。無料で使えます。</p>
+<h2>このアプリでできること</h2>
+<p>カットの絵を描き、セリフやデュレーション、カメラワークを付けて、1 本の絵コンテにまとめます。仕上げた絵コンテは、制作現場で標準的に使われる書式に近い PDF や、実際に動く MP4 として書き出せます。</p>
+<p>絵を描く部分は外部のペイントソフトに任せ、Mizutama Conte は構成・デュレーション・カメラワーク・書き出しを担当します。</p>
+<h2>3 つの考え方</h2>
+<h3>カメラワーク付きで再生できる</h3>
+<p>パンやズームを設定すると、その動きが実際の映像としてプレビュー再生されます。静止画の絵コンテだけでは伝わりにくい「カメラの動き」を、作っている途中で確認できます。プレビューと書き出した MP4 の見えかたは一致します。</p>
+<h3>手元で完結する</h3>
+<p>ファイルはローカルに保存され、外部に送信されません。アカウント登録もありません。Electron 版はローカルのファイルとして、Web 版はブラウザのファイルシステム API を通じて、自分のディスク上のデータを直接扱います。</p>
+<h3>自分の使っているペイントソフトで描く</h3>
+<p>カットをダブルクリックすると、ふだん使っているペイントソフト（CLIP STUDIO PAINT / Photoshop / Affinity Photo / GIMP / Krita）で本物の <code>.psd</code> が開きます。描いて保存すれば自動で読み込み直されます。独自フォーマットに変換することはありません。ペイントソフト側でトリミングがかかっても、描いていない範囲まで保持します。</p>
+<h2>主要な機能</h2>
+<ul>
+<li>解像度とアスペクト比の選択：SD / HD / FHD / 2K / 4K と、4:3 / 16:9 / 1.85:1 / 2.39:1 の組み合わせを作成時に選びます。</li>
+<li>クロップとリサイズ：Shift で縦・横・比率にスナップします。リサイズした向きから、パンやズームの既定カメラワークを自動で作ります。</li>
+<li>カメラワーク編集：スライダーと数値入力で調整でき、IN / OUT の入れ替えもできます。ネイティブ解像度の値はグレーアウトします。</li>
+<li>ストップウォッチ Rec：左ツールバーの T ツールです。行ごとに Rec を出し、Space で計測の開始・停止をします。芝居を演じた長さが、そのままカットのデュレーション（秒 + コマ）になります。</li>
+<li>レイヤー：カット内の時系列フリップブックとして扱います。背景の上に重ねたレイヤーが 1 コマずつ送られます。</li>
+<li>カット操作：行の追加、シーン区切り、カットの結合・分離、レイヤーの追加、ACTION / DIALOGUE / TIME の編集ができます。</li>
+<li>トランジション：フェード（White / Black の In / Out）と、クロスフェードに対応します。</li>
+<li>書き出し：スタジオ書式の絵コンテ用紙 PDF（A4）と、ネイティブ解像度・fps の MP4 を出力できます。</li>
+<li>自動保存（PSD + JSON）、新規作成、最近開いたプロジェクト、Undo / Redo、多言語（日本語 / 韓国語 / 英語）、ライト・ダークテーマに対応します。</li>
+</ul>
+<h2>こんな人向け</h2>
+<ul>
+<li>カメラの動きまで含めて絵コンテを確認したい人</li>
+<li>データを自分の手元に置いておきたい人</li>
+<li>ふだん使っているペイントソフトを変えずに絵コンテを作りたい人</li>
+<li>後工程に渡せる書式の PDF や、確認用の動画が必要な人</li>
+</ul>
+<h2>対応環境</h2>
+<p>Electron 版は macOS 12 以降 / Windows 10 以降 / Linux（Ubuntu 20.04 相当以降）で動きます。これより古い環境では、モダンな Chrome / Edge で Web 版を使ってください。</p>
+<p>配布しているビルドは未署名のため、初回起動には一手間かかります。手順はダウンロードのページで説明します。</p>
+<h2>次に読むページ</h2>
+<ul>
+<li><a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">ダウンロード</a>：自分の環境に合った版の入手と、初回起動の手順。</li>
+<li><a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">使い方</a>：プロジェクト作成から書き出しまでの流れ。</li>
+<li><a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">ショートカット一覧</a>：キーボード操作のまとめ。</li>
+</ul></main></div></div></div></div>
+  </body>
+</html>

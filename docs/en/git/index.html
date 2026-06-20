@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Git Integration — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Git Integration | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/git/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/git/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/git/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/git/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Git Integration — Mizutama Conte">
+<meta property="og:description" content="Git Integration | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/git/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git Integration — Mizutama Conte">
+<meta name="twitter:description" content="Git Integration | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/git/">JA</a> · <a href="/MizutamaConte/docs/ko/git/">KO</a> · <a href="/MizutamaConte/docs/en/git/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="on">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="">FAQ</a></div></aside><main class="docs-main"><h1>Git integration</h1>
+<p>The desktop version can version-control your project with git. You can record the current state at any moment, then later roll back to an earlier state or trace the history of your changes. The Web version doesn&#x27;t have this feature.</p>
+<p>Auto-save is always running, and your edits are written to the files as you go. Git integration sits on top of that, as a way to mark off &quot;the state up to here&quot; and keep it.</p>
+<h2>Getting started</h2>
+<p>With a project open, press &quot;Start version control&quot; in the git panel, and that project folder comes under git management. When this happens, the following are done for you automatically.</p>
+<ul>
+<li>Initialize the folder as a git repository</li>
+<li>Write out <code>.gitignore</code> and <code>.gitattributes</code></li>
+<li>Enable git-lfs for this repository</li>
+<li>Make the first commit</li>
+</ul>
+<p>If you open a project that&#x27;s already managed with git, you can just pick up where you left off.</p>
+<h2>Leaving a snapshot</h2>
+<p>When there are changes, pressing &quot;Create snapshot&quot; records the current state as a commit. You can write a message to go with it, or leave it blank and it&#x27;ll be recorded under a name based on the date and time.</p>
+<p>When there are no changes, the button can&#x27;t be pressed. You can also check when you last recorded in the panel.</p>
+<h2>What gets recorded and what is excluded</h2>
+<p>What gets recorded (tracked) is the contents of the storyboard itself.</p>
+<ul>
+<li><code>.json</code>: the project&#x27;s structure and settings</li>
+<li><code>.psd</code>: the picture for each cut (managed with git-lfs, as described below)</li>
+</ul>
+<p>On the other hand, the following are excluded via <code>.gitignore</code>.</p>
+<pre><code>.DS_Store
+*.pdf
+*.mp4
+*.mov
+.trash/
+</code></pre>
+<p>PDFs and videos (MP4 / MOV) are the result of exporting from the storyboard. Since they can be regenerated from the source data any number of times, they aren&#x27;t included in the history. <code>.trash/</code> is where things deleted inside the app are kept, and <code>.DS_Store</code> is a housekeeping file that macOS creates, so neither is recorded.</p>
+<h2>Large PSDs are handled with git-lfs</h2>
+<p>Since <code>.psd</code> files are images, they tend to be large. Putting them into git as-is would make the repository swell quickly and the history heavy to work with. So <code>.psd</code> files are managed with <a href="https://git-lfs.com/" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">git-lfs</a> (Git Large File Storage).</p>
+<p>When you start version control, the following single line is written into <code>.gitattributes</code>.</p>
+<pre><code>*.psd filter=lfs diff=lfs merge=lfs -text
+</code></pre>
+<p>With this, only a lightweight pointer goes into the repository itself, while the actual PSD data is stored on the lfs side. You don&#x27;t need to be aware of git-lfs in everyday use.</p>
+<h2>What you need</h2>
+<p>To use git integration, both <code>git</code> and <code>git-lfs</code> need to be installed. If either one can&#x27;t be found, the git panel shows a note to that effect along with guidance on installing it. Install them and restart the app, and the feature becomes available.</p></main></div></div></div></div>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Shortcuts — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Shortcuts | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/shortcuts/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/shortcuts/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/shortcuts/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Shortcuts — Mizutama Conte">
+<meta property="og:description" content="Shortcuts | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/shortcuts/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Shortcuts — Mizutama Conte">
+<meta name="twitter:description" content="Shortcuts | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/shortcuts/">JA</a> · <a href="/MizutamaConte/docs/ko/shortcuts/">KO</a> · <a href="/MizutamaConte/docs/en/shortcuts/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="on">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="">FAQ</a></div></aside><main class="docs-main"><div class="sc-page"><h1>Keyboard Shortcuts</h1><p style="color:var(--ink-2);max-width:640px">A list of common actions. On Mac use ⌘; on Windows / Linux use Ctrl. You can reach this page directly from the app’s Help menu.</p><div><div class="sc-h">File</div><table class="sc-table"><thead><tr><th>Action</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>New project</td><td><span class="kbd">⌘</span> <span class="kbd">N</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">N</span></td></tr><tr><td>New from Script</td><td><span class="kbd">⌘</span> <span class="kbd">⇧</span> <span class="kbd">N</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">N</span></td></tr><tr><td>Open</td><td><span class="kbd">⌘</span> <span class="kbd">O</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">O</span></td></tr><tr><td>Print Storyboard</td><td><span class="kbd">⌘</span> <span class="kbd">P</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">P</span></td></tr><tr><td>Export Video</td><td><span class="kbd">⌘</span> <span class="kbd">E</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">E</span></td></tr><tr><td>Reload</td><td><span class="kbd">⌘</span> <span class="kbd">R</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">R</span></td></tr><tr><td>Preferences</td><td><span class="kbd">⌘</span> <span class="kbd">.</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">.</span></td></tr></tbody></table></div><div><div class="sc-h">Edit</div><table class="sc-table"><thead><tr><th>Action</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>Undo</td><td><span class="kbd">⌘</span> <span class="kbd">Z</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Z</span></td></tr><tr><td>Redo</td><td><span class="kbd">⌘</span> <span class="kbd">⇧</span> <span class="kbd">Z</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Z</span></td></tr><tr><td>Snap to H / V / aspect while cropping</td><td><span class="kbd">⇧</span> <span class="kbd">＋ drag</span></td><td><span class="kbd">Shift</span> <span class="kbd">＋ drag</span></td></tr></tbody></table></div><div><div class="sc-h">Tabs / Tools</div><table class="sc-table"><thead><tr><th>Action</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>Edit Tab<span style="color:var(--muted);margin-left:8px;font-size:13px">or ⌘1 / Ctrl 1</span></td><td><span class="kbd">E</span></td><td><span class="kbd">E</span></td></tr><tr><td>Preview Tab<span style="color:var(--muted);margin-left:8px;font-size:13px">or ⌘2 / Ctrl 2</span></td><td><span class="kbd">P</span></td><td><span class="kbd">P</span></td></tr><tr><td>Selection tool</td><td><span class="kbd">V</span></td><td><span class="kbd">V</span></td></tr><tr><td>Crop / Resize tool</td><td><span class="kbd">C</span></td><td><span class="kbd">C</span></td></tr><tr><td>Reorder tool</td><td><span class="kbd">R</span></td><td><span class="kbd">R</span></td></tr><tr><td>Stopwatch (timing) tool</td><td><span class="kbd">T</span></td><td><span class="kbd">T</span></td></tr></tbody></table></div><div><div class="sc-h">Preview</div><table class="sc-table"><thead><tr><th>Action</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>Play / Pause</td><td><span class="kbd">Space</span></td><td><span class="kbd">Space</span></td></tr><tr><td>Step frame</td><td><span class="kbd">←</span> <span class="kbd">→</span></td><td><span class="kbd">←</span> <span class="kbd">→</span></td></tr><tr><td>Previous / Next cut</td><td><span class="kbd">↑</span> <span class="kbd">↓</span></td><td><span class="kbd">↑</span> <span class="kbd">↓</span></td></tr><tr><td>Rewind to start</td><td><span class="kbd">⌘</span> <span class="kbd">←</span></td><td><span class="kbd">Home</span></td></tr><tr><td>Jump to end</td><td><span class="kbd">⌘</span> <span class="kbd">→</span></td><td><span class="kbd">End</span></td></tr></tbody></table></div><div><div class="sc-h">Stopwatch</div><table class="sc-table"><thead><tr><th>Action</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>Start / Stop timing</td><td><span class="kbd">Space</span></td><td><span class="kbd">Space</span></td></tr><tr><td>Cancel timing</td><td><span class="kbd">Esc</span></td><td><span class="kbd">Esc</span></td></tr></tbody></table></div></div></main></div></div></div></div>
+  </body>
+</html>

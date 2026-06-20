@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Basic Usage — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Basic Usage | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/usage/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/usage/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/usage/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/usage/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/usage/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Basic Usage — Mizutama Conte">
+<meta property="og:description" content="Basic Usage | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/usage/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Basic Usage — Mizutama Conte">
+<meta name="twitter:description" content="Basic Usage | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/usage/">JA</a> · <a href="/MizutamaConte/docs/ko/usage/">KO</a> · <a href="/MizutamaConte/docs/en/usage/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="on">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="">FAQ</a></div></aside><main class="docs-main"><h1>Getting started</h1>
+<p>Mizutama Conte is an editor for animation production that lets you draw a storyboard and play it back as an animatic (a storyboard you can play back as video). All of your data is processed locally on your own computer and never sent to a server. There is a desktop version (Mac / Windows / Linux) and a Web version that runs in the browser.</p>
+<p>This page walks through the whole flow, from creating a project to exporting it, in order. The full list of keyboard shortcuts lives on a separate page (<a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Shortcuts</a>).</p>
+<h2>The overall flow</h2>
+<ol>
+<li>Create a project (choose resolution and aspect ratio)</li>
+<li>Draw the cuts (edit PSD files in external paint software)</li>
+<li>Edit the cuts (add cuts, edit scene breaks, merge and split cuts, add layers, edit ACTION / DIALOGUE / TIME)</li>
+<li>Add camera work (crop and resize, slider editing)</li>
+<li>Set the duration (act it out and time it with the stopwatch)</li>
+<li>Add transitions (fades and crossfades)</li>
+<li>Play it back in preview to check</li>
+<li>Export to PDF or MP4</li>
+</ol>
+<p>Saving happens automatically as you work (both the PSD and the JSON). You generally don&#x27;t need to save by hand.</p>
+<h2>1. Create a project</h2>
+<h3>New project</h3>
+<p>Choose &quot;New project&quot; from the menu. When you create it, you decide the resolution and aspect ratio for the storyboard.</p>
+<p>Pick a resolution from SD / HD / FHD / 2K / 4K, and an aspect ratio from 4:3 / 16:9 / 1.85:1 / 2.39:1. The resolution you choose here becomes the reference size of the PSD (its native resolution).</p>
+<p>If you&#x27;re unsure, HD or FHD at 16:9 is a good starting point for TV anime, and 1.85:1 or 2.39:1 if you have a theatrical work in mind.</p>
+<h3>Build from a script (Markdown)</h3>
+<p>If your script is already in Markdown, you can generate the scenes and cuts from it in one pass. Load it from &quot;New from script&quot; (<code>Cmd / Ctrl + Shift + N</code>) in the menu. Headings mark scene breaks, horizontal rules mark cut breaks, dialogue lines become DIALOGUE, and an empty PSD is created automatically for each cut.</p>
+<p>For the full syntax and concrete examples, see <a href="../script-syntax/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Writing a script (Markdown)</a>.</p>
+<h2>2. Draw</h2>
+<p>Mizutama Conte itself has no drawing tools. You draw in the paint software you already use. CLIP STUDIO PAINT / Photoshop / Affinity Photo / GIMP / Krita, or any other software that can open a PSD file and save over it, will work.</p>
+<h3>Open a PSD and draw</h3>
+<ol>
+<li>Double-click a cut&#x27;s frame (PICTURE).</li>
+<li>The paint software you selected in the settings launches and opens the <code>.psd</code> file that backs that cut.</li>
+<li>Draw, then save over the file.</li>
+<li>When you return to Mizutama Conte, the saved content loads automatically and the frame display updates.</li>
+</ol>
+<p>Nothing is converted to a proprietary format. What opens is an ordinary PSD that you can edit as usual in your regular software.</p>
+<h2>3. Edit the cuts</h2>
+<p>A storyboard is a collection of scenes and cuts (CUT). Each row in the list corresponds to one cut.</p>
+<h3>Add a cut</h3>
+<p>Adding a row inserts a new, empty cut. Each cut gets an empty PSD, so you can start drawing right away.</p>
+<h3>Break into scenes</h3>
+<p>You can break into a new scene at any position. Inserting a scene break starts a new scene from there.</p>
+<h3>Merge and split cuts</h3>
+<p>Adjacent cuts can be merged. Conversely, a merged cut can be split back to its original state. This is handy when you re-time your cut breakdown.</p>
+<h3>Layers = frames within a cut</h3>
+<p>A single cut can hold multiple layers. Here, layers are treated as a time-ordered flipbook within the cut. The layers stacked on top of the background are displayed one frame at a time, in order. It&#x27;s the mechanism for expressing in-betweens or motion within a single cut. If you want to treat several layers as a single frame, group them.</p>
+<h3>ACTION / DIALOGUE / TIME</h3>
+<p>Each cut can carry the following information.</p>
+<ul>
+<li>ACTION (stage directions): a description of the cut&#x27;s content and motion</li>
+<li>DIALOGUE (line): the dialogue spoken in that cut</li>
+<li>TIME (duration): the length of that cut</li>
+</ul>
+<p>You can edit ACTION and DIALOGUE as text in place. TIME can be entered as a number, or set with the stopwatch described below.</p>
+<h2>4. Add camera work</h2>
+<p>Drag the camera frame (crop frame) on the cut to set its size and position. Making the frame larger gives you a zoom-in; shifting its position gives you a pan.</p>
+<p>Holding <code>Shift</code> while dragging enables snapping.</p>
+<ul>
+<li>Horizontal snap (a horizontal pan)</li>
+<li>Vertical snap (a vertical pan)</li>
+<li>Aspect-locked snap (a zoom that keeps the aspect ratio)</li>
+</ul>
+<h3>Auto-generate a default camera move from the resize direction</h3>
+<p>When you resize the camera frame, a plausible default for the pan or zoom is filled in automatically based on the direction (which way you expanded or shrank it). The easy workflow is to move the frame roughly to get in the ballpark first, then fine-tune afterward.</p>
+<h3>Adjust with sliders and numbers</h3>
+<p>In the camera work panel, you can dial in the values with both sliders and numeric input.</p>
+<ul>
+<li>Get it close with the slider, then set the exact value with numbers</li>
+<li>IN and OUT can be swapped</li>
+<li>Items that are at full native resolution (= no crop, no motion) are grayed out</li>
+</ul>
+<p>The graying out is your signal that &quot;there&#x27;s no camera work here.&quot;</p>
+<h2>5. Set the duration (stopwatch)</h2>
+<p>For a cut&#x27;s length, you can actually act out the performance and enter that time directly as the duration.</p>
+<ol>
+<li>Select the <code>T</code> (stopwatch) tool in the left toolbar.</li>
+<li>Choose the cut whose duration you want to time.</li>
+<li>Press <code>Space</code> to start measuring, and <code>Space</code> again to stop.</li>
+<li>The length you performed is entered as that cut&#x27;s TIME (seconds + frames).</li>
+</ol>
+<p>Read the lines aloud, act out the motion with your body — whatever lets you turn the timing in your head straight into numbers. If you&#x27;d rather type the seconds by hand, you can edit TIME directly.</p>
+<h2>6. Add transitions</h2>
+<p>You can set fades and crossfades at cut transitions.</p>
+<ul>
+<li>Fade in / fade out: choose between White and Black.</li>
+<li>Crossfade: a fade where the previous cut and the next cut overlap and swap.</li>
+</ul>
+<p>The default duration for a transition is 0.5 seconds (for example, 12 frames at 24fps, or 15 frames at 30fps). You can adjust the length afterward.</p>
+<h2>7. Play it back in preview</h2>
+<p>Playing back the preview lets you watch the whole thing through as an animatic, with the durations, camera work, and transitions you set all applied. Pans and zooms play as real motion, so you can check the timing and how the screen reads while you&#x27;re still at the drawing stage.</p>
+<h2>8. Export</h2>
+<p>A finished storyboard can be exported in two formats.</p>
+<h3>PDF print (storyboard sheet)</h3>
+<p>Exports in a format close to a studio storyboard sheet (A4). Each cut&#x27;s PICTURE shows the IN / OUT camera frames and includes the cumulative duration. It drops straight into a paper workflow.</p>
+<h3>MP4 video (animatic)</h3>
+<p>Exports an MP4 video file at the project&#x27;s native resolution and fps. The motion you checked in preview becomes the video as-is.</p>
+<h2>Supported environments</h2>
+<p>The supported environments for the desktop version are as follows.</p>
+<ul>
+<li>macOS 12 or later</li>
+<li>Windows 10 or later</li>
+<li>Linux (Ubuntu 20.04 equivalent or later)</li>
+</ul>
+<p>On older environments, use the Web version, which runs in Chromium-based browsers.</p>
+<p>The Web version is intended for use in Chromium-based browsers (Chrome, Edge, and so on). Because saving and loading files and exporting video depend on the File System Access API and WebCodecs, Safari and Firefox are view-only (no saving or exporting). Chromium-based browsers are also recommended for PDF printing.</p>
+<p>The distributed builds are currently not code-signed, so the first launch takes one extra step to get past the OS warning (for example, allowing it through Gatekeeper on Mac).</p>
+<h2>Other</h2>
+<ul>
+<li>Auto-save: your edits are saved to the PSD and JSON as you go.</li>
+<li>Recent projects: reopen your previous work right away.</li>
+<li>Undo / Redo: undo and redo your actions.</li>
+<li>Display language: switch between English / Japanese / Korean.</li>
+<li>Theme: switch between light and dark.</li>
+</ul>
+<p>The shortcuts for these operations are collected on the <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Shortcuts</a> page.</p></main></div></div></div></div>
+  </body>
+</html>

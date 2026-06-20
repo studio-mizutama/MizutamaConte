@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>脚本インポート記法 — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="脚本インポート記法 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/script-syntax/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/script-syntax/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="脚本インポート記法 — Mizutama Conte">
+<meta property="og:description" content="脚本インポート記法 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="脚本インポート記法 — Mizutama Conte">
+<meta name="twitter:description" content="脚本インポート記法 | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ja-JP" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ja/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ja/usage/">使い方</a><a href="/MizutamaConte/docs/ja/shortcuts/">ショートカット</a><a href="/MizutamaConte/docs/ja/download/">ダウンロード</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/script-syntax/"><b>JA</b></a> · <a href="/MizutamaConte/docs/ko/script-syntax/">KO</a> · <a href="/MizutamaConte/docs/en/script-syntax/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">ブラウザで試す</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>目次</button><aside class="docs-side"><div class="grp"><div class="side-h">はじめに</div><a href="/MizutamaConte/docs/ja/overview/" class="">はじめに</a><a href="/MizutamaConte/docs/ja/download/" class="">ダウンロード</a></div><div class="grp"><div class="side-h">使い方</div><a href="/MizutamaConte/docs/ja/usage/" class="">使い方の基本</a></div><div class="grp"><div class="side-h">リファレンス</div><a href="/MizutamaConte/docs/ja/script-syntax/" class="on">脚本インポート記法</a><a href="/MizutamaConte/docs/ja/shortcuts/" class="">ショートカット</a><a href="/MizutamaConte/docs/ja/git/" class="">Git 連携</a></div><div class="grp"><div class="side-h">サポート</div><a href="/MizutamaConte/docs/ja/faq/" class="">よくある質問</a></div></aside><main class="docs-main"><h1>脚本インポート記法</h1>
+<p>脚本を Markdown で書いておくと、Mizutama Conte がそれを読み込んで、シーンと CUT に切り分けた絵コンテの下地を一気に作ります。セリフ（DIALOGUE）とト書き（ACTION）も振り分けて、各 CUT には空の PSD が用意されます。あとは絵を描き、尺やカメラワークを詰めていく、という流れを想定しています。</p>
+<p>このページでは、読み込まれる Markdown の書き方を、入力例と生成結果の対応つきで説明します。</p>
+<h2>起動の仕方</h2>
+<p>メニューの「脚本から新規」から実行します。ショートカットは Cmd+Shift+N（Windows / Linux は Ctrl+Shift+N）です。</p>
+<ol>
+<li>脚本の Markdown ファイルを選びます。拡張子は <code>.md</code> のほか、<code>.txt</code> / <code>.markdown</code> も受け付けます。</li>
+<li>通常の新規作成（Cmd+N / Ctrl+N）と同じように、解像度・アスペクト比・fps を設定します。</li>
+<li>読み込むと、脚本の中身からシーンと CUT が組まれた新しいプロジェクトができます。</li>
+</ol>
+<p>書式が想定と違っていても、アプリが落ちることはありません。読み取れない場合はエラーダイアログで知らせます。</p>
+<h2>全体の構造</h2>
+<p>脚本 Markdown は、おおまかに次の階層で解釈されます。</p>
+<ul>
+<li>先頭の h1（<code># 見出し</code>）= 作品タイトル（＝プロジェクト名）</li>
+<li>見出し（<code>##</code> 以下、レベルは問わない）= シーンの区切り。見出しのテキストがシーン名</li>
+<li>水平線（<code>---</code> など）= CUT の区切り</li>
+<li>「名前：セリフ」「名前「セリフ」」の行 = DIALOGUE</li>
+<li>それ以外の本文 = ACTION</li>
+</ul>
+<p>順番に見ていきます。</p>
+<h2>h1 は作品タイトル</h2>
+<p>ファイルの先頭にある h1 が、作品タイトルとしてプロジェクト名に使われます。</p>
+<pre><code># 雨上がりの放課後
+</code></pre>
+<p>h1 のすぐ下に書いた説明文（次の見出しが来るまで）は、読み込みの対象になりません。あらすじやメモを置いておく場所として使えます。</p>
+<p>先頭に h1 がなく、いきなり h2 から始まっている場合は、Markdown のファイル名がプロジェクト名になり、その h2 以降はシーン区切りとして読まれます。先頭に見出しがまったくない場合は、最初の見出しが現れるまでの内容は読み飛ばされます。</p>
+<h2>見出しはシーンの区切り</h2>
+<p>h2 から h6 までの見出しは、どれもシーンの区切りとして同じ意味を持ちます。階層をそろえる必要はありません。<code>##</code> でも <code>####</code> でも構いません。見出しのテキストがそのシーンのタイトルになります。</p>
+<p>途中に出てくる h1 も、ここでは h2 以下と同じくシーン区切りとして扱います。</p>
+<p>シーンタイトルは、そのシーンの最初の CUT に付きます。空のシーン（中身のない見出し）が作られることはありません。</p>
+<h2>水平線は CUT の区切り</h2>
+<p><code>---</code> のような水平線で CUT を区切ります。書き方の方言にはある程度対応していて、次のものはすべて CUT 区切りとして扱われます。</p>
+<pre><code>---
+***
+___
+- - -
+</code></pre>
+<p>記号が 3 つ以上だけの行であれば水平線とみなします。</p>
+<h2>ACTION と DIALOGUE の振り分け</h2>
+<p>CUT の中身は、行ごとに DIALOGUE（セリフ）か ACTION（ト書き）に振り分けられます。</p>
+<p>DIALOGUE と判定されるのは、次の 2 つの形です。</p>
+<ul>
+<li><code>名前：セリフ</code> のように、行頭にキャラクター名とコロンが続く形。コロンは半角 <code>:</code> でも全角 <code>：</code> でも構いません。コロンの後ろのスペースは省略できます。</li>
+<li><code>名前「セリフ」</code> のように、名前のあとにカギ括弧で囲んだ形。</li>
+</ul>
+<p>名前部分は 20 文字までを目安にしています。それ以外の本文はすべて ACTION になります。</p>
+<p>入力例:</p>
+<pre><code>ハル：おはよう、今日も暑いね
+ナギ:コロンの後ろにスペースが無くても大丈夫
+ナギ「カギ括弧でも同じく DIALOGUE」
+教室。窓の外でセミが鳴いている。
+</code></pre>
+<p>この 4 行が 1 つの CUT に入ると、次のように振り分けられます。</p>
+<ul>
+<li>DIALOGUE: 「おはよう、今日も暑いね」「コロンの後ろにスペースが無くても大丈夫」「カギ括弧でも同じく DIALOGUE」</li>
+<li>ACTION: 「教室。窓の外でセミが鳴いている。」</li>
+</ul>
+<p>セリフの名前（<code>ハル：</code> や <code>ナギ「</code>）は、書いたとおりそのまま残ります。プレフィックスを勝手に削ったりはしません。</p>
+<h2>Markdown 記法は外して中身だけ取り込む</h2>
+<p>引用・コードブロック・箇条書きも、中身は ACTION として取り込みます（セリフの形になっていなければ）。読み込みのときに Markdown の記号は外して、中身のテキストだけを残します。</p>
+<p>たとえば次の入力は、</p>
+<pre><code>&gt; 古い校舎の廊下
+- 黒板に残った落書き
+* 窓際の机
+**強い西日**が差し込む
+</code></pre>
+<p>ACTION として、こう取り込まれます。</p>
+<pre><code>古い校舎の廊下
+黒板に残った落書き
+窓際の机
+強い西日が差し込む
+</code></pre>
+<p><code>-</code> や <code>&gt;</code>、<code>**...**</code>（太字）、<code>*...*</code>（斜体）、<code>`...`</code>（インラインコード）などの記号は外れ、中身だけが残ります。改行はそのまま保ちます。1 つの CUT の中に複数行あれば、改行で結合して 1 つの ACTION にまとめます。</p>
+<h2>空の CUT は作らない</h2>
+<p>区切りと区切りのあいだに、ACTION も DIALOGUE も無ければ、その CUT は作りません。<code>---</code> を続けて書いてしまっても、間に中身がなければ無視されます。</p>
+<p>各 CUT には、ACTION か DIALOGUE の少なくともどちらかに必ず文字が入る、という形になります。</p>
+<p>シーン見出しの直前に CUT 区切りの <code>---</code> を入れても入れなくても、結果は同じです。最終 CUT のあとに区切りが残っていても、適切に処理します。</p>
+<h2>まとまった例</h2>
+<p>次の脚本を読み込んだとします。</p>
+<pre><code># 雨上がりの放課後
+
+あらすじをここに書いておける（読み込みでは無視される）
+
+## 教室
+
+ハル：やっと雨やんだね
+窓を開けると、濡れたグラウンドの匂い。
+
+---
+
+ナギ「先生、もう帰っていいですか」
+時計は午後 5 時を指している。
+
+## 昇降口
+
+ハル「靴、湿ってる」
+</code></pre>
+<p>読み込むと、次のようになります。</p>
+<ul>
+<li>作品タイトル: 雨上がりの放課後</li>
+<li>シーン「教室」<!-- -->
+<ul>
+<li>CUT 1 — DIALOGUE「やっと雨やんだね」 / ACTION「窓を開けると、濡れたグラウンドの匂い。」</li>
+<li>CUT 2 — DIALOGUE「先生、もう帰っていいですか」 / ACTION「時計は午後 5 時を指している。」</li>
+</ul>
+</li>
+<li>シーン「昇降口」<!-- -->
+<ul>
+<li>CUT 3 — DIALOGUE「靴、湿ってる」 / ACTION なし</li>
+</ul>
+</li>
+</ul>
+<p>シーンタイトルは、それぞれのシーンの最初の CUT（CUT 1 と CUT 3）に付きます。h1 直下のあらすじは読み込まれません。</p>
+<h2>読み込んだあと</h2>
+<p>各 CUT には空の PSD（<code>c001.psd</code>、<code>c002.psd</code>、…）が自動で用意されます。PICTURE をダブルクリックすれば外部のペイントソフトで開いて描き始められます。CUT の尺は仮の値が入るので、ストップウォッチ（T ツール）や TIME の直接編集で実際の尺に合わせていってください。</p>
+<p>セリフとト書きが入った状態から始められるので、絵に集中しやすくなるはずです。</p>
+<h2>注意点</h2>
+<ul>
+<li>拡張子は <code>.md</code> のほか <code>.txt</code> / <code>.markdown</code> も受け付けますが、中身は Markdown として解釈します。</li>
+<li>1 行に書いた <code>名前：</code> や <code>名前「</code> は DIALOGUE になります。ト書きの中で偶然この形になっている行は、セリフとして拾われることがあります。</li>
+<li>想定外の書式でも読み込み自体は止まりません。結果が思ったものと違うときは、見出しや <code>---</code> の位置、セリフの書き方を見直してください。</li>
+</ul>
+<p>ショートカットの一覧は <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">ショートカット</a> のページにまとめています。</p></main></div></div></div></div>
+  </body>
+</html>

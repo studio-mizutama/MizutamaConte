@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>ショートカット — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="ショートカット | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/shortcuts/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/shortcuts/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="ショートカット — Mizutama Conte">
+<meta property="og:description" content="ショートカット | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ja/shortcuts/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ショートカット — Mizutama Conte">
+<meta name="twitter:description" content="ショートカット | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ja-JP" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ja/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ja/usage/">使い方</a><a href="/MizutamaConte/docs/ja/shortcuts/">ショートカット</a><a href="/MizutamaConte/docs/ja/download/">ダウンロード</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/shortcuts/"><b>JA</b></a> · <a href="/MizutamaConte/docs/ko/shortcuts/">KO</a> · <a href="/MizutamaConte/docs/en/shortcuts/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">ブラウザで試す</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>目次</button><aside class="docs-side"><div class="grp"><div class="side-h">はじめに</div><a href="/MizutamaConte/docs/ja/overview/" class="">はじめに</a><a href="/MizutamaConte/docs/ja/download/" class="">ダウンロード</a></div><div class="grp"><div class="side-h">使い方</div><a href="/MizutamaConte/docs/ja/usage/" class="">使い方の基本</a></div><div class="grp"><div class="side-h">リファレンス</div><a href="/MizutamaConte/docs/ja/script-syntax/" class="">脚本インポート記法</a><a href="/MizutamaConte/docs/ja/shortcuts/" class="on">ショートカット</a><a href="/MizutamaConte/docs/ja/git/" class="">Git 連携</a></div><div class="grp"><div class="side-h">サポート</div><a href="/MizutamaConte/docs/ja/faq/" class="">よくある質問</a></div></aside><main class="docs-main"><div class="sc-page"><h1>キーボードショートカット</h1><p style="color:var(--ink-2);max-width:640px">よく使う操作の一覧です。Mac は ⌘、Windows / Linux は Ctrl に読み替えてください。アプリのヘルプからこのページへ直接来られます。</p><div><div class="sc-h">ファイル</div><table class="sc-table"><thead><tr><th>操作</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>新規プロジェクト</td><td><span class="kbd">⌘</span> <span class="kbd">N</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">N</span></td></tr><tr><td>脚本から新規</td><td><span class="kbd">⌘</span> <span class="kbd">⇧</span> <span class="kbd">N</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">N</span></td></tr><tr><td>開く</td><td><span class="kbd">⌘</span> <span class="kbd">O</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">O</span></td></tr><tr><td>絵コンテ印刷</td><td><span class="kbd">⌘</span> <span class="kbd">P</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">P</span></td></tr><tr><td>動画書き出し</td><td><span class="kbd">⌘</span> <span class="kbd">E</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">E</span></td></tr><tr><td>再読み込み</td><td><span class="kbd">⌘</span> <span class="kbd">R</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">R</span></td></tr><tr><td>設定</td><td><span class="kbd">⌘</span> <span class="kbd">.</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">.</span></td></tr></tbody></table></div><div><div class="sc-h">編集</div><table class="sc-table"><thead><tr><th>操作</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>元に戻す</td><td><span class="kbd">⌘</span> <span class="kbd">Z</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Z</span></td></tr><tr><td>やり直す</td><td><span class="kbd">⌘</span> <span class="kbd">⇧</span> <span class="kbd">Z</span></td><td><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Z</span></td></tr><tr><td>クロップ時に縦/横/比率スナップ</td><td><span class="kbd">⇧</span> <span class="kbd">＋ drag</span></td><td><span class="kbd">Shift</span> <span class="kbd">＋ drag</span></td></tr></tbody></table></div><div><div class="sc-h">タブ / ツール</div><table class="sc-table"><thead><tr><th>操作</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>編集タブ<span style="color:var(--muted);margin-left:8px;font-size:13px">または ⌘1</span></td><td><span class="kbd">E</span></td><td><span class="kbd">E</span></td></tr><tr><td>プレビュータブ<span style="color:var(--muted);margin-left:8px;font-size:13px">または ⌘2</span></td><td><span class="kbd">P</span></td><td><span class="kbd">P</span></td></tr><tr><td>選択ツール</td><td><span class="kbd">V</span></td><td><span class="kbd">V</span></td></tr><tr><td>クロップ / リサイズ</td><td><span class="kbd">C</span></td><td><span class="kbd">C</span></td></tr><tr><td>並べ替えツール</td><td><span class="kbd">R</span></td><td><span class="kbd">R</span></td></tr><tr><td>ストップウォッチ（尺計測）</td><td><span class="kbd">T</span></td><td><span class="kbd">T</span></td></tr></tbody></table></div><div><div class="sc-h">プレビュー</div><table class="sc-table"><thead><tr><th>操作</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>再生 / 一時停止</td><td><span class="kbd">Space</span></td><td><span class="kbd">Space</span></td></tr><tr><td>コマ送り</td><td><span class="kbd">←</span> <span class="kbd">→</span></td><td><span class="kbd">←</span> <span class="kbd">→</span></td></tr><tr><td>前 / 次のカット</td><td><span class="kbd">↑</span> <span class="kbd">↓</span></td><td><span class="kbd">↑</span> <span class="kbd">↓</span></td></tr><tr><td>先頭へ</td><td><span class="kbd">⌘</span> <span class="kbd">←</span></td><td><span class="kbd">Home</span></td></tr><tr><td>末尾へ</td><td><span class="kbd">⌘</span> <span class="kbd">→</span></td><td><span class="kbd">End</span></td></tr></tbody></table></div><div><div class="sc-h">ストップウォッチ</div><table class="sc-table"><thead><tr><th>操作</th><th>Mac</th><th>Windows / Linux</th></tr></thead><tbody><tr><td>計測 開始 / 停止</td><td><span class="kbd">Space</span></td><td><span class="kbd">Space</span></td></tr><tr><td>計測をキャンセル</td><td><span class="kbd">Esc</span></td><td><span class="kbd">Esc</span></td></tr></tbody></table></div></div></main></div></div></div></div>
+  </body>
+</html>

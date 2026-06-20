@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>FAQ — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="FAQ | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/faq/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/faq/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/faq/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/faq/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/faq/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="FAQ — Mizutama Conte">
+<meta property="og:description" content="FAQ | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/faq/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FAQ — Mizutama Conte">
+<meta name="twitter:description" content="FAQ | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/faq/">JA</a> · <a href="/MizutamaConte/docs/ko/faq/">KO</a> · <a href="/MizutamaConte/docs/en/faq/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="on">FAQ</a></div></aside><main class="docs-main"><h1>Frequently asked questions</h1>
+<p>A collection of common questions about Mizutama Conte.</p>
+<h2>What kind of app is Mizutama Conte?</h2>
+<p>It&#x27;s an editor for making and managing animation storyboards. You draw the picture for each cut, add dialogue, duration, and camera work, and pull it all together into a single storyboard.</p>
+<p>Set up a pan or a zoom, and you can play the storyboard back as video with that movement intact. A finished storyboard can be exported as a PDF close to the format studios commonly use, or as an MP4 that actually plays. There&#x27;s a desktop version for Mac / Windows / Linux and a Web version that runs in the browser, and all of your data stays on your own machine.</p>
+<h2>How do I get started?</h2>
+<p>The easiest thing is to open the Web version in your browser and try it. There&#x27;s nothing to install. For everyday work, we recommend the desktop version, which gives you auto-save and integration with external paint software.</p>
+<p>How to get it is on the <a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Download</a> page, and the flow from creating a project to exporting is on the <a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Usage</a> page.</p>
+<h2>Are there any AI features?</h2>
+<p>No. Mizutama Conte has no AI generation or AI assistance features. Drawing the pictures, working out the structure, and adding the camera work are all done by hand. If the paint software you connect has AI features, you&#x27;re free to use those. There are no plans to add AI features to Mizutama Conte.</p>
+<h2>Is it just a preview app?</h2>
+<p>No. Mizutama Conte is an editor for making and managing storyboards. It handles laying out the cuts, editing dialogue, duration, and camera work, and exporting to PDF or video.</p>
+<p>Playing the storyboard back as video with the camera work intact is one of its strengths, but it&#x27;s one feature among many — it isn&#x27;t a preview-only tool.</p>
+<h2>Why is there no drawing feature inside the app?</h2>
+<p>Because the paint software you already use is faster and more comfortable for drawing. Double-click a cut and a real <code>.psd</code> opens in your paint software. Draw, save, and it&#x27;s reloaded automatically.</p>
+<p>Adding a basic paint feature would be technically possible, but you&#x27;d end up editing in a separate tab or window, so from the standpoint of a seamless experience there isn&#x27;t much to gain from building paint tools in. Rather than carry a half-baked drawing feature, we think it&#x27;s better to let you keep using the tools you already know.</p>
+<h2>Which paint software is supported?</h2>
+<p>CLIP STUDIO PAINT, Photoshop, Affinity Photo, GIMP, Krita, and any other software that can open a PSD file and save over it will work.</p>
+<h2>Are there feature differences between the Web version and the desktop version?</h2>
+<p>The core editing features are the same, but a few features are desktop-only.</p>
+<ul>
+<li>Double-clicking a cut to open it in your paint software, and automatically reloading after you save, are desktop-only. In the Web version, you open the local file yourself from Finder or Explorer to draw, and reload it yourself when you&#x27;re done.</li>
+<li>git integration (version control for your project) is also desktop-only.</li>
+</ul>
+<p>The desktop version is more comfortable for everyday work. Use the Web version when you want to try it right away without installing, or when the desktop version won&#x27;t run on your OS.</p>
+<h2>Is it still being developed?</h2>
+<p>Yes. Development is ongoing. New features and bug fixes happen in the <a href="https://github.com/studio-mizutama/MizutamaConte" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">GitHub repository</a>, where the change history and releases are also published.</p>
+<h2>Is it open source?</h2>
+<p>The source code is published on GitHub. It isn&#x27;t, however, open source in the strict sense of the OSI (Open Source Initiative) definition. The license is the Business Source License 1.1 (BSL 1.1).</p>
+<p>Anyone can read the source, and for many uses — individuals, doujin work, and so on — it&#x27;s free. Some uses, such as broadcast, theatrical release, and commercial distribution, require a commercial license. Each version switches to the Apache License 2.0 four years after its release. See <a href="https://github.com/studio-mizutama/MizutamaConte/blob/master/LICENSING.md" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">License</a> for details.</p>
+<h2>Is it free to use?</h2>
+<p>It&#x27;s free for personal work, doujin projects, school assignments, film festival submissions, single-theater screenings, personal online distribution, and the like. For larger commercial use — TV broadcast, nationwide theatrical release, commercial streaming services — we offer a commercial license.</p>
+<p>The concrete process is still being put together. If you think you might fall under it, get in touch first. We&#x27;ll talk it through case by case and can provide a signed build or customizations tailored to your setup.</p>
+<h2>Is any data sent to a server?</h2>
+<p>No. The storyboard data you draw is never sent to an external server. Mizutama Conte runs entirely on your own machine. There&#x27;s no account to register and no login, and there&#x27;s no telemetry collecting how you use it.</p>
+<p>The desktop version works with local files directly, and the Web version reads and writes data on your own disk through the browser&#x27;s File System Access API.</p>
+<h2>Can I sync to the cloud or collaborate with others?</h2>
+<p>Mizutama Conte itself has no cloud sync or simultaneous multi-person editing. Your data lives only on your own machine.</p>
+<p>When you want to work on the same project across several environments, put the project in a cloud storage folder such as Dropbox, or use the desktop version&#x27;s git integration.</p>
+<h2>Can I turn off auto-save?</h2>
+<p>No, there&#x27;s no setting to turn off auto-save. Each time you edit, it&#x27;s saved to the file.</p>
+<p>When you want to keep past states around, we recommend one of two approaches. One is to put the project inside cloud storage such as Dropbox that automatically keeps snapshots (version history). The other is to manage versions with the desktop version&#x27;s git integration. Either one lets you go back to a given point in time.</p>
+<h2>What is git integration?</h2>
+<p>The desktop version can version-control your project with git. You can start a new project under git management, or place an existing project under git management later. From there, commit whenever you like to record the state at that point. You can roll back to a previous state, or trace the history of your changes.</p>
+<p>For the details of what&#x27;s recorded and what&#x27;s excluded, and how large PSDs are handled (git-lfs), see the <a href="../git/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Git integration</a> page.</p>
+<h2>Which browsers are supported?</h2>
+<p>The Web version is intended for use in Chromium-based browsers (Google Chrome, Microsoft Edge, and so on), because saving and exporting depend on the File System Access API and WebCodecs.</p>
+<p>In Safari and Firefox these APIs aren&#x27;t all present, so you can view but can&#x27;t save or export. For making storyboards, use Chrome or Edge, or the desktop version.</p>
+<h2>In the Web version, I can&#x27;t read a folder directly under the Documents folder</h2>
+<p>This is a browser security restriction. The File System Access API blocks access to special folders such as Documents, Desktop, and Downloads, and to folders directly under them. It&#x27;s a browser-side specification, so the app can&#x27;t change it.</p>
+<p>If you place your project folder one level deeper rather than directly under these folders, it can be read. For example, make a working folder inside Documents and put the project further inside that. Using a different drive or any working folder also works.</p>
+<h2>Which operating systems are supported?</h2>
+<p>The desktop version runs on macOS 12 or later, Windows 10 or later, and Linux (Ubuntu 20.04 equivalent or later). On older environments, use the Web version in Chrome or Edge. Details on supported environments are on the <a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Download</a> page.</p>
+<h2>What format does it save in?</h2>
+<p>The pictures are saved as <code>.psd</code>, and the structure and settings are saved as <code>.json</code>. Both are common formats, so you can open the contents in other tools to check them. Nothing is locked away in a proprietary format.</p>
+<h2>Can I export to PDF or video?</h2>
+<p>Yes. You can export a storyboard sheet PDF (A4) close to the format used in studios, and an MP4 at native resolution and fps. The MP4 comes out with the camera work intact, exactly as you saw it in preview. The export steps are explained on the <a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Usage</a> page.</p>
+<h2>Can I import a script to build a storyboard draft?</h2>
+<p>Yes. Importing a script written in Markdown is supported. The detailed syntax is explained on the <a href="../script-syntax/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Script import</a> page.</p>
+<h2>Can I import video or audio?</h2>
+<p>No. There&#x27;s currently no video or audio import feature. For matching timing against audio, we recommend using the stopwatch feature. We&#x27;re considering adding this in a future update.</p>
+<h2>I found a bug. Where do I send requests?</h2>
+<p>We accept them in the <a href="https://github.com/studio-mizutama/MizutamaConte/issues" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">GitHub repository&#x27;s Issues</a>. It helps if you include steps to reproduce and the OS / browser you&#x27;re using.</p>
+<p>For more involved matters, such as a commercial license, you&#x27;re also welcome to email the contact on the landing page.</p></main></div></div></div></div>
+  </body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Overview — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Overview | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/overview/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/overview/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/overview/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/overview/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Overview — Mizutama Conte">
+<meta property="og:description" content="Overview | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/overview/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Overview — Mizutama Conte">
+<meta name="twitter:description" content="Overview | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/overview/">JA</a> · <a href="/MizutamaConte/docs/ko/overview/">KO</a> · <a href="/MizutamaConte/docs/en/overview/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="on">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="">FAQ</a></div></aside><main class="docs-main"><h1>Overview</h1>
+<p>Mizutama Conte is an editor for making animation storyboards. There is an Electron version that runs on Mac / Windows / Linux, and a Web version that runs in the browser.</p>
+<p>It does more than lay out storyboard panels for printing: you can play a storyboard back as an animatic (a storyboard you can play as video), with the camera work intact. Everything stays on your own machine — nothing is sent to a server. It is free to use.</p>
+<h2>What you can do with it</h2>
+<p>Draw the picture for each cut, add dialogue, duration, and camera work, and pull it all together into a single storyboard. When it&#x27;s finished, you can export it as a PDF close to the format studios commonly use, or as an MP4 that actually plays.</p>
+<p>The drawing itself is left to external paint software; Mizutama Conte handles the structure, duration, camera work, and export.</p>
+<h2>Three ideas behind it</h2>
+<h3>Playback with camera work</h3>
+<p>Set up a pan or a zoom, and that movement plays back as actual video in the preview. Camera movement is hard to convey with a still storyboard alone, and here you can check it while you work. The preview and the exported MP4 look the same.</p>
+<h3>Everything stays on your machine</h3>
+<p>Files are saved locally and never sent anywhere. There is no account to register. The Electron version works with local files directly; the Web version does the same through the browser&#x27;s File System Access API to handle the data on your own disk.</p>
+<h3>Draw in the paint software you already use</h3>
+<p>Double-click a cut and a real <code>.psd</code> opens in the paint software you normally use (CLIP STUDIO PAINT / Photoshop / Affinity Photo / GIMP / Krita). Draw, save, and it is reloaded automatically. Nothing is converted to a proprietary format. Even if the paint software trims the canvas, the area you didn&#x27;t draw on is kept.</p>
+<h2>Main features</h2>
+<ul>
+<li>Resolution and aspect ratio: choose a combination of SD / HD / FHD / 2K / 4K with 4:3 / 16:9 / 1.85:1 / 2.39:1 when you create a project.</li>
+<li>Crop and resize: hold Shift to snap to horizontal, vertical, or aspect ratio. Based on the direction you resized, default pan or zoom camera work is generated automatically.</li>
+<li>Camera work editing: adjust with sliders and numeric input, and swap IN / OUT. Values at native resolution are greyed out.</li>
+<li>Stopwatch Rec: the T tool in the left toolbar. A Rec control appears on each row, and you start and stop timing with Space. The length of the action you perform becomes the cut&#x27;s duration (seconds + frames) directly.</li>
+<li>Layers: treated as a chronological flipbook within a cut. Layers stacked on top of the background are advanced one frame at a time.</li>
+<li>Cut operations: add a row, split a scene, merge or separate cuts, add a layer, and edit ACTION / DIALOGUE / TIME.</li>
+<li>Transitions: fades (White / Black, In / Out) and crossfade are supported.</li>
+<li>Export: a studio-format storyboard sheet PDF (A4), and an MP4 at native resolution and fps.</li>
+<li>Auto-save (PSD + JSON), new project, recently opened projects, Undo / Redo, multiple languages (English / Japanese / Korean), and light/dark themes.</li>
+</ul>
+<h2>Who it&#x27;s for</h2>
+<ul>
+<li>People who want to check a storyboard including the camera movement</li>
+<li>People who want to keep their data on their own machine</li>
+<li>People who want to make storyboards without switching from the paint software they already use</li>
+<li>People who need a PDF in a format they can hand to downstream stages, or a video for review</li>
+</ul>
+<h2>Supported environments</h2>
+<p>The Electron version runs on macOS 12 or later / Windows 10 or later / Linux (Ubuntu 20.04 equivalent or later). On older environments, use the Web version in a modern Chrome / Edge.</p>
+<p>The distributed builds are unsigned, so the first launch takes an extra step. The procedure is explained on the download page.</p>
+<h2>Where to read next</h2>
+<ul>
+<li><a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Download</a>: getting the version that fits your environment, and the first-launch procedure.</li>
+<li><a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Usage</a>: the flow from creating a project to exporting.</li>
+<li><a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Shortcuts</a>: a summary of keyboard operations.</li>
+</ul></main></div></div></div></div>
+  </body>
+</html>

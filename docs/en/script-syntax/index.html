@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>Script Import Syntax — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="Script Import Syntax | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/script-syntax/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/script-syntax/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/script-syntax/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/script-syntax/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="Script Import Syntax — Mizutama Conte">
+<meta property="og:description" content="Script Import Syntax | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/en/script-syntax/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Script Import Syntax — Mizutama Conte">
+<meta name="twitter:description" content="Script Import Syntax | Documentation for Mizutama Conte — a storyboard app that previews animatics with camera work.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="en-US" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/en/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/en/usage/">Guide</a><a href="/MizutamaConte/docs/en/shortcuts/">Shortcuts</a><a href="/MizutamaConte/docs/en/download/">Download</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/script-syntax/">JA</a> · <a href="/MizutamaConte/docs/ko/script-syntax/">KO</a> · <a href="/MizutamaConte/docs/en/script-syntax/"><b>EN</b></a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">Try in browser</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>Contents</button><aside class="docs-side"><div class="grp"><div class="side-h">Getting Started</div><a href="/MizutamaConte/docs/en/overview/" class="">Overview</a><a href="/MizutamaConte/docs/en/download/" class="">Download</a></div><div class="grp"><div class="side-h">Guide</div><a href="/MizutamaConte/docs/en/usage/" class="">Basic Usage</a></div><div class="grp"><div class="side-h">Reference</div><a href="/MizutamaConte/docs/en/script-syntax/" class="on">Script Import Syntax</a><a href="/MizutamaConte/docs/en/shortcuts/" class="">Shortcuts</a><a href="/MizutamaConte/docs/en/git/" class="">Git Integration</a></div><div class="grp"><div class="side-h">Support</div><a href="/MizutamaConte/docs/en/faq/" class="">FAQ</a></div></aside><main class="docs-main"><h1>Script Import Syntax</h1>
+<p>If you write your script in Markdown, Mizutama Conte can read it and build a storyboard draft for you in one pass, split into scenes and CUTs. It also sorts the dialogue (DIALOGUE) and the action (ACTION), and gives each CUT an empty PSD. From there, the idea is that you draw the pictures and work out the timing and camera work.</p>
+<p>This page explains how to write the Markdown that gets imported, with input examples paired against the result they produce.</p>
+<h2>How to start</h2>
+<p>Run it from the menu under &quot;New from Script&quot;. The shortcut is Cmd+Shift+N (Ctrl+Shift+N on Windows / Linux).</p>
+<ol>
+<li>Pick the Markdown file for your script. Besides <code>.md</code>, the <code>.txt</code> and <code>.markdown</code> extensions are also accepted.</li>
+<li>Set the resolution, aspect ratio, and fps, just like a regular new project (Cmd+N / Ctrl+N).</li>
+<li>Once it loads, you get a new project with scenes and CUTs assembled from the contents of the script.</li>
+</ol>
+<p>If the formatting isn&#x27;t what&#x27;s expected, the app won&#x27;t crash. When something can&#x27;t be read, it tells you with an error dialog.</p>
+<h2>Overall structure</h2>
+<p>A script in Markdown is interpreted, broadly, along the following hierarchy.</p>
+<ul>
+<li>The h1 at the top (<code># Heading</code>) = the work&#x27;s title (which becomes the project name)</li>
+<li>A heading (<code>##</code> and below, any level) = a scene break. The heading text is the scene name.</li>
+<li>A horizontal rule (<code>---</code> and the like) = a CUT break</li>
+<li>A line in the form &quot;Name: dialogue&quot; or &quot;Name &#x27;dialogue&#x27;&quot; = DIALOGUE</li>
+<li>Any other body text = ACTION</li>
+</ul>
+<p>Let&#x27;s go through them in order.</p>
+<h2>The h1 is the work&#x27;s title</h2>
+<p>The h1 at the top of the file is used as the work&#x27;s title, which becomes the project name.</p>
+<pre><code># After the Rain
+</code></pre>
+<p>Any explanatory text written just below the h1 (up until the next heading) is not imported. You can use it as a place to keep a synopsis or notes.</p>
+<p>If there&#x27;s no h1 at the top and the file starts straight from an h2, the Markdown file name becomes the project name, and everything from that h2 on is read as scene breaks. If there&#x27;s no heading at all at the top, anything before the first heading appears is skipped.</p>
+<h2>Headings mark scene breaks</h2>
+<p>Headings from h2 through h6 all carry the same meaning as scene breaks. You don&#x27;t need to keep the levels consistent. <code>##</code> is fine, and so is <code>####</code>. The heading text becomes the title of that scene.</p>
+<p>An h1 that turns up partway through is also treated as a scene break here, the same as h2 and below.</p>
+<p>The scene title is attached to the first CUT of that scene. Empty scenes (a heading with no contents) are never created.</p>
+<h2>Horizontal rules mark CUT breaks</h2>
+<p>A horizontal rule like <code>---</code> separates CUTs. There&#x27;s some tolerance for stylistic variants, and all of the following are treated as CUT breaks.</p>
+<pre><code>---
+***
+___
+- - -
+</code></pre>
+<p>A line made up of three or more of the same symbol is treated as a horizontal rule.</p>
+<h2>Sorting into ACTION and DIALOGUE</h2>
+<p>Within a CUT, the contents are sorted line by line into either DIALOGUE (the lines) or ACTION (the stage directions).</p>
+<p>A line is recognized as DIALOGUE when it takes one of these two forms.</p>
+<ul>
+<li>A character name followed by a colon at the start of the line, as in <code>Name: dialogue</code>. The colon can be a half-width <code>:</code> or a full-width <code>：</code>. The space after the colon may be omitted.</li>
+<li>A name followed by the line in quotation marks, as in <code>Name &quot;dialogue&quot;</code>.</li>
+</ul>
+<p>The name part is expected to be up to about 20 characters. Everything else becomes ACTION.</p>
+<p>Input example:</p>
+<pre><code>Haru: Morning, hot again today
+Nagi:No space after the colon is fine too
+Nagi &quot;Quotation marks are DIALOGUE all the same&quot;
+The classroom. Cicadas are singing outside the window.
+</code></pre>
+<p>When these 4 lines land in a single CUT, they&#x27;re sorted like this.</p>
+<ul>
+<li>DIALOGUE: &quot;Morning, hot again today&quot; / &quot;No space after the colon is fine too&quot; / &quot;Quotation marks are DIALOGUE all the same&quot;</li>
+<li>ACTION: &quot;The classroom. Cicadas are singing outside the window.&quot;</li>
+</ul>
+<p>The names on the dialogue (<code>Haru:</code> or <code>Nagi &quot;</code>) are kept exactly as written. The prefix isn&#x27;t stripped out on its own.</p>
+<h2>Markdown syntax is removed; only the contents are imported</h2>
+<p>Quotes, code blocks, and bullet lists are imported as ACTION too (as long as they aren&#x27;t in dialogue form). On import, the Markdown markers are removed and only the text inside is kept.</p>
+<p>For example, the following input</p>
+<pre><code>&gt; Hallway of the old schoolhouse
+- Graffiti left on the blackboard
+* A desk by the window
+A strong **western sun** streams in
+</code></pre>
+<p>is imported as ACTION like this.</p>
+<pre><code>Hallway of the old schoolhouse
+Graffiti left on the blackboard
+A desk by the window
+A strong western sun streams in
+</code></pre>
+<p>Markers such as <code>-</code>, <code>&gt;</code>, <code>**...**</code> (bold), <code>*...*</code> (italic), and <code>`...`</code> (inline code) come off, and only the contents remain. Line breaks are kept as is. When there are several lines within one CUT, they&#x27;re joined by line breaks into a single ACTION.</p>
+<h2>Empty CUTs aren&#x27;t created</h2>
+<p>If there&#x27;s no ACTION and no DIALOGUE between two breaks, that CUT isn&#x27;t created. Even if you happen to write <code>---</code> several times in a row, they&#x27;re ignored as long as there&#x27;s nothing in between.</p>
+<p>Each CUT ends up with text in at least one of ACTION or DIALOGUE.</p>
+<p>It makes no difference whether or not you put a <code>---</code> CUT break right before a scene heading. A break left over after the final CUT is handled cleanly as well.</p>
+<h2>A complete example</h2>
+<p>Suppose you import the following script.</p>
+<pre><code># After the Rain
+
+You can keep a synopsis here (ignored on import)
+
+## Classroom
+
+Haru: The rain finally let up
+Open the window, and there&#x27;s the smell of the wet schoolyard.
+
+---
+
+Nagi &quot;Sir, can I head home now?&quot;
+The clock points to 5 p.m.
+
+## Entrance Hall
+
+Haru &quot;My shoes are damp&quot;
+</code></pre>
+<p>After importing, it comes out like this.</p>
+<ul>
+<li>Work title: After the Rain</li>
+<li>Scene &quot;Classroom&quot;<!-- -->
+<ul>
+<li>CUT 1 — DIALOGUE &quot;The rain finally let up&quot; / ACTION &quot;Open the window, and there&#x27;s the smell of the wet schoolyard.&quot;</li>
+<li>CUT 2 — DIALOGUE &quot;Sir, can I head home now?&quot; / ACTION &quot;The clock points to 5 p.m.&quot;</li>
+</ul>
+</li>
+<li>Scene &quot;Entrance Hall&quot;<!-- -->
+<ul>
+<li>CUT 3 — DIALOGUE &quot;My shoes are damp&quot; / no ACTION</li>
+</ul>
+</li>
+</ul>
+<p>The scene titles are attached to the first CUT of each scene (CUT 1 and CUT 3). The synopsis directly under the h1 isn&#x27;t imported.</p>
+<h2>After importing</h2>
+<p>Each CUT comes with an empty PSD (<code>c001.psd</code>, <code>c002.psd</code>, and so on) prepared automatically. Double-click PICTURE to open it in your external paint software and start drawing. The CUT durations start with placeholder values, so use the stopwatch (T tool) or edit TIME directly to bring them in line with the real durations.</p>
+<p>Since you start out with the dialogue and action already in place, it should be easier to focus on the artwork.</p>
+<h2>Things to keep in mind</h2>
+<ul>
+<li>Besides <code>.md</code>, the <code>.txt</code> and <code>.markdown</code> extensions are accepted, but the contents are interpreted as Markdown.</li>
+<li>A <code>Name:</code> or <code>Name &quot;</code> written on a line becomes DIALOGUE. A line within the action that happens to fall into this form may be picked up as dialogue.</li>
+<li>Even with unexpected formatting, the import itself won&#x27;t stop. When the result isn&#x27;t what you intended, take another look at the placement of headings and <code>---</code>, and at how the dialogue is written.</li>
+</ul>
+<p>The full list of shortcuts is collected on the <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Shortcuts</a> page.</p></main></div></div></div></div>
+  </body>
+</html>

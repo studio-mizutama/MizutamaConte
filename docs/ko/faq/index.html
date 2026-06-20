@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>자주 묻는 질문 — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="자주 묻는 질문 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/faq/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/faq/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/faq/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/faq/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/faq/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="자주 묻는 질문 — Mizutama Conte">
+<meta property="og:description" content="자주 묻는 질문 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ko/faq/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="자주 묻는 질문 — Mizutama Conte">
+<meta name="twitter:description" content="자주 묻는 질문 | 카메라 워크가 들어간 애니매틱을 미리 볼 수 있는 콘티 제작·관리 앱 Mizutama Conte 문서.">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ko-KR" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ko/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="메뉴" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ko/usage/">사용법</a><a href="/MizutamaConte/docs/ko/shortcuts/">단축키</a><a href="/MizutamaConte/docs/ko/download/">다운로드</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/faq/">JA</a> · <a href="/MizutamaConte/docs/ko/faq/"><b>KO</b></a> · <a href="/MizutamaConte/docs/en/faq/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">브라우저에서 사용해보기</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>목차</button><aside class="docs-side"><div class="grp"><div class="side-h">시작하기</div><a href="/MizutamaConte/docs/ko/overview/" class="">소개</a><a href="/MizutamaConte/docs/ko/download/" class="">다운로드</a></div><div class="grp"><div class="side-h">사용법</div><a href="/MizutamaConte/docs/ko/usage/" class="">기본 사용법</a></div><div class="grp"><div class="side-h">레퍼런스</div><a href="/MizutamaConte/docs/ko/script-syntax/" class="">스크립트 가져오기 문법</a><a href="/MizutamaConte/docs/ko/shortcuts/" class="">단축키</a><a href="/MizutamaConte/docs/ko/git/" class="">Git 연동</a></div><div class="grp"><div class="side-h">지원</div><a href="/MizutamaConte/docs/ko/faq/" class="on">자주 묻는 질문</a></div></aside><main class="docs-main"><h1>자주 묻는 질문</h1>
+<p>Mizutama Conte에 대해 자주 들어오는 질문을 정리했습니다.</p>
+<h2>Mizutama Conte는 어떤 앱인가요?</h2>
+<p>애니메이션 제작용 콘티를 만들고 관리하기 위한 에디터입니다. 컷의 그림을 그리고, 대사와 듀레이션, 카메라 워크를 더해 한 편의 콘티로 정리합니다.</p>
+<p>팬이나 줌을 설정하면 그 움직임이 적용된 채로 영상으로 미리보기 재생할 수 있습니다. 완성한 콘티는 제작 현장에서 쓰이는 서식에 가까운 PDF나, 실제로 움직이는 MP4로 내보낼 수 있습니다. Mac / Windows / Linux용 데스크톱 버전과, 브라우저에서 동작하는 Web 버전이 있으며, 데이터는 모두 사용자의 기기 안에서 완결됩니다.</p>
+<h2>시작하려면 무엇을 해야 하나요?</h2>
+<p>먼저 브라우저에서 Web 버전을 열어 보는 것이 손쉽습니다. 설치가 필요 없습니다. 평소에 자주 쓸 거라면, 자동 저장이나 외부 페인트 앱 연동을 쓸 수 있는 데스크톱 버전을 추천합니다.</p>
+<p>입수 방법은 <a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">다운로드</a>, 프로젝트를 만드는 법부터 내보내기까지의 흐름은 <a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">사용법 기본</a> 페이지에 정리해 두었습니다.</p>
+<h2>AI 연동 기능이 있나요?</h2>
+<p>없습니다. Mizutama Conte에는 AI를 통한 생성이나 보조 기능이 없습니다. 그림을 그리는 것도, 구성을 정하는 것도, 카메라 워크를 더하는 것도 모두 사람의 손으로 합니다. 연동하는 페인트 앱에 AI 기능이 있다면 그것을 사용하는 것은 가능합니다. Mizutama Conte에 AI 기능을 넣을 계획은 없습니다.</p>
+<h2>미리보기 전용 앱인가요?</h2>
+<p>아닙니다. Mizutama Conte는 콘티를 만들고 관리하기 위한 에디터입니다. 컷을 나열하고, 대사와 듀레이션, 카메라 워크를 편집하고, PDF나 동영상으로 내보내는 데까지를 담당합니다.</p>
+<p>카메라 워크를 적용한 채로 영상으로 미리보기 재생할 수 있는 것은 특징 중 하나이지만, 여러 기능 가운데 하나일 뿐 미리보기만 하는 도구는 아닙니다.</p>
+<h2>왜 앱 안에 드로잉 기능이 없나요?</h2>
+<p>그리는 작업은 평소 쓰는 페인트 앱이 더 빠르고 쾌적하기 때문입니다. 컷을 더블 클릭하면 사용하는 페인트 앱에서 진짜 <code>.psd</code>가 열립니다. 그려서 저장하면 자동으로 다시 읽어들입니다.</p>
+<p>간단한 페인트 기능을 구현하는 것은 기술적으로는 가능하지만, 별도 탭·별도 창에서 편집하게 되므로 매끄러운 경험이라는 관점에서도 내부에 페인트 기능을 두는 이점은 크지 않다고 봅니다. 어중간한 드로잉 기능을 떠안기보다, 익숙한 도구를 그대로 살리는 편이 낫다고 생각합니다.</p>
+<h2>지원하는 페인트 앱은 무엇인가요?</h2>
+<p>CLIP STUDIO PAINT, Photoshop, Affinity Photo, GIMP, Krita 등, PSD 파일을 읽어 들여 덮어쓰기 저장할 수 있는 소프트웨어라면 어떤 것이든 사용할 수 있습니다.</p>
+<h2>Web 버전과 데스크톱 버전에 기능 차이가 있나요?</h2>
+<p>기본 편집 기능은 같지만, 데스크톱 버전에만 있는 기능이 몇 가지 있습니다.</p>
+<ul>
+<li>컷을 더블 클릭해 페인트 앱에서 여는 기능과, 저장 후 자동으로 다시 읽어들이는 기능은 데스크톱 버전에만 있습니다. Web 버전에서는 Finder나 탐색기에서 로컬 파일을 직접 열어 그린 뒤, 다 그리고 나면 직접 다시 읽어들입니다.</li>
+<li>git 연동(프로젝트의 버전 관리)도 데스크톱 버전에만 있는 기능입니다.</li>
+</ul>
+<p>평소에 자주 쓰기에는 데스크톱 버전이 쾌적합니다. 설치하지 않고 바로 써 보고 싶을 때나, 지원 OS 사정으로 데스크톱 버전이 동작하지 않을 때는 Web 버전을 사용하세요.</p>
+<h2>개발은 계속되고 있나요?</h2>
+<p>네. 지금도 개발을 계속하고 있습니다. 기능 추가나 버그 수정은 <a href="https://github.com/studio-mizutama/MizutamaConte" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">GitHub 저장소</a>에서 진행하고 있으며, 변경 이력이나 릴리스도 그곳에서 공개합니다.</p>
+<h2>오픈 소스인가요?</h2>
+<p>소스 코드는 GitHub에 공개되어 있습니다. 다만 OSI(Open Source Initiative)의 정의 그대로의 오픈 소스는 아닙니다. 라이선스는 Business Source License 1.1(BSL 1.1)입니다.</p>
+<p>소스는 누구나 읽을 수 있고, 개인이나 동인 등 많은 용도에서는 무료로 쓸 수 있습니다. 한편 방송·극장·상업 배포와 같은 일부 용도에는 상용 라이선스가 필요합니다. 각 버전은 공개로부터 4년 뒤에 Apache License 2.0으로 전환됩니다. 자세한 내용은 <a href="https://github.com/studio-mizutama/MizutamaConte/blob/master/LICENSING.md" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">라이선스</a>를 참조하세요.</p>
+<h2>무료로 쓸 수 있나요?</h2>
+<p>개인 제작, 동인, 학교 과제, 영화제 출품, 단관 상영, 개인 인터넷 방송 등에서는 무료로 쓸 수 있습니다. TV 방송, 전국 규모의 극장 개봉, 상업 배포 서비스와 같은 규모가 큰 상업적 이용에는 상용 라이선스를 마련해 드립니다.</p>
+<p>구체적인 절차는 앞으로 정비해 나가는 중입니다. 해당될 것 같은 경우에는 먼저 문의해 주세요. 개별 상담을 거쳐, 서명된 빌드나 현장에 맞춘 커스터마이즈 등을 제공해 드립니다.</p>
+<h2>서버로 데이터가 전송되나요?</h2>
+<p>아닙니다. 그린 콘티의 데이터가 외부 서버로 전송되는 일은 없습니다. Mizutama Conte는 사용자 기기 안에서만 동작합니다. 계정 등록도 로그인도 없으며, 이용 상황을 수집하는 구조(텔레메트리)도 넣지 않았습니다.</p>
+<p>데스크톱 버전은 로컬 파일로, Web 버전은 브라우저의 File System Access API를 통해, 자신의 디스크에 있는 데이터를 직접 읽고 씁니다.</p>
+<h2>클라우드 동기화나 공동 편집이 되나요?</h2>
+<p>Mizutama Conte 자체에는 클라우드 동기화나 여러 사람의 동시 편집 기능이 없습니다. 데이터는 사용자 기기 안에만 있습니다.</p>
+<p>여러 환경에서 같은 프로젝트를 다루고 싶을 때는 Dropbox 같은 클라우드 스토리지 폴더에 프로젝트를 두거나, 데스크톱 버전의 git 연동을 사용하세요.</p>
+<h2>자동 저장을 끌 수 있나요?</h2>
+<p>아니요, 자동 저장을 끄는 설정은 없습니다. 편집하면 그때그때 파일에 저장됩니다.</p>
+<p>과거 상태를 남겨 두고 싶을 때는 다음 두 가지 중 하나를 추천합니다. 하나는 Dropbox처럼 스냅샷(버전 이력)을 자동으로 남겨 주는 클라우드 스토리지 안에 프로젝트를 두는 것입니다. 다른 하나는 데스크톱 버전의 git 연동으로 버전 관리하는 것입니다. 둘 다 어느 시점의 상태로 되돌릴 수 있게 됩니다.</p>
+<h2>git 연동이란 무엇인가요?</h2>
+<p>데스크톱 버전에는 프로젝트를 git으로 버전 관리하는 기능이 있습니다. 새 프로젝트를 git 관리로 시작할 수도 있고, 이미 있는 프로젝트를 나중에 git 관리 아래에 둘 수도 있습니다. 그다음에는 원하는 시점에 커밋하면 그 시점의 상태를 기록으로 남길 수 있습니다. 이전 상태로 되돌리거나, 변경 이력을 따라가 볼 수 있습니다.</p>
+<p>무엇이 기록되고 무엇이 제외되는지, 큰 PSD를 어떻게 다루는지(git-lfs) 같은 자세한 내용은 <a href="../git/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Git 연동</a> 페이지에 정리해 두었습니다.</p>
+<h2>지원하는 브라우저는 무엇인가요?</h2>
+<p>Web 버전은 Chromium 계열 브라우저(Google Chrome, Microsoft Edge 등)에서의 이용을 상정하고 있습니다. 저장이나 내보내기에 File System Access API와 WebCodecs를 사용하기 때문입니다.</p>
+<p>Safari와 Firefox에서는 이 API들이 갖춰져 있지 않아, 열람은 되지만 저장·내보내기는 할 수 없습니다. 제작할 때는 Chrome이나 Edge, 또는 데스크톱 버전을 사용하세요.</p>
+<h2>Web 버전에서 Documents 폴더 바로 아래의 폴더를 읽을 수 없습니다</h2>
+<p>브라우저의 보안상 제한입니다. File System Access API는 Documents·Desktop·Downloads 같은 특별한 폴더와, 그 바로 아래의 폴더에 대한 접근을 차단합니다. 브라우저 쪽 사양이므로 앱에서는 바꿀 수 없습니다.</p>
+<p>프로젝트 폴더를 이 폴더들의 바로 아래가 아니라 한 단계 더 깊은 곳에 두면 읽어들일 수 있습니다. 예를 들어 Documents 안에 작업용 폴더를 하나 만들고, 프로젝트는 그 안에 다시 두는 식입니다. 다른 드라이브나 임의의 작업 폴더를 쓰는 것도 효과적입니다.</p>
+<h2>어떤 OS를 지원하나요?</h2>
+<p>데스크톱 버전은 macOS 12 이상, Windows 10 이상, Linux(Ubuntu 20.04 상당 이상)에서 동작합니다. 이보다 오래된 환경에서는 Chrome이나 Edge로 Web 버전을 사용하세요. 지원 환경의 자세한 내용은 <a href="../download/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">다운로드</a> 페이지에 있습니다.</p>
+<h2>어떤 형식으로 저장되나요?</h2>
+<p>그림은 <code>.psd</code>, 구성이나 설정 정보는 <code>.json</code>으로 저장합니다. 둘 다 일반적인 형식이라서 내용을 다른 도구로 열어 확인할 수 있습니다. 독자 포맷에 가두지 않습니다.</p>
+<h2>PDF나 동영상으로 내보낼 수 있나요?</h2>
+<p>네. 제작 현장에서 쓰이는 서식에 가까운 콘티 용지 PDF(A4)와, 네이티브 해상도·fps의 MP4를 내보낼 수 있습니다. MP4는 카메라 워크가 적용된 채로, 미리보기에서 본 그대로 출력됩니다. 내보내기 절차는 <a href="../usage/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">사용법 기본</a> 페이지에서 설명합니다.</p>
+<h2>각본을 읽어 들여 콘티 초안을 만들 수 있나요?</h2>
+<p>네. Markdown 형식으로 쓴 각본의 가져오기를 지원합니다. 자세한 표기법은 <a href="../script-syntax/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">각본 가져오기 표기법</a> 페이지에서 설명합니다.</p>
+<h2>동영상이나 음성을 읽어 들일 수 있나요?</h2>
+<p>아닙니다. 현재로서는 동영상이나 음성의 가져오기 기능이 없습니다. 음성과의 타이밍 맞추기는 스톱워치 기능의 사용을 추천합니다. 앞으로의 업데이트에서 기능 추가를 검토하고 있습니다.</p>
+<h2>버그를 발견했습니다. 요청은 어디로 보내면 되나요?</h2>
+<p><a href="https://github.com/studio-mizutama/MizutamaConte/issues" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">GitHub 저장소의 Issues</a>에서 받고 있습니다. 재현하는 절차나, 사용 중인 OS·브라우저를 함께 적어 주시면 도움이 됩니다.</p>
+<p>상용 라이선스 등 복잡한 상담은 랜딩 페이지의 문의처에서 메일로 주셔도 됩니다.</p></main></div></div></div></div>
+  </body>
+</html>

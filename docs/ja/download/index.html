@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <!-- 旧ハッシュURL（/docs/#/usage 等。アプリ内Help・外部記事リンクが指す）と
+         裸root（/docs/）を、locale 付きクリーンURL へ無音リダイレクトする経過措置。
+         全ページの <head> に入るが、locale 付きクリーンURLでは rest!=='' で何もしない
+         （= no-op・ループしない）。言語は localStorage→navigator.language→ja のカスケード。
+         React より前に同期実行（チラつき防止）。 -->
+    <script>
+      (function () {
+        var m = location.pathname.match(/^(.*\/docs\/)/);
+        var base = m ? m[1] : '/';
+        function pickLocale() {
+          try {
+            var s = localStorage.getItem('docsLocale');
+            if (s === 'ja' || s === 'ko' || s === 'en') return s;
+          } catch (e) {}
+          var n = (navigator.language || 'ja').slice(0, 2);
+          return n === 'ko' || n === 'en' ? n : 'ja';
+        }
+        var h = location.hash.replace(/^#\/?/, '');
+        if (h) {
+          var id = h.replace(/^(ja|ko|en)\//, '').replace(/\/+$/, '');
+          location.replace(base + pickLocale() + '/' + (id === '' || id === 'home' ? '' : id + '/'));
+          return;
+        }
+        var rest = location.pathname.slice(base.length).replace(/^\/+/, '').replace(/\/+$/, '');
+        if (rest === '') location.replace(base + pickLocale() + '/');
+      })();
+    </script>
+    <meta name="theme-color" content="#C9817D" >
+    <link rel="icon" href="/MizutamaConte/docs/assets/favicon-BwSatmKM.ico" >
+    <!-- description / canonical / hreflang / OGP / twitter は prerender.tsx が
+         ページ・ロケール別に <head> へ注入する（静的にはここに置かない）。 -->
+    <title>ダウンロード — Mizutama Conte</title>
+    <script type="module" crossorigin src="/MizutamaConte/docs/assets/index-BxFbqliE.js"></script>
+    <link rel="modulepreload" crossorigin href="/MizutamaConte/docs/assets/prerender-ue3UnnMO.js">
+    <link rel="stylesheet" crossorigin href="/MizutamaConte/docs/assets/prerender-Bl-xWNCP.css">
+  <meta name="description" content="ダウンロード | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<link rel="canonical" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/download/">
+<link rel="alternate" hreflang="ja" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/download/">
+<link rel="alternate" hreflang="ko" href="https://studio-mizutama.github.io/MizutamaConte/docs/ko/download/">
+<link rel="alternate" hreflang="en" href="https://studio-mizutama.github.io/MizutamaConte/docs/en/download/">
+<link rel="alternate" hreflang="x-default" href="https://studio-mizutama.github.io/MizutamaConte/docs/ja/download/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mizutama Conte">
+<meta property="og:title" content="ダウンロード — Mizutama Conte">
+<meta property="og:description" content="ダウンロード | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta property="og:url" content="https://studio-mizutama.github.io/MizutamaConte/docs/ja/download/">
+<meta property="og:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ダウンロード — Mizutama Conte">
+<meta name="twitter:description" content="ダウンロード | カメラワーク付きのビデオコンテをプレビューできる絵コンテ制作・管理アプリ Mizutama Conte のドキュメント。">
+<meta name="twitter:image" content="https://studio-mizutama.github.io/MizutamaConte/docs/og.png"></head>
+  <body>
+    <div id="root"><div style="isolation:isolate;color-scheme:light" class="_spectrum_eb688 _spectrum_c6e6e _spectrum--light_606b7 _spectrum--large_4f200 _spectrum_5be2e _spectrum--medium_5be2e _spectrum--large_5be2e _spectrum--darkest_5be2e _spectrum--dark_5be2e _spectrum--light_5be2e _spectrum--lightest_5be2e" lang="ja-JP" dir="ltr"><div><nav class="lp-nav"><div class="wrap"><a class="lp-brand" href="/MizutamaConte/docs/ja/"><img src="/MizutamaConte/docs/assets/logo-DL1odHPL.png" alt="Mizutama Conte">Mizutama Conte</a><button class="lp-burger" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg></button><div class="lp-navlinks"><a href="/MizutamaConte/docs/ja/usage/">使い方</a><a href="/MizutamaConte/docs/ja/shortcuts/">ショートカット</a><a href="/MizutamaConte/docs/ja/download/">ダウンロード</a><span class="lp-lang"><a href="/MizutamaConte/docs/ja/download/"><b>JA</b></a> · <a href="/MizutamaConte/docs/ko/download/">KO</a> · <a href="/MizutamaConte/docs/en/download/">EN</a></span><a class="btn btn-ghost btn-sm" href="../" target="_blank" rel="noopener">ブラウザで試す</a></div></div></nav><div class="docs-layout"><button class="toc-toggle" aria-expanded="false"><svg viewBox="0 0 36 36" class="_spectrum-Icon_8ac98 _spectrum-Icon--sizeL_8ac98" focusable="false" aria-hidden="true" role="img"><rect height="4" rx="1" ry="1" width="28" x="4" y="16"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="6"></rect><rect height="4" rx="1" ry="1" width="28" x="4" y="26"></rect></svg>目次</button><aside class="docs-side"><div class="grp"><div class="side-h">はじめに</div><a href="/MizutamaConte/docs/ja/overview/" class="">はじめに</a><a href="/MizutamaConte/docs/ja/download/" class="on">ダウンロード</a></div><div class="grp"><div class="side-h">使い方</div><a href="/MizutamaConte/docs/ja/usage/" class="">使い方の基本</a></div><div class="grp"><div class="side-h">リファレンス</div><a href="/MizutamaConte/docs/ja/script-syntax/" class="">脚本インポート記法</a><a href="/MizutamaConte/docs/ja/shortcuts/" class="">ショートカット</a><a href="/MizutamaConte/docs/ja/git/" class="">Git 連携</a></div><div class="grp"><div class="side-h">サポート</div><a href="/MizutamaConte/docs/ja/faq/" class="">よくある質問</a></div></aside><main class="docs-main"><h1>ダウンロード</h1>
+<p>Mizutama Conte には、Mac / Windows / Linux で動くデスクトップ版と、ブラウザだけで動く Web 版があります。どちらもローカルで完結し、描いた絵コンテのデータをサーバーに送ることはありません。</p>
+<p>最新版は <a href="https://github.com/studio-mizutama/MizutamaConte/releases" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">GitHub Releases ページ</a> から入手できます。各リリースに Mac / Windows / Linux 向けのバイナリを追加していきます。ダウンロードは公式リポジトリ（studio-mizutama/MizutamaConte）からのみ行ってください。第三者が再配布したバイナリは使わないでください。</p>
+<p>迷ったら、まず Web 版をブラウザで開いて試すのがおすすめです。インストール不要で、すぐに触れます。普段使いするなら、自動保存や外部のペイントソフト連携が使えるデスクトップ版をどうぞ。</p>
+<h2>どれを使うか</h2>
+<ul>
+<li>まず試したい / インストールしたくない → Web 版（Chromium 系ブラウザを推奨）</li>
+<li>普段使いする / PSD を外部のペイントソフトで往復編集したい → デスクトップ版（Mac / Windows / Linux）</li>
+</ul>
+<h2>デスクトップ版のダウンロード</h2>
+<p><a href="https://github.com/studio-mizutama/MizutamaConte/releases" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">Releases ページ</a> から、お使いの OS のファイルを選んでください。</p>
+<h3>macOS</h3>
+<ul>
+<li><code>.dmg</code> をダウンロードします。</li>
+<li><code>.dmg</code> を開いて、Mizutama Conte を Applications フォルダにドラッグします。</li>
+</ul>
+<p>Apple Silicon（M1 以降）と Intel の両方に対応しています。ファイル名にチップの区別がある場合は、お使いの Mac に合うものを選んでください。初回起動には下記「初回起動について」の手順が必要です。</p>
+<h3>Windows</h3>
+<ul>
+<li>インストーラ（<code>.exe</code>）をダウンロードします。</li>
+<li>ダウンロードした <code>.exe</code> を実行し、画面の指示に従ってインストールします。</li>
+<li>初回実行時に SmartScreen の警告が出ます。下記「初回起動について」を参照してください。</li>
+</ul>
+<h3>Linux</h3>
+<ul>
+<li><code>AppImage</code> をダウンロードします。</li>
+<li>ファイルに実行権限を付けてから起動します。ファイルを右クリック →「プロパティ」→「実行可能にする」にチェックを入れるか、ターミナルで次を実行します。</li>
+</ul>
+<pre><code class="language-sh">chmod +x Mizutama-Conte*.AppImage
+</code></pre>
+<h2>対応環境</h2>
+<ul>
+<li>macOS 12（Monterey）以降</li>
+<li>Windows 10 以降</li>
+<li>Linux: Ubuntu 20.04 相当以降</li>
+</ul>
+<p>これより古い環境では、デスクトップ版が起動しないことがあります。その場合は Web 版を使ってください。</p>
+<h2>初回起動について（未署名ビルド）</h2>
+<p>現在配布しているデスクトップ版には、コード署名・公証（notarization）を付けていません。そのため初回起動時に、OS が「開発元を確認できない」などの警告を出します。アプリが壊れているわけではなく、署名されていないアプリ全般に出るものです。インストールと実行は自己責任でお願いします。次の手順で起動できます。</p>
+<h3>macOS</h3>
+<p>ダブルクリックすると「&quot;Mizutama Conte&quot; は壊れているため開けません」や「開発元を確認できないため開けません」と表示されることがあります。次のどちらかで起動できます。</p>
+<p>方法 1: システム設定から許可する（推奨）</p>
+<ol>
+<li>Mizutama Conte をダブルクリックして、警告が出るのを確認します。ここではゴミ箱に入れず、いったん閉じます。</li>
+<li>アップルメニュー →「システム設定」→「プライバシーとセキュリティ」を開きます。</li>
+<li>下の方に「&quot;Mizutama Conte&quot; は開発元を確認できないため、使用がブロックされました」といったメッセージが出ています。その横の「このまま開く」をクリックします。</li>
+<li>もう一度確認ダイアログが出たら「開く」を選びます。次回からは普通にダブルクリックで起動できます。</li>
+</ol>
+<p>方法 2: ターミナルで quarantine 属性を外す</p>
+<p>「壊れているため開けません」が出て方法 1 の表示が見当たらない場合は、ダウンロード時に付く隔離属性を外すと起動できます。アプリを Applications フォルダに移したうえで、ターミナルで次を実行してください。</p>
+<pre><code class="language-sh">xattr -dr com.apple.quarantine &quot;/Applications/Mizutama Conte.app&quot;
+</code></pre>
+<p>実行後、もう一度アプリを開きます。</p>
+<h3>Windows</h3>
+<p>初めて <code>.exe</code> を実行すると、Microsoft Defender SmartScreen が「Windows によって PC が保護されました」という青い画面を出すことがあります。</p>
+<ol>
+<li>画面内の「詳細情報」をクリックします。</li>
+<li>下に表示される「実行」ボタンを押します。</li>
+</ol>
+<p>これでインストール（または起動）が進みます。次回以降は表示されません。</p>
+<h3>Linux</h3>
+<p>ディストリビューションによっては、起動時に実行権限や信頼の確認を求められることがあります。前述のとおり <code>AppImage</code> に実行権限を付けてから起動してください。</p>
+<p>ファイルマネージャで実行権限を付けても、ダブルクリックではセキュリティの確認で起動できないことがあります。その場合は、ターミナルから直接実行すると起動できます。</p>
+<pre><code class="language-sh">./Mizutama-Conte*.AppImage
+</code></pre>
+<h2>Web 版</h2>
+<p>ブラウザで開くだけで使えます。インストールは不要です。</p>
+<ul>
+<li><a href="https://studio-mizutama.github.io/MizutamaConte/" target="_blank" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">https://studio-mizutama.github.io/MizutamaConte/</a></li>
+</ul>
+<p>ファイルの読み書きにはブラウザの File System Access API を使います。モダンな Chromium 系ブラウザでの利用を想定しています。古い OS でデスクトップ版が動かないときの選択肢としても使えます。</p>
+<h2>ショートカット</h2>
+<p>キーボードショートカットの一覧は、別ページにまとめています。</p>
+<ul>
+<li>ショートカット一覧: <a href="../shortcuts/" rel="noreferrer" class="_spectrum-Link_f1e6e spectrum-Link--primary">ショートカット</a></li>
+</ul></main></div></div></div></div>
+  </body>
+</html>
