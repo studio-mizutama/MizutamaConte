@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { Locale } from './content/manifest';
-import { buildPath } from './route';
+import { buildPath, appUrl } from './route';
 import ShowMenu from '@spectrum-icons/workflow/ShowMenu';
 import Close from '@spectrum-icons/workflow/Close';
 import logoUrl from './assets/logo.png';
-
-/* 配信時 base=/MizutamaConte/docs/。Web版アプリは親 /MizutamaConte/ に居る。 */
-const APP_URL = '../';
 
 // ヘッダー／フッター共通のナビ用ラベル。用語は manifest.ts のページ・グループ名に揃える。
 export const NAV: Record<Locale, { usage: string; shortcuts: string; download: string; try: string; menu: string }> = {
@@ -24,6 +21,8 @@ export const SiteHeader: React.FC<{ locale: Locale; pageId: string | null; base:
   const [open, setOpen] = useState(false);
   const n = NAV[locale];
   const close = () => setOpen(false);
+  // Web版アプリ（親 /MizutamaConte/）への絶対URL。base から導出（相対 '../' はページ深さで壊れる）。
+  const appHref = appUrl(base);
   // 言語スイッチャの飛び先: doc ページなら同一 id の別 locale、home なら別 locale の home。
   const langHref = (l: Locale): string => (pageId ? buildPath(base, l, pageId) : buildPath(base, l));
   return (
@@ -48,7 +47,7 @@ export const SiteHeader: React.FC<{ locale: Locale; pageId: string | null; base:
                 </React.Fragment>
               ))}
             </span>
-            <a className="btn btn-ghost btn-sm" href={APP_URL} target="_blank" rel="noopener" onClick={close}>{n.try}</a>
+            <a className="btn btn-ghost btn-sm" href={appHref} target="_blank" rel="noopener" onClick={close}>{n.try}</a>
           </div>
         </div>
       </nav>

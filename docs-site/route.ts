@@ -45,5 +45,14 @@ export const allRoutes = (base: string): string[] => {
   return out;
 };
 
+/**
+ * Web版アプリ（エディタ）の絶対URL。docs は base=/MizutamaConte/docs/ 配下に配信され、
+ * アプリはその親 /MizutamaConte/ に居る。末尾の docs/ だけを剥がして導出する。
+ * 相対 '../' だと nested クリーンURL（/docs/<loc>/<id>/）の深さで解決先がズレるため、
+ * buildPath と同じく base 起点の絶対パスを単一ソースで生成する。
+ * dev base '/' は docs/ を含まないのでそのまま '/' を返す。
+ */
+export const appUrl = (base: string): string => base.replace(/docs\/$/, '');
+
 const BCP47: Record<Locale, string> = { ja: 'ja-JP', ko: 'ko-KR', en: 'en-US' };
 export const bcp47 = (l: Locale): string => BCP47[l];

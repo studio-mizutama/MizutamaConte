@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Locale } from './content/manifest';
-import { buildPath } from './route';
+import { buildPath, appUrl } from './route';
 import { SiteHeader, NAV } from './SiteHeader';
 import { Lightbox, ZoomMedia } from './Lightbox';
 import Camera from '@spectrum-icons/workflow/Camera';
@@ -11,8 +11,6 @@ import studioLogo from './assets/studio-logo.svg';
 // 3本柱のアイコン（Spectrum・全ロケール共通。ネイティブ絵文字は使わない方針）
 const PILLAR_ICONS = [Camera, LockClosed, Draw];
 
-/* 配信時 base=/MizutamaConte/docs/。Web版アプリは親 /MizutamaConte/ に居る。 */
-const APP_URL = '../';
 const REPO_URL = 'https://github.com/studio-mizutama/MizutamaConte';
 
 // 問い合わせ先（収集bot対策：アドレスは user / domain に分割保持し、静的HTML・DOM に
@@ -274,6 +272,8 @@ const COPY: Record<Locale, Copy> = { ja: JA, ko: KO, en: EN };
 export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, base }) => {
   const c = COPY[locale];
   const [zoom, setZoom] = useState<ZoomMedia | null>(null);
+  // Web版アプリ（親 /MizutamaConte/）への絶対URL。base から導出（相対 '../' はページ深さで壊れる）。
+  const APP_URL = appUrl(base);
 
   return (
     <div className="lp">

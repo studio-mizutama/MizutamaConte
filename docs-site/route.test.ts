@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRoute, buildPath, allRoutes, bcp47, LOCALES } from './route';
+import { parseRoute, buildPath, allRoutes, appUrl, bcp47, LOCALES } from './route';
 import { PAGES } from './content/manifest';
 
 const B = '/MizutamaConte/docs/';
@@ -48,6 +48,18 @@ describe('allRoutes', () => {
   });
   it('base=/ でアプリ相対の全ルート', () => {
     expect(allRoutes('/')).toContain('/ja/usage/');
+  });
+});
+
+describe('appUrl', () => {
+  it('配信 base から Web版アプリ（親 /MizutamaConte/）の絶対URLを導く', () => {
+    expect(appUrl(B)).toBe('/MizutamaConte/');
+  });
+  it('dev base "/" はそのまま "/"（docs/ を含まない）', () => {
+    expect(appUrl('/')).toBe('/');
+  });
+  it('末尾 docs/ のみを剥がす（途中の docs は残す）', () => {
+    expect(appUrl('/foo/docs/docs/')).toBe('/foo/docs/');
   });
 });
 
