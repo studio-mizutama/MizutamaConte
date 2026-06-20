@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseRoute, buildPath, allRoutes, bcp47 } from './route';
+import { parseRoute, buildPath, allRoutes, bcp47, LOCALES } from './route';
+import { PAGES } from './content/manifest';
 
 const B = '/MizutamaConte/docs/';
 
@@ -37,11 +38,13 @@ describe('buildPath', () => {
 });
 
 describe('allRoutes', () => {
-  it('locale home 3 + doc 15 = 18 を base 付きで返す', () => {
+  it('各 locale の home + 全 doc ページを base 付きで返す（件数=locale×(pages+1)）', () => {
     const r = allRoutes(B);
     expect(r).toContain(B + 'ja/');
     expect(r).toContain(B + 'en/shortcuts/');
-    expect(r.length).toBe(18);
+    expect(r).toContain(B + 'ja/faq/');
+    // ページ追加に追従（home 1 + 各 doc ページ）。重複・欠落は検出する。
+    expect(r.length).toBe(LOCALES.length * (PAGES.length + 1));
   });
   it('base=/ でアプリ相対の全ルート', () => {
     expect(allRoutes('/')).toContain('/ja/usage/');
