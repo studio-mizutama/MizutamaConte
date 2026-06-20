@@ -373,7 +373,7 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
         </div>
       </footer>
 
-      {zoom && <Lightbox media={zoom} onClose={() => setZoom(null)} />}
+      {zoom && <Lightbox media={zoom} locale={locale} onClose={() => setZoom(null)} />}
     </div>
   );
 };

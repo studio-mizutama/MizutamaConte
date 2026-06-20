@@ -177,6 +177,11 @@ footer.lp-foot a:hover{color:var(--rose-600)}
 /* クリックできるメディア枠には zoom-in カーソル。プレースホルダ(.ph)には付けない。 */
 .shot.zoomable{cursor:zoom-in}
 .lightbox{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(31,34,40,.82);cursor:zoom-out;animation:lb-fade .14s ease}
-/* ネイティブ解像度で表示。width/height:auto で実寸、viewport を超える分だけ縮める。 */
-.lightbox img,.lightbox video{max-width:96vw;max-height:92vh;width:auto;height:auto;border-radius:10px;box-shadow:0 30px 90px rgba(0,0,0,.55);cursor:default}
+/* ネイティブ解像度で表示しつつ左右に余白を残す（width/height:auto＝実寸、viewport を
+   超える分だけ縮める）。メディアもクリックで閉じるので cursor は親(zoom-out)を継承。 */
+.lightbox img,.lightbox video{max-width:80vw;max-height:86vh;width:auto;height:auto;border-radius:10px;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+/* 右上の閉じるボタン（Spectrum Close アイコン・白・半透明の丸）。 */
+.lightbox-close{position:absolute;top:18px;right:18px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;backdrop-filter:blur(4px);transition:.15s}
+.lightbox-close:hover{background:rgba(255,255,255,.26)}
+.lightbox-close svg{width:24px;height:24px;fill:currentColor}
 @keyframes lb-fade{from{opacity:0}to{opacity:1}}
