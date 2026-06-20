@@ -101,4 +101,4 @@ xattr -dr com.apple.quarantine "/Applications/Mizutama Conte.app"
 
 키보드 단축키 목록은 별도 페이지에 정리되어 있습니다.
 
-- 단축키 목록: [#/shortcuts](#/shortcuts)
+- 단축키 목록: [단축키](#/shortcuts)

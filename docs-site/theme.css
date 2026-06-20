@@ -172,3 +172,11 @@ footer.lp-foot a:hover{color:var(--rose-600)}
 .sc-table td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:middle}
 .sc-table tr:hover td{background:var(--rose-50)}
 .sc-h{color:var(--rose-600);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:30px 0 4px}
+
+/* ============ Lightbox (ランディングのメディア拡大) ============ */
+/* クリックできるメディア枠には zoom-in カーソル。プレースホルダ(.ph)には付けない。 */
+.shot.zoomable{cursor:zoom-in}
+.lightbox{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(31,34,40,.82);cursor:zoom-out;animation:lb-fade .14s ease}
+/* ネイティブ解像度で表示。width/height:auto で実寸、viewport を超える分だけ縮める。 */
+.lightbox img,.lightbox video{max-width:96vw;max-height:92vh;width:auto;height:auto;border-radius:10px;box-shadow:0 30px 90px rgba(0,0,0,.55);cursor:default}
+@keyframes lb-fade{from{opacity:0}to{opacity:1}}

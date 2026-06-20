@@ -101,4 +101,4 @@ It reads and writes files through the browser's File System Access API. It's int
 
 The full list of keyboard shortcuts is on a separate page.
 
-- Shortcut list: [#/shortcuts](#/shortcuts)
+- Shortcut list: [Shortcuts](#/shortcuts)

@@ -48,7 +48,7 @@ export const SiteHeader: React.FC<{ locale: Locale; pageId: string | null; base:
                 </React.Fragment>
               ))}
             </span>
-            <a className="btn btn-ghost btn-sm" href={APP_URL} onClick={close}>{n.try}</a>
+            <a className="btn btn-ghost btn-sm" href={APP_URL} target="_blank" rel="noopener" onClick={close}>{n.try}</a>
           </div>
         </div>
       </nav>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Locale } from './content/manifest';
 import { buildPath } from './route';
 import { SiteHeader, NAV } from './SiteHeader';
+import { Lightbox, ZoomMedia } from './Lightbox';
 import Camera from '@spectrum-icons/workflow/Camera';
 import LockClosed from '@spectrum-icons/workflow/LockClosed';
 import Draw from '@spectrum-icons/workflow/Draw';
@@ -25,7 +26,7 @@ const openContact = (): void => {
 
 /* 画像/動画の枠。public/shots/<file> を参照し、無ければラベル＋ファイル名のプレースホルダ。
    ＝ユーザーがそのファイル名で shots/ に置けば自動で表示される。 */
-const Shot: React.FC<{ file: string; label: string; video?: boolean }> = ({ file, label, video }) => {
+const Shot: React.FC<{ file: string; label: string; video?: boolean; onOpen?: (m: ZoomMedia) => void }> = ({ file, label, video, onOpen }) => {
   const [err, setErr] = useState(false);
   const src = `${import.meta.env.BASE_URL}shots/${file}`;
   // 拡張子で動画/画像を自動判定（video を明示指定した場合はそれを優先）。
@@ -39,8 +40,9 @@ const Shot: React.FC<{ file: string; label: string; video?: boolean }> = ({ file
       </div>
     );
   }
+  // クリックでライトボックスを開く（ネイティブ解像度の拡大表示）。
   return (
-    <div className="shot">
+    <div className="shot zoomable" onClick={() => onOpen?.({ src, isVideo, label })}>
       {isVideo
         ? <video src={src} autoPlay loop muted playsInline onError={() => setErr(true)} />
         : <img src={src} alt={label} onError={() => setErr(true)} />}
@@ -271,6 +273,7 @@ const COPY: Record<Locale, Copy> = { ja: JA, ko: KO, en: EN };
 // locale/base は URL 由来（App が parseRoute して渡す）。
 export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, base }) => {
   const c = COPY[locale];
+  const [zoom, setZoom] = useState<ZoomMedia | null>(null);
 
   return (
     <div className="lp">
@@ -281,7 +284,7 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
         <h1>{c.hero.h1a}<br /><span className="em">{c.hero.em}</span>{c.hero.h1b}</h1>
         <p className="sub">{c.hero.sub}</p>
         <div className="cta">
-          <a className="btn btn-primary" href={APP_URL}>{c.hero.cta1} ▸</a>
+          <a className="btn btn-primary" href={APP_URL} target="_blank" rel="noopener">{c.hero.cta1} ▸</a>
           <a className="btn btn-ghost" href={buildPath(base, locale, 'download')}>{c.hero.cta2}</a>
         </div>
         <div className="trust">
@@ -290,7 +293,7 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
           <span className="it">{c.hero.t3}</span>
         </div>
         <div className="hero-stage">
-          <Shot file="hero.mp4" video label={c.heroShot} />
+          <Shot file="hero.mp4" video label={c.heroShot} onOpen={setZoom} />
         </div>
       </header>
 
@@ -320,7 +323,7 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
                 <p>{f.p}</p>
                 <ul>{f.li.map((x) => <li key={x}>{x}</li>)}</ul>
               </div>
-              <div><Shot file={FEAT_FILES[i]} label={f.shot} /></div>
+              <div><Shot file={FEAT_FILES[i]} label={f.shot} onOpen={setZoom} /></div>
             </div>
           </div>
         </section>
@@ -352,7 +355,7 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
           <h2>{c.ctaH}</h2>
           <p className="lead">{c.ctaSub}</p>
           <div className="cta">
-            <a className="btn btn-primary" href={APP_URL}>{c.hero.cta1} ▸</a>
+            <a className="btn btn-primary" href={APP_URL} target="_blank" rel="noopener">{c.hero.cta1} ▸</a>
             <a className="btn btn-ghost" href={buildPath(base, locale, 'download')}>{c.hero.cta2}</a>
           </div>
         </div>
@@ -369,6 +372,8 @@ export const Landing: React.FC<{ locale: Locale; base: string }> = ({ locale, ba
           </span>
         </div>
       </footer>
+
+      {zoom && <Lightbox media={zoom} onClose={() => setZoom(null)} />}
     </div>
   );
 };
