@@ -127,7 +127,7 @@ const JA: Copy = {
   },
   audPro: {
     h: 'スタジオ・商業制作',
-    p: '地上波・衛星・配信、または全国規模の劇場で公開する商業作品には、商用ライセンスが必要です。料金や手続きはこれから整備していくところです。該当しそうな場合は、まずお問い合わせください。個別にご相談のうえ、ライセンスや署名版ビルドをご用意します。',
+    p: '地上波・衛星・配信、または全国規模の劇場で公開する商業作品には、商用ライセンスが必要です。具体的な手続きはこれから整備していくところです。該当しそうな場合は、まずお問い合わせください。個別にご相談のうえ、署名版ビルドや、現場に合わせたカスタマイズ等をご提供いたします。',
     link: 'お問い合わせ',
   },
   ctaH: 'さっそく、作ってみる。',
@@ -194,7 +194,7 @@ const EN: Copy = {
   },
   audPro: {
     h: 'Studio and commercial production',
-    p: 'Commercial work shown on terrestrial, satellite, or streaming broadcast, or in nationwide theatrical release, needs a commercial license. Pricing and the process are still being prepared. If this might apply to you, get in touch first — we\'ll work out a license, and a signed build, with you individually.',
+    p: 'Commercial work shown on terrestrial, satellite, or streaming broadcast, or in nationwide theatrical release, needs a commercial license. The specific process is still being put in place. If this might apply to you, please reach out first. After talking it through individually, we can provide a signed build, customization tailored to your production, and the like.',
     link: 'Contact',
   },
   ctaH: 'Go ahead — start making one.',
@@ -261,7 +261,7 @@ const KO: Copy = {
   },
   audPro: {
     h: '스튜디오·상업 제작',
-    p: '지상파·위성·스트리밍, 또는 전국 규모의 극장에서 공개하는 상업 작품에는 상용 라이선스가 필요합니다. 요금이나 절차는 이제부터 정비해 나가는 단계입니다. 해당될 것 같다면 먼저 문의해 주세요. 개별적으로 상의한 뒤 라이선스나 서명판 빌드를 마련해 드립니다.',
+    p: '지상파·위성·스트리밍, 또는 전국 규모의 극장에서 공개하는 상업 작품에는 상용 라이선스가 필요합니다. 구체적인 절차는 이제부터 정비해 나가는 단계입니다. 해당될 것 같다면 먼저 문의해 주세요. 개별적으로 상의한 뒤, 서명판 빌드나 제작 현장에 맞춘 커스터마이즈 등을 제공해 드립니다.',
     link: '문의하기',
   },
   ctaH: '지금 바로, 만들어 보세요.',
